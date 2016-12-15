@@ -1,0 +1,17 @@
+.PHONY: clean
+
+LDFLAGS		+= -L/usr/local/lib -ldivecomputer
+CFLAGS		+= -I/usr/local/include -std=c99 -W -Wall
+OBJS		 = common.o \
+		   main.o \
+		   download.o \
+		   list.o \
+		   output.o
+
+divecmd: $(OBJS)
+	$(CC) -o $@ $(OBJS) $(LDFLAGS) 
+
+$(OBJS): extern.h
+
+clean:
+	rm -f $(OBJS) divecmd
