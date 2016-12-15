@@ -2,18 +2,21 @@
 .\"
 .\" Copyright (c) 2016 Kristaps Dzonsons <kristaps@bsd.lv>
 .\"
-.\" Permission to use, copy, modify, and distribute this software for any
-.\" purpose with or without fee is hereby granted, provided that the above
-.\" copyright notice and this permission notice appear in all copies.
-.\"
-.\" THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES
-.\" WITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF
-.\" MERCHANTABILITY AND FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR
-.\" ANY SPECIAL, DIRECT, INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES
-.\" WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN
-.\" ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
-.\" OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
-.\"
+.\" This library is free software; you can redistribute it and/or
+.\" modify it under the terms of the GNU Lesser General Public
+.\" License as published by the Free Software Foundation; either
+.\" version 2.1 of the License, or (at your option) any later version.
+.\" 
+.\" This library is distributed in the hope that it will be useful,
+.\" but WITHOUT ANY WARRANTY; without even the implied warranty of
+.\" MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+.\" Lesser General Public License for more details.
+.\" 
+.\" You should have received a copy of the GNU Lesser General Public
+.\" License along with this library; if not, write to the Free Software
+.\" Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston,
+.\" MA 02110-1301 USA
+.\" 
 .Dd $Mdocdate$
 .Dt DIVECMD 1
 .Os
@@ -22,19 +25,45 @@
 .Nd download dive computer data as structured XML files
 .Sh SYNOPSIS
 .Nm divecmd
-.Op Fl qv
+.Op Fl v
 .Fl l
 .Nm divecmd
-.Op Fl qv
-.Op Fl d Ar computer
-.Op Fl f Ar family
-.Op Fl m Ar model
+.Op Fl v
+.Fl d Ar computer
 .Ar device
 .Sh DESCRIPTION
 The
 .Nm
-utility downloads data from a dive computer and converts it to a regular
-XML output format.
+utility downloads data from a dive
+.Ar computer
+on a serial (or USB)
+.Ar device
+and converts it to a regular XML output format on standard output.
+The arguments are as follows:
+.Bl -tag -width Ds
+.It Fl v
+Increase verbosity.
+One more, emits informational messages.
+Twice, debugging messages.
+Three times, inundation.
+.It Fl l
+Lists all known device computers instead of trying to download data.
+.It Fl d Ar computer
+The case-insensitive full vendor and product, e.g.,
+.Dq suunto d6i
+or
+.Dq cressi leonardo .
+You can also just specify the product, e.g.,
+.Dq d6i ,
+but if there are multiple vendors with the same product, they may
+conflict.
+.El
+.Pp
+In the default behaviour (i.e.,
+.Fl l
+was not specified), the dive computer connected to
+.Ar device
+is opened and its contents downloaded and formatted as XML.
 .Sh EXIT STATUS
 .Ex -std
 .Sh AUTHORS

@@ -1,7 +1,7 @@
 /*	$Id$ */
 /*
  * Copyright (C) 2015 Jef Driesen
- * Copyright (C) 2016 Kristaps Dzonsons
+ * Copyright (c) 2016 Kristaps Dzonsons <kristaps@bsd.lv>
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -34,90 +34,10 @@
 
 #include "extern.h"
 
-typedef struct backend_table_t {
-	const char *name;
-	dc_family_t type;
-	unsigned int model;
-} backend_table_t;
-
-static const backend_table_t g_backends[] = {
-	{"solution",    DC_FAMILY_SUUNTO_SOLUTION,     0},
-	{"eon",	        DC_FAMILY_SUUNTO_EON,          0},
-	{"vyper",       DC_FAMILY_SUUNTO_VYPER,        0x0A},
-	{"vyper2",      DC_FAMILY_SUUNTO_VYPER2,       0x10},
-	{"d9",          DC_FAMILY_SUUNTO_D9,           0x0E},
-	{"eonsteel",    DC_FAMILY_SUUNTO_EONSTEEL,     0},
-	{"aladin",      DC_FAMILY_UWATEC_ALADIN,       0x3F},
-	{"memomouse",   DC_FAMILY_UWATEC_MEMOMOUSE,    0},
-	{"smart",       DC_FAMILY_UWATEC_SMART,        0x10},
-	{"meridian",    DC_FAMILY_UWATEC_MERIDIAN,     0x20},
-	{"sensus",      DC_FAMILY_REEFNET_SENSUS,      1},
-	{"sensuspro",   DC_FAMILY_REEFNET_SENSUSPRO,   2},
-	{"sensusultra", DC_FAMILY_REEFNET_SENSUSULTRA, 3},
-	{"vtpro",       DC_FAMILY_OCEANIC_VTPRO,       0x4245},
-	{"veo250",      DC_FAMILY_OCEANIC_VEO250,      0x424C},
-	{"atom2",       DC_FAMILY_OCEANIC_ATOM2,       0x4342},
-	{"nemo",        DC_FAMILY_MARES_NEMO,          0},
-	{"puck",        DC_FAMILY_MARES_PUCK,          7},
-	{"darwin",      DC_FAMILY_MARES_DARWIN,        0},
-	{"iconhd",      DC_FAMILY_MARES_ICONHD,        0x14},
-	{"ostc",        DC_FAMILY_HW_OSTC,             0},
-	{"frog",        DC_FAMILY_HW_FROG,             0},
-	{"ostc3",       DC_FAMILY_HW_OSTC3,            0x0A},
-	{"edy",         DC_FAMILY_CRESSI_EDY,          0x08},
-	{"leonardo",	DC_FAMILY_CRESSI_LEONARDO,     1},
-	{"n2ition3",    DC_FAMILY_ZEAGLE_N2ITION3,     0},
-	{"cobalt",      DC_FAMILY_ATOMICS_COBALT,      0},
-	{"predator",	DC_FAMILY_SHEARWATER_PREDATOR, 2},
-	{"petrel",      DC_FAMILY_SHEARWATER_PETREL,   3},
-	{"nitekq",      DC_FAMILY_DIVERITE_NITEKQ,     0},
-	{"aqualand",    DC_FAMILY_CITIZEN_AQUALAND,    0},
-	{"idive",       DC_FAMILY_DIVESYSTEM_IDIVE,    0x03},
-	{"cochran",     DC_FAMILY_COCHRAN_COMMANDER,   0},
-	{NULL,		DC_FAMILY_NULL,		       0},
-};
-
 static volatile sig_atomic_t g_cancel = 0;
 
-static dc_family_t
-dctool_family_type(const char *name)
-{
-	size_t	 i;
-
-	for (i = 0; NULL != g_backends[i].name; i++)
-		if (0 == strcmp(name, g_backends[i].name))
-			return(g_backends[i].type);
-
-	return(DC_FAMILY_NULL);
-}
-
-static const char *
-dctool_family_name(dc_family_t type)
-{
-	size_t	 i;
-
-	for (i = 0; NULL != g_backends[i].name; i++) 
-		if (g_backends[i].type == type)
-			return(g_backends[i].name);
-
-	return(NULL);
-}
-
-static unsigned int
-dctool_family_model(dc_family_t type)
-{
-	size_t	 i;
-
-	for (i = 0; NULL != g_backends[i].name; i++)
-		if (g_backends[i].type == type)
-			return(g_backends[i].model);
-
-	return(0);
-}
-
 static dc_status_t
-dctool_descriptor_search(dc_descriptor_t **out, 
-	const char *name, dc_family_t family, unsigned int model)
+dctool_descriptor_search(dc_descriptor_t **out, const char *name)
 {
 	dc_status_t	 rc = DC_STATUS_SUCCESS;
 	dc_iterator_t	*iterator = NULL;
@@ -131,40 +51,20 @@ dctool_descriptor_search(dc_descriptor_t **out,
 		return(rc);
 	}
 
-	while ((rc = dc_iterator_next(iterator, &descriptor)) == DC_STATUS_SUCCESS) {
-		if (NULL != name) {
-			vendor = dc_descriptor_get_vendor (descriptor);
-			product = dc_descriptor_get_product (descriptor);
-			n = strlen(vendor);
+	while ((rc = dc_iterator_next(iterator, &descriptor)) == 
+	       DC_STATUS_SUCCESS) {
+		vendor = dc_descriptor_get_vendor (descriptor);
+		product = dc_descriptor_get_product (descriptor);
+		n = strlen(vendor);
 
-			if (strncasecmp(name, vendor, n) == 0 && name[n] == ' ' &&
-			    strcasecmp (name + n + 1, product) == 0) {
-				current = descriptor;
-				break;
-			} else if (strcasecmp (name, product) == 0) {
-				current = descriptor;
-				break;
-			}
-		} else {
-			if (family == dc_descriptor_get_type(descriptor)) {
-				if (model == dc_descriptor_get_model(descriptor)) {
-					/* Exact match found. */
-					dc_descriptor_free (current);
-					current = descriptor;
-					break;
-				} else {
-					/* 
-					 * Possible match found. Keep
-					 * searching for an exact match.
-					 * If no exact match is found,
-					 * the first match is returned.
-					 */
-					if (current == NULL) {
-						current = descriptor;
-						descriptor = NULL;
-					}
-				}
-			}
+		if (strncasecmp(name, vendor, n) == 0 && 
+		    name[n] == ' ' &&
+		    strcasecmp (name + n + 1, product) == 0) {
+			current = descriptor;
+			break;
+		} else if (strcasecmp (name, product) == 0) {
+			current = descriptor;
+			break;
 		}
 
 		dc_descriptor_free(descriptor);
@@ -233,9 +133,6 @@ main (int argc, char *argv[])
 	dc_loglevel_t 	 loglevel = DC_LOGLEVEL_WARNING;
 	const char 	*device = NULL;
 	const char	*udev = NULL;
-	dc_family_t 	 family = DC_FAMILY_NULL;
-	unsigned int 	 model = 0;
-	unsigned int 	 have_family = 0, have_model = 0;
 	int 		 list = 0, ch;
 
 #if defined(__OpenBSD__) && OpenBSD > 201510
@@ -243,24 +140,13 @@ main (int argc, char *argv[])
 		err(EXIT_FAILURE, "pledge");
 #endif
 
-	while (-1 != (ch = getopt (argc, argv, "d:f:m:lqv"))) {
+	while (-1 != (ch = getopt (argc, argv, "d:lv"))) {
 		switch (ch) {
 		case 'd':
 			device = optarg;
 			break;
-		case 'f':
-			family = dctool_family_type(optarg);
-			have_family = 1;
-			break;
 		case 'l':
 			list = 1;
-			break;
-		case 'm':
-			model = strtoul(optarg, NULL, 0);
-			have_model = 1;
-			break;
-		case 'q':
-			loglevel = DC_LOGLEVEL_NONE;
 			break;
 		case 'v':
 			loglevel++;
@@ -273,15 +159,10 @@ main (int argc, char *argv[])
 	argc -= optind;
 	argv += optind;
 
-	if (0 == list && 0 == argc)
+	if (0 == list && (0 == argc || NULL == device))
 		goto usage;
 	else if (0 == list)
 		udev = argv[0];
-
-	/* Set the default model number. */
-
-	if (have_family && ! have_model)
-		model = dctool_family_model(family);
 
 	/* Setup the cancel signal handler. */
 
@@ -299,30 +180,12 @@ main (int argc, char *argv[])
 	dc_context_set_logfunc(context, logfunc, NULL);
 
 	if (0 == list) {
-		if (device == NULL && 
-		    family == DC_FAMILY_NULL) {
-			warnx("-d or -f required");
-			goto cleanup;
-		}
-
-		/* Search for a matching device descriptor. */
-
 		status = dctool_descriptor_search
-			(&descriptor, device, family, model);
-		if (status != DC_STATUS_SUCCESS)
+			(&descriptor, device);
+		if (status != DC_STATUS_SUCCESS) 
 			goto cleanup;
-
-		/* Fail if no device descriptor found. */
-
 		if (descriptor == NULL) {
-			if (NULL != device)
-				warnx("%s: device not "
-					"supported", device);
-			else
-				warnx("%s: model not "
-					"supported: 0x%X",
-					dctool_family_name(family), 
-					model);
+			warnx("%s: not supported", device);
 			goto cleanup;
 		}
 	}
@@ -336,9 +199,8 @@ cleanup:
 	dc_context_free(context);
 	return(exitcode);
 usage:
-	fprintf(stderr, "usage: %s [-qv] [-d computer] "
-			"[-f family] [-m model] device\n"
-			"       %s [-qv] -l\n",
+	fprintf(stderr, "usage: %s [-v] [-d computer] device\n"
+			"       %s [-v] -l\n",
 			getprogname(), getprogname());
 	return(EXIT_FAILURE);
 }
