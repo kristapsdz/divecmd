@@ -42,7 +42,7 @@ dc_buffer_t	*dctool_convert_hex2bin(const char *str);
 int	 	 dctool_list_run(dc_context_t *context);
 int		 dctool_download_run(dc_context_t *, dc_descriptor_t *, const char *);
 int		 dctool_cancel_cb(void *userdata);
-dctool_output_t *dctool_ss_output_new(const char *, dctool_units_t);
+dctool_output_t *dctool_ss_output_new(dctool_units_t);
 dc_status_t	 dctool_ss_output_write(dctool_output_t *, 
 			dc_parser_t *, 
 			const unsigned char[], unsigned int, 

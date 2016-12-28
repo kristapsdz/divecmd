@@ -198,7 +198,7 @@ dctool_download_run(dc_context_t *context,
 
 	/* Create the output. */
 
-	if (NULL == (output = dctool_ss_output_new(NULL, units)))
+	if (NULL == (output = dctool_ss_output_new(units)))
 		goto cleanup;
 
 	/* Download the dives. */
