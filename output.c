@@ -93,23 +93,16 @@ sample_cb(dc_sample_type_t type, dc_sample_value_t value, void *userdata)
 }
 
 dctool_output_t *
-dctool_ss_output_new(const char *filename, dctool_units_t units)
+dctool_ss_output_new(dctool_units_t units)
 {
 	dctool_ss_output_t *output = NULL;
-
-	if (filename == NULL)
-		goto error_exit;
 
 	output = malloc(sizeof(dctool_ss_output_t));
 
 	if (output == NULL)
 		goto error_exit;
 
-	output->ostream = fopen(filename, "w");
-
-	if (output->ostream == NULL)
-		goto error_free;
-
+	output->ostream = stdout;
 	output->units = units;
 
 	fputs("<?xml version=\"1.0\" encoding=\"UTF-8\" ?>\n"
@@ -119,9 +112,6 @@ dctool_ss_output_new(const char *filename, dctool_units_t units)
 	      "<dives>\n", output->ostream);
 
 	return((dctool_output_t *)output);
-
-error_free:
-	dctool_ss_output_free((dctool_output_t *)output);
 
 error_exit:
 	return(NULL);
@@ -293,6 +283,9 @@ dc_status_t
 dctool_ss_output_free(dctool_output_t *abstract)
 {
 	dctool_ss_output_t *output = (dctool_ss_output_t *)abstract;
+
+	if (NULL == output)
+		return(DC_STATUS_SUCCESS);
 
 	fputs("</dives>\n"
 	      "</divelog\n", output->ostream);
