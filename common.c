@@ -55,30 +55,39 @@ dctool_errmsg(dc_status_t status)
 	}
 }
 
+/*
+ * Print information about an event.
+ * We only do this when we're running in high-verbosity mode.
+ */
 void
 dctool_event_cb(dc_device_t *device, 
 	dc_event_type_t event, const void *data, void *userdata)
 {
-	const dc_event_progress_t *progress = (const dc_event_progress_t *) data;
-	const dc_event_devinfo_t *devinfo = (const dc_event_devinfo_t *) data;
-	const dc_event_clock_t *clock = (const dc_event_clock_t *) data;
-	const dc_event_vendor_t *vendor = (const dc_event_vendor_t *) data;
-	unsigned int	 i;
+	const dc_event_progress_t *progress;
+	const dc_event_devinfo_t  *devinfo;
+	const dc_event_clock_t    *clock;
+	const dc_event_vendor_t   *vendor;
+	unsigned int	 	   i;
 
 	(void)device;
 	(void)userdata;
+
+	if (verbose < 1)
+		return;
 
 	switch (event) {
 	case DC_EVENT_WAITING:
 		fprintf(stderr, "Event: waiting for user action\n");
 		break;
 	case DC_EVENT_PROGRESS:
+		progress = data;
 		fprintf(stderr, "Event: progress %3.2f%% (%u/%u)\n",
 			100.0 * (double) progress->current / 
 			(double) progress->maximum,
 			progress->current, progress->maximum);
 		break;
 	case DC_EVENT_DEVINFO:
+		devinfo = data;
 		fprintf(stderr, "Event: model=%u (0x%08x), "
 			"firmware=%u (0x%08x), serial=%u (0x%08x)\n",
 			devinfo->model, devinfo->model,
@@ -86,10 +95,12 @@ dctool_event_cb(dc_device_t *device,
 			devinfo->serial, devinfo->serial);
 		break;
 	case DC_EVENT_CLOCK:
+		clock = data;
 		fprintf(stderr, "Event: systime=%lld, devtime=%u\n",
 			(long long)clock->systime, clock->devtime);
 		break;
 	case DC_EVENT_VENDOR:
+		vendor = data;
 		fprintf(stderr, "Event: vendor=");
 		for (i = 0; i < vendor->size; ++i)
 			fprintf(stderr, "%02X", vendor->data[i]);
