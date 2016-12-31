@@ -84,7 +84,7 @@ sample_cb(dc_sample_type_t type, dc_sample_value_t value, void *userdata)
 		break;
 	case DC_SAMPLE_TEMPERATURE:
 		fprintf(sampledata->ostream, 
-			" temperature=\"%.2f\"",
+			" temp=\"%.2f\"",
 			convert_temperature(value.temperature, DCTOOL_UNITS_METRIC));
 		break;
 	default:
@@ -107,8 +107,6 @@ dctool_ss_output_new(dctool_units_t units)
 
 	fputs("<?xml version=\"1.0\" encoding=\"UTF-8\" ?>\n"
 	      "<divelog program=\"divecmd\" version=\"0.0.1\">\n"
-	      "<settings></settings>\n"
-	      "<divesites></divesites>\n"
 	      "<dives>\n", output->ostream);
 
 	return((dctool_output_t *)output);
