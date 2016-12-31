@@ -131,7 +131,7 @@ main (int argc, char *argv[])
 	dc_context_t	*context = NULL;
 	dc_descriptor_t *descriptor = NULL;
 	dc_loglevel_t 	 loglevel = DC_LOGLEVEL_WARNING;
-	const char 	*device = NULL;
+	const char 	*device = "/dev/ttyU0";
 	const char	*udev = NULL;
 	int 		 list = 0, ch;
 
@@ -199,7 +199,7 @@ cleanup:
 	dc_context_free(context);
 	return(exitcode);
 usage:
-	fprintf(stderr, "usage: %s [-v] [-d computer] device\n"
+	fprintf(stderr, "usage: %s [-v] [-d computer] [device]\n"
 			"       %s [-v] -l\n",
 			getprogname(), getprogname());
 	return(EXIT_FAILURE);
