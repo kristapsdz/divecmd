@@ -146,8 +146,10 @@ download(dc_context_t *context, dc_descriptor_t *descriptor,
 	/* Open the device. */
 
 	rc = dc_device_open(&device, context, descriptor, devname);
-	if (rc != DC_STATUS_SUCCESS)
+	if (rc != DC_STATUS_SUCCESS) {
+		warnx("%s: %s", devname, dctool_errmsg(rc));
 		goto cleanup;
+	}
 
 #if defined(__OpenBSD__) && OpenBSD > 201510
 	if (-1 == pledge("stdio", NULL))
@@ -157,18 +159,22 @@ download(dc_context_t *context, dc_descriptor_t *descriptor,
 	/* Register the event handler. */
 
 	events = DC_EVENT_WAITING | DC_EVENT_PROGRESS | 
-		 DC_EVENT_DEVINFO | DC_EVENT_CLOCK | DC_EVENT_VENDOR;
+		 DC_EVENT_DEVINFO | DC_EVENT_CLOCK | 
+		 DC_EVENT_VENDOR;
 
 	rc = dc_device_set_events(device, events, event_cb, &eventdata);
-
-	if (rc != DC_STATUS_SUCCESS)
+	if (rc != DC_STATUS_SUCCESS) {
+		warnx("%s: %s", devname, dctool_errmsg(rc));
 		goto cleanup;
+	}
 
 	/* Register the cancellation handler. */
 
 	rc = dc_device_set_cancel(device, dctool_cancel_cb, NULL);
-	if (rc != DC_STATUS_SUCCESS)
+	if (rc != DC_STATUS_SUCCESS) {
+		warnx("%s: %s", devname, dctool_errmsg(rc));
 		goto cleanup;
+	}
 
 	/* Initialize the dive data. */
 
@@ -180,8 +186,10 @@ download(dc_context_t *context, dc_descriptor_t *descriptor,
 	/* Download the dives. */
 
 	rc = dc_device_foreach(device, dive_cb, &divedata);
-	if (rc != DC_STATUS_SUCCESS)
+	if (rc != DC_STATUS_SUCCESS) {
+		warnx("%s: %s", devname, dctool_errmsg(rc));
 		goto cleanup;
+	}
 
 cleanup:
 	dc_buffer_free(ofingerprint);
