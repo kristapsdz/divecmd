@@ -49,6 +49,8 @@ dc_status_t	 dctool_ss_output_write(dctool_output_t *,
 			const unsigned char[], unsigned int);
 dc_status_t	 dctool_ss_output_free(dctool_output_t *);
 
+extern int	 verbose;
+
 __END_DECLS
 
 #endif /* !EXTERN_H */
