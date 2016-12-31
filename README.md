@@ -1,9 +1,14 @@
 ## Synopsis
 
-**divecmd** drives [libdivecomputer](http://www.libdivecomputer.org) to
+*divecmd* drives [libdivecomputer](http://www.libdivecomputer.org) to
 extract the contents of your dive computer in a safe, simple manner.
 
-I forked the **dctool** to do so, originally to provide output like
+**It is still in the earliest phases, and is tailored mostly to my dive
+computer, a [Suunto D6i](http://www.suunto.com/en-US/Products/Dive-Computers-and-Instruments/Suunto-D6i-Novo/Suunto-D6i-Novo-Black/).**
+I welcome being sent on dives with another dive computer for better
+support...
+
+I forked the *dctool* to do so, originally to provide output like
 [Subsurface](https://subsurface-divelog.org/)'s XML format, but later
 to significantly simplify the code, to add sandboxing via
 [pledge(2)](http://man.openbsd.org/pledge.2), and to provide more
