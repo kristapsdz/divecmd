@@ -52,7 +52,7 @@ dive_cb(const unsigned char *data, unsigned int size,
 	const unsigned char *fingerprint, 
 	unsigned int fsize, void *userdata)
 {
-	dive_data_t	*divedata = (dive_data_t *) userdata;
+	dive_data_t	*divedata = userdata;
 	dc_status_t	 rc = DC_STATUS_SUCCESS;
 	dc_parser_t	*parser = NULL;
 	dc_buffer_t	*fp;
