@@ -17,7 +17,7 @@
 .\" Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston,
 .\" MA 02110-1301 USA
 .\" 
-.Dd $Mdocdate: December 15 2016 $
+.Dd $Mdocdate: December 31 2016 $
 .Dt DIVECMD 1
 .Os
 .Sh NAME
@@ -30,7 +30,7 @@
 .Nm divecmd
 .Op Fl v
 .Fl d Ar computer
-.Ar device
+.Op Ar device
 .Sh DESCRIPTION
 The
 .Nm
@@ -38,6 +38,7 @@ utility downloads data from a dive
 .Ar computer
 on a serial (or USB)
 .Ar device
+.Pq defaulting to Pa /dev/ttyU0
 and converts it to a regular XML output format on standard output.
 The arguments are as follows:
 .Bl -tag -width Ds
