@@ -21,8 +21,11 @@
 #ifdef __OpenBSD_
 # include <sys/param.h>
 #endif
+#include <sys/stat.h>
 
+#include <ctype.h>
 #include <err.h>
+#include <fcntl.h>
 #include <signal.h>
 #include <stdlib.h>
 #include <stdio.h>
@@ -132,8 +135,61 @@ logfunc(dc_context_t *ctx, dc_loglevel_t loglevel,
 		warnx("%s: %s", loglevels[loglevel], msg);
 }
 
+static char *
+fingerprint_get(const char *device)
+{
+	char		*cp, *ccp, *file, *res = NULL;
+	struct stat	 st;
+	size_t		 i, sz;
+	ssize_t		 ssz;
+	int		 fd = -1;
+
+	/* Escape device name as file. */
+
+	if (NULL == (cp = strdup(device)))
+		err(EXIT_FAILURE, NULL);
+	for (ccp = cp; '\0' != *ccp; ccp++)
+		if (isspace((int)*ccp) || '(' == *ccp || ')' == *ccp)
+			*ccp = '_';
+
+	/* Open ~/.divecmd/DEVICE read-only, exiting on fail. */
+
+	if (asprintf(&file, "%s/.divecmd/%s", getenv("HOME"), cp) < 0)
+		err(EXIT_FAILURE, NULL);
+	if (-1 == (fd = open(file, O_RDONLY, 0)))
+		goto out;
+	else if (-1 == fstat(fd, &st))
+		err(EXIT_FAILURE, "%s", file);
+
+	/* Copy the entire file (fingerprint) into buffer. */
+
+	sz = st.st_size;
+	res = malloc(sz + 1);
+	res[sz] = '\0';
+
+	if (-1 == (ssz = read(fd, res, sz)))
+		err(EXIT_FAILURE, "%s", file);
+	else if ((size_t)ssz != sz)
+		errx(EXIT_FAILURE, "%s: short read", file);
+
+	for (i = 0; i < sz; i++)
+		if ( ! isalnum((int)res[i]))
+			errx(EXIT_FAILURE, "%s: bad print", file);
+
+out:
+	if (NULL != res && verbose > 0)
+		fprintf(stderr, "%s: good fingerprint\n", file);
+	if (NULL == res && verbose > 0)
+		fprintf(stderr, "%s: no fingerprint\n", file);
+	if (-1 != fd)
+		close(fd);
+	free(cp);
+	free(file);
+	return(res);
+}
+
 int
-main (int argc, char *argv[])
+main(int argc, char *argv[])
 {
 	int		 exitcode = EXIT_FAILURE;
 	dc_status_t	 status = DC_STATUS_SUCCESS;
@@ -143,6 +199,7 @@ main (int argc, char *argv[])
 	const char 	*device = NULL;
 	const char	*udev = "/dev/ttyU0";
 	int 		 list = 0, ch;
+	char		*fprint;
 
 #if defined(__OpenBSD__) && OpenBSD > 201510
 	if (-1 == pledge("stdio rpath", NULL))
@@ -158,7 +215,9 @@ main (int argc, char *argv[])
 			list = 1;
 			break;
 		case 'v':
-			loglevel++;
+			if (verbose)
+				loglevel++;
+			verbose++;
 			break;
 		default:
 			goto usage;
@@ -172,6 +231,8 @@ main (int argc, char *argv[])
 		goto usage;
 	else if (0 == list && argc)
 		udev = argv[0];
+
+	fprint = fingerprint_get(device);
 
 	/* Setup the cancel signal handler. */
 
@@ -206,6 +267,7 @@ main (int argc, char *argv[])
 cleanup:
 	dc_descriptor_free(descriptor);
 	dc_context_free(context);
+	free(fprint);
 	return(exitcode);
 usage:
 	fprintf(stderr, "usage: %s [-v] [-d computer] [device]\n"
