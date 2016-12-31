@@ -131,8 +131,8 @@ main (int argc, char *argv[])
 	dc_context_t	*context = NULL;
 	dc_descriptor_t *descriptor = NULL;
 	dc_loglevel_t 	 loglevel = DC_LOGLEVEL_WARNING;
-	const char 	*device = "/dev/ttyU0";
-	const char	*udev = NULL;
+	const char 	*device = NULL;
+	const char	*udev = "/dev/ttyU0";
 	int 		 list = 0, ch;
 
 #if defined(__OpenBSD__) && OpenBSD > 201510
@@ -159,9 +159,9 @@ main (int argc, char *argv[])
 	argc -= optind;
 	argv += optind;
 
-	if (0 == list && (0 == argc || NULL == device))
+	if (0 == list && NULL == device)
 		goto usage;
-	else if (0 == list)
+	else if (0 == list && argc)
 		udev = argv[0];
 
 	/* Setup the cancel signal handler. */
