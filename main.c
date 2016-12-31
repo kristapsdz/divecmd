@@ -34,6 +34,15 @@
 
 #include "extern.h"
 
+/* 
+ * Program verbosity. 
+ * Zero for quiet, 1 for some, 2 for more.
+ */
+int verbose = 0;
+
+/* 
+ * Cancellation (signal-control-c). 
+ */
 static volatile sig_atomic_t g_cancel = 0;
 
 static dc_status_t
@@ -117,10 +126,10 @@ logfunc(dc_context_t *ctx, dc_loglevel_t loglevel,
 
 	if (loglevel == DC_LOGLEVEL_ERROR || 
 	    loglevel == DC_LOGLEVEL_WARNING)
-		warnx("%s: %s [in %s:%d (%s)]\n", 
+		warnx("%s: %s [in %s:%d (%s)]", 
 			loglevels[loglevel], msg, file, line, func);
 	else
-		warnx("%s: %s\n", loglevels[loglevel], msg);
+		warnx("%s: %s", loglevels[loglevel], msg);
 }
 
 int
