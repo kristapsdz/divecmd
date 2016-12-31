@@ -60,11 +60,13 @@ dive_cb(const unsigned char *data, unsigned int size,
 
 	divedata->number++;
 
-	fprintf(stderr, "Dive: number=%u, size=%u, fingerprint=", 
-		divedata->number, size);
-	for (i = 0; i < fsize; ++i)
-		fprintf(stderr, "%02X", fingerprint[i]);
-	fputc('\n', stderr);
+	if (verbose) {
+		fprintf(stderr, "Dive: number=%u, size=%u, fingerprint=", 
+			divedata->number, size);
+		for (i = 0; i < fsize; ++i)
+			fprintf(stderr, "%02X", fingerprint[i]);
+		fputc('\n', stderr);
+	}
 
 	/* 
 	 * Keep a copy of the most recent fingerprint. Because dives are
