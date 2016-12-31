@@ -72,7 +72,7 @@ dctool_event_cb(dc_device_t *device,
 	(void)device;
 	(void)userdata;
 
-	if (verbose < 1)
+	if (verbose < 2)
 		return;
 
 	switch (event) {
