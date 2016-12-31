@@ -95,7 +95,7 @@ dive_cb(const unsigned char *data, unsigned int size,
 	/* Parse the dive data. */
 
 	rc = dctool_ss_output_write(divedata->output, 
-		parser, data, size, fingerprint, fsize);
+		parser, fingerprint, fsize);
 	if (rc != DC_STATUS_SUCCESS)
 		goto cleanup;
 

@@ -45,7 +45,6 @@ int		 dctool_cancel_cb(void *userdata);
 dctool_output_t *dctool_ss_output_new(dctool_units_t);
 dc_status_t	 dctool_ss_output_write(dctool_output_t *, 
 			dc_parser_t *, 
-			const unsigned char[], unsigned int, 
 			const unsigned char[], unsigned int);
 dc_status_t	 dctool_ss_output_free(dctool_output_t *);
 

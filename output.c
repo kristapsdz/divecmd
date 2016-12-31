@@ -117,7 +117,6 @@ error_exit:
 
 dc_status_t
 dctool_ss_output_write(dctool_output_t *abstract, dc_parser_t *parser, 
-	const unsigned char data[], unsigned int size, 
 	const unsigned char fingerprint[], unsigned int fsize)
 {
 	dctool_ss_output_t *output = (dctool_ss_output_t *)abstract;
@@ -134,9 +133,6 @@ dctool_ss_output_write(dctool_output_t *abstract, dc_parser_t *parser,
 	unsigned int	 ngases = 0;
 	unsigned int	 ntanks = 0;
 	unsigned int	 i;
-
-	(void)data;
-	(void)size;
 
 	memset(&sampledata, 0, sizeof(sample_data_t));
 	memset(&dt, 0, sizeof(dc_datetime_t));
