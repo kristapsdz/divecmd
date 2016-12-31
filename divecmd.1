@@ -65,6 +65,10 @@ In the default behaviour (i.e.,
 was not specified), the dive computer connected to
 .Ar device
 is opened and its contents downloaded and formatted as XML.
+.Pp
+.Em Be careful :
+many dive computers don't charge when connected to a computer.
+Plug it in, suck down your data, and unplug it as soon as possible.
 .Ss Output
 .Nm
 outputs an XML file describing the dive.
@@ -104,12 +108,13 @@ A unique, alphanumeric fingerprint for the dive.
 .Pp
 Cylinders used and the gas mix.
 Multiple cylinders are indicated by several entries.
-If the mix is regular air (\(gt20%, \(le22%), the mix is omitted.
+If the mix is regular air (>20%, <22%), the mix is omitted.
 .Pq Helium is not yet supported.
 .Bd -literal
       <divecomputer dctype="xxxx">
         <depth max="xxx" mean="yyy" />
 .Ed
+.Pp
 Now the information from the dive computer.
 First, the type of dive recorded.
 This can be
@@ -120,12 +125,11 @@ This can be
 .Li Opencircuit
 .Pq open-circuit standard diving ,
 .Li Closedcircuit
-.Pq closed-circuit rebreathing 
+.Pq closed-circuit rebreathing
 or
 .Li unknown .
 The mean depth is zero if it is not supported by your device.
 And now, the samples...
-.Pp
 .Bd -literal
         <sample time="mm:ss" depth="xx" temp="xx" />
 .Ed
