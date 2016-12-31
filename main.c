@@ -59,14 +59,14 @@ dctool_descriptor_search(dc_descriptor_t **out, const char *name)
 
 	rc = dc_descriptor_iterator(&iterator);
 	if (rc != DC_STATUS_SUCCESS) {
-		warnx("dc_descriptor_iterator: %s", dctool_errmsg(rc));
+		warnx("%s", dctool_errmsg(rc));
 		return(rc);
 	}
 
 	while ((rc = dc_iterator_next(iterator, &descriptor)) == 
 	       DC_STATUS_SUCCESS) {
-		vendor = dc_descriptor_get_vendor (descriptor);
-		product = dc_descriptor_get_product (descriptor);
+		vendor = dc_descriptor_get_vendor(descriptor);
+		product = dc_descriptor_get_product(descriptor);
 		n = strlen(vendor);
 
 		if (strncasecmp(name, vendor, n) == 0 && 
@@ -85,7 +85,7 @@ dctool_descriptor_search(dc_descriptor_t **out, const char *name)
 	if (rc != DC_STATUS_SUCCESS && rc != DC_STATUS_DONE) {
 		dc_descriptor_free(current);
 		dc_iterator_free(iterator);
-		warnx("dc_iterator_next: %s", dctool_errmsg(rc));
+		warnx("%s", dctool_errmsg(rc));
 		return(rc);
 	}
 
@@ -240,9 +240,11 @@ main(int argc, char *argv[])
 
 	/* Initialize a library context. */
 
-	status = dc_context_new (&context);
-	if (status != DC_STATUS_SUCCESS)
+	status = dc_context_new(&context);
+	if (status != DC_STATUS_SUCCESS) {
+		warnx("%s", dctool_errmsg(status));
 		goto cleanup;
+	}
 
 	/* Setup the logging. */
 
@@ -252,9 +254,10 @@ main(int argc, char *argv[])
 	if (0 == list) {
 		status = dctool_descriptor_search
 			(&descriptor, device);
-		if (status != DC_STATUS_SUCCESS) 
+		if (status != DC_STATUS_SUCCESS) {
+			warnx("%s", dctool_errmsg(status));
 			goto cleanup;
-		if (descriptor == NULL) {
+		} else if (descriptor == NULL) {
 			warnx("%s: not supported", device);
 			goto cleanup;
 		}
