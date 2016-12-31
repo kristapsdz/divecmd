@@ -105,10 +105,6 @@ dctool_ss_output_new(dctool_units_t units)
 	output->ostream = stdout;
 	output->units = units;
 
-	fputs("<?xml version=\"1.0\" encoding=\"UTF-8\" ?>\n"
-	      "<divelog program=\"divecmd\" version=\"0.0.1\">\n"
-	      "<dives>\n", output->ostream);
-
 	return((dctool_output_t *)output);
 
 error_exit:
@@ -129,10 +125,11 @@ dctool_ss_output_write(dctool_output_t *abstract, dc_parser_t *parser,
 	dc_divemode_t 	 divemode = DC_DIVEMODE_OC;
 	double maxdepth = 0.0, avgdepth = 0.0;
 	const char	*dm = NULL;
-	unsigned int divetime = 0;
-	unsigned int ngases = 0;
-	unsigned int ntanks = 0;
-	unsigned int i;
+	int		 rc = 0;
+	unsigned int	 divetime = 0;
+	unsigned int	 ngases = 0;
+	unsigned int	 ntanks = 0;
+	unsigned int	 i;
 
 	(void)data;
 	(void)size;
@@ -196,6 +193,10 @@ dctool_ss_output_write(dctool_output_t *abstract, dc_parser_t *parser,
 		else if (3 == divemode)
 			dm = "Closedcircuit";
 	}
+
+	fputs("<?xml version=\"1.0\" encoding=\"UTF-8\" ?>\n"
+	      "<divelog program=\"divecmd\" version=\"0.0.1\">\n"
+	      "<dives>\n", output->ostream);
 
 	fprintf(output->ostream, 
 		"<dive number=\"%u\" date=\"%04i-%02i-%02i\" "
@@ -269,10 +270,14 @@ dctool_ss_output_write(dctool_output_t *abstract, dc_parser_t *parser,
 	if (sampledata.nsamples)
 		fputs(" />\n", output->ostream);
 
+	rc = 1;
 cleanup:
 
-	fputs("</divecomputer>\n"
-	      "</dive>\n", output->ostream);
+	if (1 == rc)
+		fputs("</divecomputer>\n"
+		      "</dive>\n"
+		      "</dives>\n"
+	      	      "</divelog>\n", output->ostream);
 
 	return(DC_STATUS_SUCCESS);
 }
@@ -284,9 +289,6 @@ dctool_ss_output_free(dctool_output_t *abstract)
 
 	if (NULL == output)
 		return(DC_STATUS_SUCCESS);
-
-	fputs("</dives>\n"
-	      "</divelog\n", output->ostream);
 
 	fclose(output->ostream);
 	return(DC_STATUS_SUCCESS);
