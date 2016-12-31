@@ -105,6 +105,10 @@ dctool_ss_output_new(dctool_units_t units)
 	output->ostream = stdout;
 	output->units = units;
 
+	fputs("<?xml version=\"1.0\" encoding=\"UTF-8\" ?>\n"
+	      "<divelog program=\"divecmd\" version=\"0.0.1\">\n"
+	      "<dives>\n", output->ostream);
+
 	return((dctool_output_t *)output);
 
 error_exit:
@@ -194,10 +198,6 @@ dctool_ss_output_write(dctool_output_t *abstract, dc_parser_t *parser,
 			dm = "Closedcircuit";
 	}
 
-	fputs("<?xml version=\"1.0\" encoding=\"UTF-8\" ?>\n"
-	      "<divelog program=\"divecmd\" version=\"0.0.1\">\n"
-	      "<dives>\n", output->ostream);
-
 	fprintf(output->ostream, 
 		"<dive number=\"%u\" date=\"%04i-%02i-%02i\" "
 		       "time=\"%02i:%02i:%02i\" duration=\"%02u:%02u\">\n", 
@@ -275,9 +275,7 @@ cleanup:
 
 	if (1 == rc)
 		fputs("</divecomputer>\n"
-		      "</dive>\n"
-		      "</dives>\n"
-	      	      "</divelog>\n", output->ostream);
+		      "</dive>\n", output->ostream);
 
 	return(DC_STATUS_SUCCESS);
 }
@@ -289,6 +287,9 @@ dctool_ss_output_free(dctool_output_t *abstract)
 
 	if (NULL == output)
 		return(DC_STATUS_SUCCESS);
+
+	fputs("</dives>\n"
+      	      "</divelog>\n", output->ostream);
 
 	fclose(output->ostream);
 	return(DC_STATUS_SUCCESS);
