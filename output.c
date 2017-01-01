@@ -29,13 +29,13 @@
 #include "extern.h"
 
 struct	dcmd_full {
-	FILE		*ostream;
-	unsigned int	 number;
+	FILE		*ostream; /* output stream */
+	unsigned int	 number; /* dive number */
 };
 
 struct	dcmd_samp {
-	FILE		*ostream;
-	unsigned int	 nsamples;
+	FILE		*ostream; /* output stream */
+	unsigned int	 nsamples; /* num samples parsed */
 };
 
 static void
@@ -70,23 +70,18 @@ sample_cb(dc_sample_type_t type, dc_sample_value_t value, void *userdata)
 struct dcmd_out *
 output_full_new(void)
 {
-	struct dcmd_full *output = NULL;
+	struct dcmd_full *p = NULL;
 
-	output = malloc(sizeof(struct dcmd_full));
+	if (NULL == (p = malloc(sizeof(struct dcmd_full))))
+		err(EXIT_FAILURE, NULL);
 
-	if (output == NULL)
-		goto error_exit;
-
-	output->ostream = stdout;
+	p->ostream = stdout;
 
 	fputs("<?xml version=\"1.0\" encoding=\"UTF-8\" ?>\n"
 	      "<divelog program=\"divecmd\" version=\"0.0.1\">\n"
-	      "<dives>\n", output->ostream);
+	      "<dives>\n", p->ostream);
 
-	return((struct dcmd_out *)output);
-
-error_exit:
-	return(NULL);
+	return((struct dcmd_out *)p);
 }
 
 dc_status_t
