@@ -187,6 +187,9 @@ fingerprint_get(const char *device)
 	ssize_t		 ssz;
 	int		 fd = -1;
 
+	if (NULL == device)
+		return(NULL);
+
 	/* Escape device name as file. */
 
 	if (NULL == (cp = strdup(device)))
