@@ -38,7 +38,6 @@ __BEGIN_DECLS
 
 const char	*dctool_errmsg(dc_status_t status);
 void		 dctool_event_cb(dc_device_t *device, dc_event_type_t event, const void *data, void *userdata);
-dc_buffer_t	*dctool_convert_hex2bin(const char *str);
 int	 	 dctool_list_run(dc_context_t *context);
 int		 dctool_download_run(dc_context_t *, dc_descriptor_t *, const char *);
 int		 dctool_cancel_cb(void *userdata);

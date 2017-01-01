@@ -135,6 +135,49 @@ logfunc(dc_context_t *ctx, dc_loglevel_t loglevel,
 		warnx("%s: %s", loglevels[loglevel], msg);
 }
 
+#if 0
+static unsigned char
+hex2dec (unsigned char value)
+{
+	if (value >= '0' && value <= '9')
+		return value - '0';
+	else if (value >= 'A' && value <= 'F')
+		return value - 'A' + 10;
+	else if (value >= 'a' && value <= 'f')
+		return value - 'a' + 10;
+	else
+		return 0;
+}
+
+dc_buffer_t *
+dctool_convert_hex2bin (const char *str)
+{
+	size_t 		 nbytes = (str ? strlen (str) / 2 : 0);
+	unsigned int	 i;
+	unsigned char	 msn, lsn, byte;
+
+	/* Get the length of the fingerprint data. */
+
+	if (nbytes == 0)
+		return NULL;
+
+	/* Allocate a memory buffer. */
+
+	dc_buffer_t *buffer = dc_buffer_new (nbytes);
+
+	// Convert the hexadecimal string.
+	for (i = 0; i < nbytes; ++i) {
+		msn = hex2dec (str[i * 2 + 0]);
+		lsn = hex2dec (str[i * 2 + 1]);
+		byte = (msn << 4) + lsn;
+
+		dc_buffer_append (buffer, &byte, 1);
+	}
+
+	return buffer;
+}
+#endif
+
 static char *
 fingerprint_get(const char *device)
 {
