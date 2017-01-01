@@ -29,42 +29,22 @@
 
 #include "extern.h"
 
-typedef	struct dctool_ss_output_t {
-	FILE *ostream;
-	dctool_units_t units;
-	unsigned int number;
-} dctool_ss_output_t;
+struct	dcmd_full {
+	FILE		*ostream;
+	dctool_units_t	 units;
+	unsigned int	 number;
+};
 
-typedef struct sample_data_t {
-	FILE *ostream;
-	dctool_units_t units;
-	unsigned int nsamples;
-} sample_data_t;
-
-static double
-convert_depth(double value, dctool_units_t units)
-{
-
-	if (units == DCTOOL_UNITS_IMPERIAL)
-		return value / FEET;
-	else
-		return value;
-}
-
-static double
-convert_temperature(double value, dctool_units_t units)
-{
-
-	if (units == DCTOOL_UNITS_IMPERIAL)
-		return value * (9.0 / 5.0) + 32.0;
-	else
-		return value;
-}
+struct	dcmd_samp {
+	FILE		*ostream;
+	dctool_units_t	 units;
+	unsigned int	 nsamples;
+};
 
 static void
 sample_cb(dc_sample_type_t type, dc_sample_value_t value, void *userdata)
 {
-	sample_data_t *sampledata = (sample_data_t *)userdata;
+	struct dcmd_samp *sampledata = userdata;
 
 	if (DC_SAMPLE_EVENT == type)
 		return;
@@ -79,13 +59,11 @@ sample_cb(dc_sample_type_t type, dc_sample_value_t value, void *userdata)
 		break;
 	case DC_SAMPLE_DEPTH:
 		fprintf(sampledata->ostream, 
-			" depth=\"%.2f\"",
-			convert_depth(value.depth, DCTOOL_UNITS_METRIC));
+			" depth=\"%.2f\"", value.depth);
 		break;
 	case DC_SAMPLE_TEMPERATURE:
 		fprintf(sampledata->ostream, 
-			" temp=\"%.2f\"",
-			convert_temperature(value.temperature, DCTOOL_UNITS_METRIC));
+			" temp=\"%.2f\"", value.temperature);
 		break;
 	default:
 		break;
@@ -95,9 +73,9 @@ sample_cb(dc_sample_type_t type, dc_sample_value_t value, void *userdata)
 dctool_output_t *
 output_full_new(dctool_units_t units)
 {
-	dctool_ss_output_t *output = NULL;
+	struct dcmd_full *output = NULL;
 
-	output = malloc(sizeof(dctool_ss_output_t));
+	output = malloc(sizeof(struct dcmd_full));
 
 	if (output == NULL)
 		goto error_exit;
@@ -119,9 +97,9 @@ dc_status_t
 output_full_write(dctool_output_t *abstract, dc_parser_t *parser, 
 	const unsigned char fingerprint[], unsigned int fsize)
 {
-	dctool_ss_output_t *output = (dctool_ss_output_t *)abstract;
+	struct dcmd_full *output = (struct dcmd_full *)abstract;
 	dc_status_t status = DC_STATUS_SUCCESS;
-	sample_data_t	 sampledata;
+	struct dcmd_samp sampledata;
 	dc_datetime_t	 dt;
 	dc_gasmix_t 	 gasmix;
 	dc_tank_t 	 tank;
@@ -134,7 +112,7 @@ output_full_write(dctool_output_t *abstract, dc_parser_t *parser,
 	unsigned int	 ntanks = 0;
 	unsigned int	 i;
 
-	memset(&sampledata, 0, sizeof(sample_data_t));
+	memset(&sampledata, 0, sizeof(struct dcmd_samp));
 	memset(&dt, 0, sizeof(dc_datetime_t));
 	memset(&gasmix, 0, sizeof(dc_gasmix_t));
 	memset(&tank, 0, sizeof(dc_tank_t));
@@ -241,14 +219,11 @@ output_full_write(dctool_output_t *abstract, dc_parser_t *parser,
 		"<divecomputer dctype=\"%s\">\n", 
 		NULL == dm ? "unknown" : dm);
 
+	/* FIXME: remove "m". */
+
 	fprintf(output->ostream, 
-		"<depth max=\"%.2f %s\" mean=\"%.2f %s\" />\n", 
-		convert_depth(maxdepth, output->units),
-		DCTOOL_UNITS_IMPERIAL == output->units ?
-		"ft" : "m",
-		convert_depth(avgdepth, output->units),
-		DCTOOL_UNITS_IMPERIAL == output->units ?
-		"ft" : "m");
+		"<depth max=\"%.2f m\" mean=\"%.2f m\" />\n", 
+		maxdepth, avgdepth);
 
 	status = dc_parser_get_field(parser, DC_FIELD_TANK_COUNT, 0, &ntanks);
 	if (status != DC_STATUS_SUCCESS && 
@@ -279,7 +254,7 @@ cleanup:
 dc_status_t
 output_full_free(dctool_output_t *abstract)
 {
-	dctool_ss_output_t *output = (dctool_ss_output_t *)abstract;
+	struct dcmd_full *output = (struct dcmd_full *)abstract;
 
 	if (NULL == output)
 		return(DC_STATUS_SUCCESS);

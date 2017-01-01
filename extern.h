@@ -34,7 +34,7 @@ typedef enum dctool_units_t {
 	DCTOOL_UNITS_IMPERIAL
 } dctool_units_t;
 
-enum dcmd_out {
+enum	dcmd_out {
 	DC_OUTPUT_FULL,
 	DC_OUTPUT_LIST
 };
