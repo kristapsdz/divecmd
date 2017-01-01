@@ -36,15 +36,16 @@
 #include "extern.h"
 
 typedef struct event_data_t {
-	const char *cachedir;
+	const char	  *cachedir;
 	dc_event_devinfo_t devinfo;
 } event_data_t;
 
 typedef struct dive_data_t {
-	dc_device_t *device;
-	dc_buffer_t **fingerprint;
-	unsigned int number;
-	dctool_output_t *output;
+	dc_device_t	 *device;
+	dc_buffer_t	**fingerprint;
+	unsigned int 	  number;
+	enum dcmd_out 	  type;
+	dctool_output_t	 *output;
 } dive_data_t;
 
 static int
@@ -94,8 +95,17 @@ dive_cb(const unsigned char *data, unsigned int size,
 
 	/* Parse the dive data. */
 
-	rc = dctool_ss_output_write(divedata->output, 
-		parser, fingerprint, fsize);
+	switch (divedata->type) {
+	case (DC_OUTPUT_FULL):
+		rc = output_full_write(divedata->output, 
+			parser, fingerprint, fsize);
+		break;
+	case (DC_OUTPUT_LIST):
+		rc = output_list_write(divedata->output, 
+			parser, fingerprint, fsize);
+		break;
+	}
+
 	if (rc != DC_STATUS_SUCCESS)
 		goto cleanup;
 
@@ -130,8 +140,9 @@ event_cb(dc_device_t *device, dc_event_type_t event,
 }
 
 static dc_status_t
-download(dc_context_t *context, dc_descriptor_t *descriptor, 
-	const char *devname, dctool_output_t *output)
+parse(dc_context_t *context, dc_descriptor_t *descriptor, 
+	const char *devname, dctool_output_t *output,
+	enum dcmd_out type)
 {
 	dc_status_t	 rc = DC_STATUS_SUCCESS;
 	dc_device_t	*device = NULL;
@@ -182,6 +193,7 @@ download(dc_context_t *context, dc_descriptor_t *descriptor,
 	divedata.fingerprint = &ofingerprint;
 	divedata.number = 0;
 	divedata.output = output;
+	divedata.type = type;
 
 	/* Download the dives. */
 
@@ -198,22 +210,30 @@ cleanup:
 }
 
 int
-dctool_download_run(dc_context_t *context, 
-	dc_descriptor_t *descriptor, const char *udev)
+download(dc_context_t *context, dc_descriptor_t *descriptor, 
+	const char *udev, enum dcmd_out type)
 {
 	int		 exitcode = EXIT_FAILURE;
 	dc_status_t	 status = DC_STATUS_SUCCESS;
 	dctool_output_t	*output = NULL;
-	dctool_units_t	 units = DCTOOL_UNITS_METRIC;
 
 	/* Create the output. */
 
-	if (NULL == (output = dctool_ss_output_new(units)))
+	switch (type) {
+	case (DC_OUTPUT_FULL):
+		output = output_full_new(DCTOOL_UNITS_METRIC);
+		break;
+	default:
+		output = output_list_new();
+		break;
+	}
+
+	if (NULL == output)
 		goto cleanup;
 
-	/* Download the dives. */
+	/* Parse the dives. */
 
-	status = download(context, descriptor, udev, output);
+	status = parse(context, descriptor, udev, output, type);
 
 	if (status != DC_STATUS_SUCCESS) {
 		warnx("%s", dctool_errmsg(status));
@@ -223,6 +243,14 @@ dctool_download_run(dc_context_t *context,
 	exitcode = EXIT_SUCCESS;
 
 cleanup:
-	dctool_ss_output_free(output);
+	switch (type) {
+	case (DC_OUTPUT_FULL):
+		output_full_free(output);
+		break;
+	default:
+		output_list_free(output);
+		break;
+	}
+
 	return(exitcode);
 }

@@ -289,16 +289,20 @@ main(int argc, char *argv[])
 	const char	*udev = "/dev/ttyU0";
 	int 		 show = 0, ch;
 	char		*fprint;
+	enum dcmd_out	 out = DC_OUTPUT_FULL;
 
 #if defined(__OpenBSD__) && OpenBSD > 201510
 	if (-1 == pledge("stdio rpath", NULL))
 		err(EXIT_FAILURE, "pledge");
 #endif
 
-	while (-1 != (ch = getopt (argc, argv, "d:sv"))) {
+	while (-1 != (ch = getopt (argc, argv, "d:lsv"))) {
 		switch (ch) {
 		case 'd':
 			device = optarg;
+			break;
+		case 'l':
+			out = DC_OUTPUT_LIST;
 			break;
 		case 's':
 			show = 1;
@@ -352,8 +356,8 @@ main(int argc, char *argv[])
 		}
 	}
 
-	exitcode = show ? show_devices() :
-		dctool_download_run(context, descriptor, udev);
+	exitcode = show ? show_devices() : download
+		(context, descriptor, udev, out);
 
 cleanup:
 	dc_descriptor_free(descriptor);
