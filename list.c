@@ -33,44 +33,6 @@
 
 #include "extern.h"
 
-int
-dctool_list_run(dc_context_t *context)
-{
-	dc_iterator_t	*iter = NULL;
-	dc_descriptor_t *desc = NULL;
-	dc_status_t	 st;
-	const char	*vendor, *product;
-
-#if defined(__OpenBSD__) && OpenBSD > 201510
-	if (-1 == pledge("stdio", NULL))
-		err(EXIT_FAILURE, "pledge");
-#endif
-
-	(void)context;
-
-	if (DC_STATUS_SUCCESS != 
-	    (st = dc_descriptor_iterator(&iter))) {
-		warnx("%s", dctool_errmsg(st));
-		return(EXIT_FAILURE);
-	}
-
-	while (DC_STATUS_SUCCESS == 
-	       (st = dc_iterator_next(iter, &desc))) {
-		vendor = dc_descriptor_get_vendor(desc);
-		product = dc_descriptor_get_product(desc);
-		printf("%s %s\n", 
-			NULL == vendor ? "(none)" : vendor, 
-			NULL == product ? "(none)" : product);
-		dc_descriptor_free(desc);
-	}
-
-	/* We don't care about errors now. */
-
-	if (DC_STATUS_DONE != st)
-		warnx("%s", dctool_errmsg(st));
-
-	if (DC_STATUS_SUCCESS != (st = dc_iterator_free(iter)))
-		warnx("%s", dctool_errmsg(st));
-
-	return(EXIT_SUCCESS);
-}
+/* 
+ * This will soon contain the code for listing contents.
+ */
