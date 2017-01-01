@@ -38,9 +38,7 @@ output_list_new(void)
 {
 	struct dcmd_list *p;
 
-	p = malloc(sizeof(struct dcmd_list));
-
-	if (p == NULL)
+	if (NULL == (p = malloc(sizeof(struct dcmd_list))))
 		err(EXIT_FAILURE, NULL);
 		
 	p->ostream = stdout;

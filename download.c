@@ -228,9 +228,6 @@ download(dc_context_t *context, dc_descriptor_t *descriptor,
 		break;
 	}
 
-	if (NULL == output)
-		goto cleanup;
-
 	/* Parse the dives. */
 
 	status = parse(context, descriptor, udev, output, type);
