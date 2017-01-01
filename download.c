@@ -45,7 +45,7 @@ typedef struct dive_data_t {
 	dc_buffer_t	**fingerprint;
 	unsigned int 	  number;
 	enum dcmd_type 	  type;
-	dctool_output_t	 *output;
+	struct dcmd_out	 *output;
 } dive_data_t;
 
 static int
@@ -141,7 +141,7 @@ event_cb(dc_device_t *device, dc_event_type_t event,
 
 static dc_status_t
 parse(dc_context_t *context, dc_descriptor_t *descriptor, 
-	const char *devname, dctool_output_t *output,
+	const char *devname, struct dcmd_out *output,
 	enum dcmd_type type)
 {
 	dc_status_t	 rc = DC_STATUS_SUCCESS;
@@ -215,7 +215,7 @@ download(dc_context_t *context, dc_descriptor_t *descriptor,
 {
 	int		 exitcode = EXIT_FAILURE;
 	dc_status_t	 status = DC_STATUS_SUCCESS;
-	dctool_output_t	*output = NULL;
+	struct dcmd_out	*output = NULL;
 
 	/* Create the output. */
 

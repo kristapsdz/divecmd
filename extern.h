@@ -27,8 +27,7 @@
 #include <libdivecomputer/common.h>
 #include <libdivecomputer/parser.h>
 
-typedef struct dctool_output_t dctool_output_t;
-struct	dcmd_outarg;
+struct	dcmd_out;
 
 enum	dcmd_type {
 	DC_OUTPUT_FULL,
@@ -43,14 +42,14 @@ void		 dctool_event_cb(dc_device_t *,
 int		 download(dc_context_t *, dc_descriptor_t *, 
 			const char *, enum dcmd_type);
 
-dc_status_t	 output_list_free(dctool_output_t *);
-dctool_output_t *output_list_new(void);
-dc_status_t	 output_list_write(dctool_output_t *, dc_parser_t *, 
+dc_status_t	 output_list_free(struct dcmd_out *);
+struct dcmd_out *output_list_new(void);
+dc_status_t	 output_list_write(struct dcmd_out *, dc_parser_t *, 
 			const unsigned char[], unsigned int);
 
-dc_status_t	 output_full_free(dctool_output_t *);
-dctool_output_t *output_full_new(void);
-dc_status_t	 output_full_write(dctool_output_t *, dc_parser_t *, 
+dc_status_t	 output_full_free(struct dcmd_out *);
+struct dcmd_out *output_full_new(void);
+dc_status_t	 output_full_write(struct dcmd_out *, dc_parser_t *, 
 			const unsigned char[], unsigned int);
 
 int		 dctool_cancel_cb(void *userdata);
