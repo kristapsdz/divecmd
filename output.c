@@ -93,7 +93,7 @@ sample_cb(dc_sample_type_t type, dc_sample_value_t value, void *userdata)
 }
 
 dctool_output_t *
-dctool_ss_output_new(dctool_units_t units)
+output_full_new(dctool_units_t units)
 {
 	dctool_ss_output_t *output = NULL;
 
@@ -116,7 +116,7 @@ error_exit:
 }
 
 dc_status_t
-dctool_ss_output_write(dctool_output_t *abstract, dc_parser_t *parser, 
+output_full_write(dctool_output_t *abstract, dc_parser_t *parser, 
 	const unsigned char fingerprint[], unsigned int fsize)
 {
 	dctool_ss_output_t *output = (dctool_ss_output_t *)abstract;
@@ -277,7 +277,7 @@ cleanup:
 }
 
 dc_status_t
-dctool_ss_output_free(dctool_output_t *abstract)
+output_full_free(dctool_output_t *abstract)
 {
 	dctool_ss_output_t *output = (dctool_ss_output_t *)abstract;
 

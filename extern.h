@@ -34,17 +34,30 @@ typedef enum dctool_units_t {
 	DCTOOL_UNITS_IMPERIAL
 } dctool_units_t;
 
+enum dcmd_out {
+	DC_OUTPUT_FULL,
+	DC_OUTPUT_LIST
+};
+
 __BEGIN_DECLS
 
-const char	*dctool_errmsg(dc_status_t status);
-void		 dctool_event_cb(dc_device_t *device, dc_event_type_t event, const void *data, void *userdata);
-int		 dctool_download_run(dc_context_t *, dc_descriptor_t *, const char *);
-int		 dctool_cancel_cb(void *userdata);
-dctool_output_t *dctool_ss_output_new(dctool_units_t);
-dc_status_t	 dctool_ss_output_write(dctool_output_t *, 
-			dc_parser_t *, 
+const char	*dctool_errmsg(dc_status_t);
+void		 dctool_event_cb(dc_device_t *, 
+			dc_event_type_t, const void *, void *);
+int		 download(dc_context_t *, dc_descriptor_t *, 
+			const char *, enum dcmd_out);
+
+dc_status_t	 output_list_free(dctool_output_t *);
+dctool_output_t *output_list_new(void);
+dc_status_t	 output_list_write(dctool_output_t *, dc_parser_t *, 
 			const unsigned char[], unsigned int);
-dc_status_t	 dctool_ss_output_free(dctool_output_t *);
+
+dc_status_t	 output_full_free(dctool_output_t *);
+dctool_output_t *output_full_new(dctool_units_t);
+dc_status_t	 output_full_write(dctool_output_t *, dc_parser_t *, 
+			const unsigned char[], unsigned int);
+
+int		 dctool_cancel_cb(void *userdata);
 
 extern int	 verbose;
 
