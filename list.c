@@ -50,7 +50,7 @@ dctool_list_run(dc_context_t *context)
 
 	if (DC_STATUS_SUCCESS != 
 	    (st = dc_descriptor_iterator(&iter))) {
-		warnx("dc_descriptor_iterator: %s", dctool_errmsg(st));
+		warnx("%s", dctool_errmsg(st));
 		return(EXIT_FAILURE);
 	}
 
@@ -67,10 +67,10 @@ dctool_list_run(dc_context_t *context)
 	/* We don't care about errors now. */
 
 	if (DC_STATUS_DONE != st)
-		warnx("dc_iterator_next: %s", dctool_errmsg(st));
+		warnx("%s", dctool_errmsg(st));
 
 	if (DC_STATUS_SUCCESS != (st = dc_iterator_free(iter)))
-		warnx("dc_iterator_free: %s", dctool_errmsg(st));
+		warnx("%s", dctool_errmsg(st));
 
 	return(EXIT_SUCCESS);
 }
