@@ -289,7 +289,7 @@ main(int argc, char *argv[])
 	const char	*udev = "/dev/ttyU0";
 	int 		 show = 0, ch;
 	char		*fprint;
-	enum dcmd_type	 out = DC_OUTPUT_FULL;
+	enum dcmd_type	 out = DC_OUTPUT_XML;
 
 #if defined(__OpenBSD__) && OpenBSD > 201510
 	if (-1 == pledge("stdio rpath", NULL))

@@ -28,7 +28,7 @@
 
 #include "extern.h"
 
-struct	dcmd_full {
+struct	dcmd_xml {
 	FILE		*ostream; /* output stream */
 	unsigned int	 number; /* dive number */
 };
@@ -68,11 +68,11 @@ sample_cb(dc_sample_type_t type, dc_sample_value_t value, void *userdata)
 }
 
 struct dcmd_out *
-output_full_new(void)
+output_xml_new(void)
 {
-	struct dcmd_full *p = NULL;
+	struct dcmd_xml *p = NULL;
 
-	if (NULL == (p = malloc(sizeof(struct dcmd_full))))
+	if (NULL == (p = malloc(sizeof(struct dcmd_xml))))
 		err(EXIT_FAILURE, NULL);
 
 	p->ostream = stdout;
@@ -85,10 +85,10 @@ output_full_new(void)
 }
 
 dc_status_t
-output_full_write(struct dcmd_out *abstract, dc_parser_t *parser, 
+output_xml_write(struct dcmd_out *abstract, dc_parser_t *parser, 
 	const unsigned char fingerprint[], unsigned int fsize)
 {
-	struct dcmd_full *output = (struct dcmd_full *)abstract;
+	struct dcmd_xml *output = (struct dcmd_xml *)abstract;
 	dc_status_t status = DC_STATUS_SUCCESS;
 	struct dcmd_samp sampledata;
 	dc_datetime_t	 dt;
@@ -242,9 +242,9 @@ cleanup:
 }
 
 dc_status_t
-output_full_free(struct dcmd_out *abstract)
+output_xml_free(struct dcmd_out *abstract)
 {
-	struct dcmd_full *output = (struct dcmd_full *)abstract;
+	struct dcmd_xml *output = (struct dcmd_xml *)abstract;
 
 	if (NULL == output)
 		return(DC_STATUS_SUCCESS);

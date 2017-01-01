@@ -30,7 +30,7 @@
 struct	dcmd_out;
 
 enum	dcmd_type {
-	DC_OUTPUT_FULL,
+	DC_OUTPUT_XML,
 	DC_OUTPUT_LIST
 };
 
@@ -47,9 +47,9 @@ struct dcmd_out *output_list_new(void);
 dc_status_t	 output_list_write(struct dcmd_out *, dc_parser_t *, 
 			const unsigned char[], unsigned int);
 
-dc_status_t	 output_full_free(struct dcmd_out *);
-struct dcmd_out *output_full_new(void);
-dc_status_t	 output_full_write(struct dcmd_out *, dc_parser_t *, 
+dc_status_t	 output_xml_free(struct dcmd_out *);
+struct dcmd_out *output_xml_new(void);
+dc_status_t	 output_xml_write(struct dcmd_out *, dc_parser_t *, 
 			const unsigned char[], unsigned int);
 
 int		 dctool_cancel_cb(void *userdata);

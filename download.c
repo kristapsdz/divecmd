@@ -22,6 +22,7 @@
 # include <sys/param.h>
 #endif
 
+#include <assert.h>
 #include <err.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -96,8 +97,8 @@ dive_cb(const unsigned char *data, unsigned int size,
 	/* Parse the dive data. */
 
 	switch (divedata->type) {
-	case (DC_OUTPUT_FULL):
-		rc = output_full_write(divedata->output, 
+	case (DC_OUTPUT_XML):
+		rc = output_xml_write(divedata->output, 
 			parser, fingerprint, fsize);
 		break;
 	case (DC_OUTPUT_LIST):
@@ -220,8 +221,8 @@ download(dc_context_t *context, dc_descriptor_t *descriptor,
 	/* Create the output. */
 
 	switch (type) {
-	case (DC_OUTPUT_FULL):
-		output = output_full_new();
+	case (DC_OUTPUT_XML):
+		output = output_xml_new();
 		break;
 	default:
 		output = output_list_new();
@@ -230,6 +231,7 @@ download(dc_context_t *context, dc_descriptor_t *descriptor,
 
 	/* Parse the dives. */
 
+	assert(NULL != output);
 	status = parse(context, descriptor, udev, output, type);
 
 	if (status != DC_STATUS_SUCCESS) {
@@ -238,11 +240,10 @@ download(dc_context_t *context, dc_descriptor_t *descriptor,
 	}
 
 	exitcode = EXIT_SUCCESS;
-
 cleanup:
 	switch (type) {
-	case (DC_OUTPUT_FULL):
-		output_full_free(output);
+	case (DC_OUTPUT_XML):
+		output_xml_free(output);
 		break;
 	default:
 		output_list_free(output);
