@@ -1,7 +1,7 @@
 .PHONY: clean
 
 LDFLAGS		+= -L/usr/local/lib -ldivecomputer
-CFLAGS		+= -g -I/usr/local/include -std=c99 -W -Wall
+CFLAGS		+= -g -I/usr/local/include -W -Wall
 OBJS		 = common.o \
 		   main.o \
 		   download.o \
