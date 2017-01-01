@@ -6,7 +6,7 @@ OBJS		 = common.o \
 		   main.o \
 		   download.o \
 		   list.o \
-		   output.o
+		   xml.o
 
 divecmd: $(OBJS)
 	$(CC) -o $@ $(OBJS) $(LDFLAGS) 
