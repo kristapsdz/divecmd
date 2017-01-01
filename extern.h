@@ -38,7 +38,6 @@ __BEGIN_DECLS
 
 const char	*dctool_errmsg(dc_status_t status);
 void		 dctool_event_cb(dc_device_t *device, dc_event_type_t event, const void *data, void *userdata);
-int	 	 dctool_list_run(dc_context_t *context);
 int		 dctool_download_run(dc_context_t *, dc_descriptor_t *, const char *);
 int		 dctool_cancel_cb(void *userdata);
 dctool_output_t *dctool_ss_output_new(dctool_units_t);

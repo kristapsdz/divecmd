@@ -94,6 +94,49 @@ dctool_descriptor_search(dc_descriptor_t **out, const char *name)
 	return DC_STATUS_SUCCESS;
 }
 
+/*
+ * Iterate over all devices supported by libdivecomputer.
+ */
+static int
+show_devices(void)
+{
+	dc_iterator_t	*iter = NULL;
+	dc_descriptor_t *desc = NULL;
+	dc_status_t	 st;
+	const char	*vendor, *product;
+
+#if defined(__OpenBSD__) && OpenBSD > 201510
+	if (-1 == pledge("stdio", NULL))
+		err(EXIT_FAILURE, "pledge");
+#endif
+
+	if (DC_STATUS_SUCCESS != 
+	    (st = dc_descriptor_iterator(&iter))) {
+		warnx("%s", dctool_errmsg(st));
+		return(EXIT_FAILURE);
+	}
+
+	while (DC_STATUS_SUCCESS == 
+	       (st = dc_iterator_next(iter, &desc))) {
+		vendor = dc_descriptor_get_vendor(desc);
+		product = dc_descriptor_get_product(desc);
+		printf("%s %s\n", 
+			NULL == vendor ? "(none)" : vendor, 
+			NULL == product ? "(none)" : product);
+		dc_descriptor_free(desc);
+	}
+
+	/* We don't care about errors now. */
+
+	if (DC_STATUS_DONE != st)
+		warnx("%s", dctool_errmsg(st));
+
+	if (DC_STATUS_SUCCESS != (st = dc_iterator_free(iter)))
+		warnx("%s", dctool_errmsg(st));
+
+	return(EXIT_SUCCESS);
+}
+
 int
 dctool_cancel_cb(void *dat)
 {
@@ -309,8 +352,7 @@ main(int argc, char *argv[])
 		}
 	}
 
-	exitcode = show ?
-		dctool_list_run(context) :
+	exitcode = show ? show_devices() :
 		dctool_download_run(context, descriptor, udev);
 
 cleanup:
