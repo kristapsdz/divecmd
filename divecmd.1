@@ -26,7 +26,7 @@
 .Sh SYNOPSIS
 .Nm divecmd
 .Op Fl v
-.Fl l
+.Fl s
 .Nm divecmd
 .Op Fl v
 .Fl d Ar computer
@@ -47,8 +47,8 @@ Increase verbosity.
 One more, emits informational messages.
 Twice, debugging messages.
 Three times, inundation.
-.It Fl l
-Lists all known device computers instead of trying to download data.
+.It Fl s
+Shows all known device computers instead of trying to download data.
 .It Fl d Ar computer
 The case-insensitive full vendor and product, e.g.,
 .Dq suunto d6i
@@ -61,7 +61,7 @@ conflict.
 .El
 .Pp
 In the default behaviour (i.e.,
-.Fl l
+.Fl s
 was not specified), the dive computer connected to
 .Ar device
 is opened and its contents downloaded and formatted as XML.
