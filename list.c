@@ -33,7 +33,7 @@ struct	dcmd_list {
 	unsigned int	 number;
 };
 
-dctool_output_t *
+struct dcmd_out *
 output_list_new(void)
 {
 	struct dcmd_list *p;
@@ -44,11 +44,11 @@ output_list_new(void)
 		err(EXIT_FAILURE, NULL);
 		
 	p->ostream = stdout;
-	return((dctool_output_t *)p);
+	return((struct dcmd_out *)p);
 }
 
 dc_status_t
-output_list_write(dctool_output_t *abstract, dc_parser_t *parser, 
+output_list_write(struct dcmd_out *abstract, dc_parser_t *parser, 
 	const unsigned char fingerprint[], unsigned int fsize)
 {
 	struct dcmd_list *output = (struct dcmd_list *)abstract;
@@ -130,7 +130,7 @@ cleanup:
 }
 
 dc_status_t
-output_list_free(dctool_output_t *abstract)
+output_list_free(struct dcmd_out *abstract)
 {
 	struct dcmd_list *output = (struct dcmd_list *)abstract;
 

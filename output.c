@@ -67,7 +67,7 @@ sample_cb(dc_sample_type_t type, dc_sample_value_t value, void *userdata)
 	}
 }
 
-dctool_output_t *
+struct dcmd_out *
 output_full_new(void)
 {
 	struct dcmd_full *output = NULL;
@@ -83,14 +83,14 @@ output_full_new(void)
 	      "<divelog program=\"divecmd\" version=\"0.0.1\">\n"
 	      "<dives>\n", output->ostream);
 
-	return((dctool_output_t *)output);
+	return((struct dcmd_out *)output);
 
 error_exit:
 	return(NULL);
 }
 
 dc_status_t
-output_full_write(dctool_output_t *abstract, dc_parser_t *parser, 
+output_full_write(struct dcmd_out *abstract, dc_parser_t *parser, 
 	const unsigned char fingerprint[], unsigned int fsize)
 {
 	struct dcmd_full *output = (struct dcmd_full *)abstract;
@@ -247,7 +247,7 @@ cleanup:
 }
 
 dc_status_t
-output_full_free(dctool_output_t *abstract)
+output_full_free(struct dcmd_out *abstract)
 {
 	struct dcmd_full *output = (struct dcmd_full *)abstract;
 
