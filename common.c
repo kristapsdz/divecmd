@@ -27,31 +27,32 @@
 const char *
 dctool_errmsg(dc_status_t status)
 {
+
 	switch (status) {
 	case DC_STATUS_SUCCESS:
-		return "Success";
+		return "success";
 	case DC_STATUS_UNSUPPORTED:
-		return "Unsupported operation";
+		return "unsupported operation";
 	case DC_STATUS_INVALIDARGS:
-		return "Invalid arguments";
+		return "invalid arguments";
 	case DC_STATUS_NOMEMORY:
-		return "Out of memory";
+		return "out of memory";
 	case DC_STATUS_NODEVICE:
-		return "No device found";
+		return "no device found";
 	case DC_STATUS_NOACCESS:
-		return "Access denied";
+		return "access denied";
 	case DC_STATUS_IO:
-		return "Input/output error";
+		return "input/output error";
 	case DC_STATUS_TIMEOUT:
-		return "Timeout";
+		return "timeout";
 	case DC_STATUS_PROTOCOL:
-		return "Protocol error";
+		return "protocol error";
 	case DC_STATUS_DATAFORMAT:
-		return "Data format error";
+		return "data format error";
 	case DC_STATUS_CANCELLED:
-		return "Cancelled";
+		return "cancelled";
 	default:
-		return "Unknown error";
+		return "unknown error";
 	}
 }
 
