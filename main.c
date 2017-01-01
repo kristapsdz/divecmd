@@ -244,7 +244,7 @@ main(int argc, char *argv[])
 	dc_loglevel_t 	 loglevel = DC_LOGLEVEL_WARNING;
 	const char 	*device = NULL;
 	const char	*udev = "/dev/ttyU0";
-	int 		 list = 0, ch;
+	int 		 show = 0, ch;
 	char		*fprint;
 
 #if defined(__OpenBSD__) && OpenBSD > 201510
@@ -252,13 +252,13 @@ main(int argc, char *argv[])
 		err(EXIT_FAILURE, "pledge");
 #endif
 
-	while (-1 != (ch = getopt (argc, argv, "d:lv"))) {
+	while (-1 != (ch = getopt (argc, argv, "d:sv"))) {
 		switch (ch) {
 		case 'd':
 			device = optarg;
 			break;
-		case 'l':
-			list = 1;
+		case 's':
+			show = 1;
 			break;
 		case 'v':
 			if (verbose)
@@ -273,9 +273,9 @@ main(int argc, char *argv[])
 	argc -= optind;
 	argv += optind;
 
-	if (0 == list && NULL == device)
+	if (0 == show && NULL == device)
 		goto usage;
-	else if (0 == list && argc)
+	else if (0 == show && argc)
 		udev = argv[0];
 
 	fprint = fingerprint_get(device);
@@ -297,7 +297,7 @@ main(int argc, char *argv[])
 	dc_context_set_loglevel(context, loglevel);
 	dc_context_set_logfunc(context, logfunc, NULL);
 
-	if (0 == list) {
+	if (0 == show) {
 		status = dctool_descriptor_search
 			(&descriptor, device);
 		if (status != DC_STATUS_SUCCESS) {
@@ -309,7 +309,7 @@ main(int argc, char *argv[])
 		}
 	}
 
-	exitcode = list ?
+	exitcode = show ?
 		dctool_list_run(context) :
 		dctool_download_run(context, descriptor, udev);
 
@@ -320,7 +320,7 @@ cleanup:
 	return(exitcode);
 usage:
 	fprintf(stderr, "usage: %s [-v] [-d computer] [device]\n"
-			"       %s [-v] -l\n",
+			"       %s [-v] -s\n",
 			getprogname(), getprogname());
 	return(EXIT_FAILURE);
 }
