@@ -23,7 +23,6 @@
 #include <string.h>
 #include <stdio.h>
 
-#include <libdivecomputer/units.h>
 #include <libdivecomputer/common.h>
 #include <libdivecomputer/parser.h>
 
@@ -31,13 +30,11 @@
 
 struct	dcmd_full {
 	FILE		*ostream;
-	dctool_units_t	 units;
 	unsigned int	 number;
 };
 
 struct	dcmd_samp {
 	FILE		*ostream;
-	dctool_units_t	 units;
 	unsigned int	 nsamples;
 };
 
@@ -71,7 +68,7 @@ sample_cb(dc_sample_type_t type, dc_sample_value_t value, void *userdata)
 }
 
 dctool_output_t *
-output_full_new(dctool_units_t units)
+output_full_new(void)
 {
 	struct dcmd_full *output = NULL;
 
@@ -81,7 +78,6 @@ output_full_new(dctool_units_t units)
 		goto error_exit;
 
 	output->ostream = stdout;
-	output->units = units;
 
 	fputs("<?xml version=\"1.0\" encoding=\"UTF-8\" ?>\n"
 	      "<divelog program=\"divecmd\" version=\"0.0.1\">\n"
@@ -118,7 +114,6 @@ output_full_write(dctool_output_t *abstract, dc_parser_t *parser,
 	memset(&tank, 0, sizeof(dc_tank_t));
 
 	sampledata.ostream = output->ostream;
-	sampledata.units = output->units;
 
 	/* Parse date and time of dive. */
 

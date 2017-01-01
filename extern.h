@@ -28,13 +28,9 @@
 #include <libdivecomputer/parser.h>
 
 typedef struct dctool_output_t dctool_output_t;
+struct	dcmd_outarg;
 
-typedef enum dctool_units_t {
-	DCTOOL_UNITS_METRIC,
-	DCTOOL_UNITS_IMPERIAL
-} dctool_units_t;
-
-enum	dcmd_out {
+enum	dcmd_type {
 	DC_OUTPUT_FULL,
 	DC_OUTPUT_LIST
 };
@@ -45,7 +41,7 @@ const char	*dctool_errmsg(dc_status_t);
 void		 dctool_event_cb(dc_device_t *, 
 			dc_event_type_t, const void *, void *);
 int		 download(dc_context_t *, dc_descriptor_t *, 
-			const char *, enum dcmd_out);
+			const char *, enum dcmd_type);
 
 dc_status_t	 output_list_free(dctool_output_t *);
 dctool_output_t *output_list_new(void);
@@ -53,7 +49,7 @@ dc_status_t	 output_list_write(dctool_output_t *, dc_parser_t *,
 			const unsigned char[], unsigned int);
 
 dc_status_t	 output_full_free(dctool_output_t *);
-dctool_output_t *output_full_new(dctool_units_t);
+dctool_output_t *output_full_new(void);
 dc_status_t	 output_full_write(dctool_output_t *, dc_parser_t *, 
 			const unsigned char[], unsigned int);
 
