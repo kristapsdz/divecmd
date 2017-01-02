@@ -3,8 +3,11 @@
 *divecmd* drives [libdivecomputer](http://www.libdivecomputer.org) to
 extract the contents of your dive computer in a safe, simple manner.
 
-**It is still in the earliest phases, and is tailored mostly to my dive
-computer, a [Suunto D6i](http://www.suunto.com/en-US/Products/Dive-Computers-and-Instruments/Suunto-D6i-Novo/Suunto-D6i-Novo-Black/).**
+**It is still in the earliest phases, and is tailored mostly to my our
+computers, a [Suunto
+D6i](http://www.suunto.com/en-US/Products/Dive-Computers-and-Instruments/Suunto-D6i-Novo/Suunto-D6i-Novo-Black/)
+and a [Heinrichs Weikamp OSTC
+2](http://heinrichsweikamp.com/ostc2.html).**
 I welcome being sent on dives with another dive computer for better
 support...
 
