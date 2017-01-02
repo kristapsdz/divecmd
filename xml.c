@@ -30,7 +30,6 @@
 
 struct	dcmd_xml {
 	FILE		*ostream; /* output stream */
-	unsigned int	 number; /* dive number */
 };
 
 struct	dcmd_samp {
@@ -38,13 +37,39 @@ struct	dcmd_samp {
 	unsigned int	 nsamples; /* num samples parsed */
 };
 
+static	const char *dcmd_events[] = {
+	"none", 
+	"deco", 
+	"rbt", 
+	"ascent", 
+	"ceiling", 
+	"workload", 
+	"transmitter", 
+	"violation", 
+	"bookmark", 
+	"surface", 
+	"safety stop", 
+	"gaschange",
+	"safety stop (voluntary)", 
+	"safety stop (mandatory)", 
+	"deepstop",
+	"ceiling (safety stop)", 
+	"floor", 
+	"divetime", 
+	"maxdepth",
+	"OLF", 
+	"PO2", 
+	"airtime", 
+	"rgbm", 
+	"heading", 
+	"tissue level warning",
+	"gaschange2"
+};
+
 static void
 sample_cb(dc_sample_type_t type, dc_sample_value_t value, void *userdata)
 {
 	struct dcmd_samp *sampledata = userdata;
-
-	if (DC_SAMPLE_EVENT == type)
-		return;
 
 	switch (type) {
 	case DC_SAMPLE_TIME:
@@ -63,6 +88,8 @@ sample_cb(dc_sample_type_t type, dc_sample_value_t value, void *userdata)
 			" temp=\"%.2f\"", value.temperature);
 		break;
 	default:
+		fprintf(stderr, "unhandled type: %s\n",
+			dcmd_events[type]);
 		break;
 	}
 }
@@ -85,8 +112,8 @@ output_xml_new(void)
 }
 
 dc_status_t
-output_xml_write(struct dcmd_out *abstract, dc_parser_t *parser, 
-	const unsigned char fingerprint[], unsigned int fsize)
+output_xml_write(struct dcmd_out *abstract, 
+	size_t num, dc_parser_t *parser, const char *fpr)
 {
 	struct dcmd_xml *output = (struct dcmd_xml *)abstract;
 	dc_status_t status = DC_STATUS_SUCCESS;
@@ -163,19 +190,13 @@ output_xml_write(struct dcmd_out *abstract, dc_parser_t *parser,
 	}
 
 	fprintf(output->ostream, 
-		"<dive number=\"%u\" date=\"%04i-%02i-%02i\" "
+		"<dive number=\"%zu\" date=\"%04i-%02i-%02i\" "
 		       "time=\"%02i:%02i:%02i\" duration=\"%02u:%02u\">\n", 
-		       output->number,
-		       dt.year, dt.month, dt.day,
+		       num, dt.year, dt.month, dt.day,
 		       dt.hour, dt.minute, dt.second,
 		       divetime / 60, divetime % 60);
 
-	if (fingerprint) {
-		fprintf(output->ostream, "<fingerprint>");
-		for (i = 0; i < fsize; ++i)
-			fprintf (output->ostream, "%02X", fingerprint[i]);
-		fprintf(output->ostream, "</fingerprint>\n");
-	}
+	fprintf(output->ostream, "<fingerprint>%s</fingerprint>\n", fpr);
 
 	status = dc_parser_get_field(parser, DC_FIELD_GASMIX_COUNT, 0, &ngases);
 

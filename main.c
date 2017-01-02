@@ -23,9 +23,11 @@
 #endif
 #include <sys/stat.h>
 
+#include <assert.h>
 #include <ctype.h>
 #include <err.h>
 #include <fcntl.h>
+#include <limits.h>
 #include <signal.h>
 #include <stdlib.h>
 #include <stdio.h>
@@ -178,26 +180,12 @@ logfunc(dc_context_t *ctx, dc_loglevel_t loglevel,
 		warnx("%s: %s", loglevels[loglevel], msg);
 }
 
-#if 0
-static unsigned char
-hex2dec (unsigned char value)
+static dc_buffer_t *
+hex2bin(const char *str)
 {
-	if (value >= '0' && value <= '9')
-		return value - '0';
-	else if (value >= 'A' && value <= 'F')
-		return value - 'A' + 10;
-	else if (value >= 'a' && value <= 'f')
-		return value - 'a' + 10;
-	else
-		return 0;
-}
-
-dc_buffer_t *
-dctool_convert_hex2bin (const char *str)
-{
-	size_t 		 nbytes = (str ? strlen (str) / 2 : 0);
-	unsigned int	 i;
-	unsigned char	 msn, lsn, byte;
+	size_t 		 i, nbytes = (str ? strlen (str) / 2 : 0);
+	unsigned int	 in;
+	unsigned char	 byte;
 
 	/* Get the length of the fingerprint data. */
 
@@ -208,25 +196,24 @@ dctool_convert_hex2bin (const char *str)
 
 	dc_buffer_t *buffer = dc_buffer_new (nbytes);
 
-	// Convert the hexadecimal string.
-	for (i = 0; i < nbytes; ++i) {
-		msn = hex2dec (str[i * 2 + 0]);
-		lsn = hex2dec (str[i * 2 + 1]);
-		byte = (msn << 4) + lsn;
-
-		dc_buffer_append (buffer, &byte, 1);
+	for (i = 0; i < nbytes; i++) {
+		sscanf(&str[i * 2], "%02X", &in);
+		assert(in <= UCHAR_MAX);
+		byte = in;
+		dc_buffer_append(buffer, &byte, 1);
 	}
 
 	return buffer;
 }
-#endif
 
-static char *
+static dc_buffer_t *
 fingerprint_get(const char *device)
 {
-	char		*cp, *ccp, *file, *res = NULL;
+	char		*cp, *ccp, *file;
+	char		 buf[1024];
+	dc_buffer_t	*res = NULL;
 	struct stat	 st;
-	size_t		 i, sz;
+	size_t		 sz;
 	ssize_t		 ssz;
 	int		 fd = -1;
 
@@ -253,18 +240,20 @@ fingerprint_get(const char *device)
 	/* Copy the entire file (fingerprint) into buffer. */
 
 	sz = st.st_size;
-	res = malloc(sz + 1);
-	res[sz] = '\0';
 
-	if (-1 == (ssz = read(fd, res, sz)))
-		err(EXIT_FAILURE, "%s", file);
-	else if ((size_t)ssz != sz)
-		errx(EXIT_FAILURE, "%s: short read", file);
+	if (NULL == (res = dc_buffer_new(sz)))
+		err(EXIT_FAILURE, NULL);
 
-	for (i = 0; i < sz; i++)
-		if ( ! isalnum((int)res[i]))
-			errx(EXIT_FAILURE, "%s: bad print", file);
+	for (;;) {
+		if (-1 == (ssz = read(fd, buf, sizeof(buf))))
+			err(EXIT_FAILURE, "%s", file);
+		else if (0 == ssz)
+			break;
+		if ( ! dc_buffer_append(res, buf, ssz))
+			err(EXIT_FAILURE, NULL);
+	}
 
+	/* Clean up descriptors and temporary memory. */
 out:
 	if (NULL != res && verbose > 0)
 		fprintf(stderr, "%s: good fingerprint\n", file);
@@ -285,10 +274,10 @@ main(int argc, char *argv[])
 	dc_context_t	*context = NULL;
 	dc_descriptor_t *descriptor = NULL;
 	dc_loglevel_t 	 loglevel = DC_LOGLEVEL_WARNING;
-	const char 	*device = NULL;
+	const char 	*device = NULL, *ofp = NULL;
 	const char	*udev = "/dev/ttyU0";
 	int 		 show = 0, ch;
-	char		*fprint;
+	dc_buffer_t	*fprint = NULL, *ofprint = NULL;
 	enum dcmd_type	 out = DC_OUTPUT_XML;
 
 #if defined(__OpenBSD__) && OpenBSD > 201510
@@ -296,10 +285,13 @@ main(int argc, char *argv[])
 		err(EXIT_FAILURE, "pledge");
 #endif
 
-	while (-1 != (ch = getopt (argc, argv, "d:lsv"))) {
+	while (-1 != (ch = getopt (argc, argv, "d:f:lsv"))) {
 		switch (ch) {
 		case 'd':
 			device = optarg;
+			break;
+		case 'f':
+			ofp = optarg;
 			break;
 		case 'l':
 			out = DC_OUTPUT_LIST;
@@ -324,6 +316,11 @@ main(int argc, char *argv[])
 		goto usage;
 	else if (0 == show && argc)
 		udev = argv[0];
+
+	/* Convert fingerprints into binary. */
+
+	if (NULL != ofp)
+		ofprint = hex2bin(ofp);
 
 	fprint = fingerprint_get(device);
 
@@ -357,7 +354,7 @@ main(int argc, char *argv[])
 	}
 
 	exitcode = show ? show_devices() : download
-		(context, descriptor, udev, out);
+		(context, descriptor, udev, out, fprint, ofprint);
 
 cleanup:
 	dc_descriptor_free(descriptor);
@@ -365,7 +362,7 @@ cleanup:
 	free(fprint);
 	return(exitcode);
 usage:
-	fprintf(stderr, "usage: %s [-v] [-d computer] [device]\n"
+	fprintf(stderr, "usage: %s [-v] [-d computer] [-f fingerprint] [device]\n"
 			"       %s [-v] -s\n",
 			getprogname(), getprogname());
 	return(EXIT_FAILURE);
