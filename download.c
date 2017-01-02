@@ -42,33 +42,39 @@ typedef struct event_data_t {
 } event_data_t;
 
 typedef struct dive_data_t {
-	dc_device_t	 *device;
-	dc_buffer_t	**fingerprint;
-	unsigned int 	  number;
-	enum dcmd_type 	  type;
-	struct dcmd_out	 *output;
+	dc_device_t	 *device; /* device */
+	dc_buffer_t	**fingerprint; /* first fingerprint */
+	dc_buffer_t	 *ofp; /* only this fingerprint */
+	size_t	  	  number; /* dive number, from 1 */
+	enum dcmd_type 	  type; /* type of output */
+	struct dcmd_out	 *output; /* output handler */
 } dive_data_t;
 
 static int
 dive_cb(const unsigned char *data, unsigned int size, 
-	const unsigned char *fingerprint, 
-	unsigned int fsize, void *userdata)
+	const unsigned char *fpr, unsigned int fprsz, 
+	void *userdata)
 {
-	dive_data_t	*divedata = userdata;
+	dive_data_t	*dd = userdata;
 	dc_status_t	 rc = DC_STATUS_SUCCESS;
 	dc_parser_t	*parser = NULL;
 	dc_buffer_t	*fp;
 	unsigned int	 i;
+	char		*fpbuf = NULL;
+	int		 retc = 0;
 
-	divedata->number++;
+	dd->number++;
 
-	if (verbose) {
-		fprintf(stderr, "Dive: number=%u, size=%u, fingerprint=", 
-			divedata->number, size);
-		for (i = 0; i < fsize; ++i)
-			fprintf(stderr, "%02X", fingerprint[i]);
-		fputc('\n', stderr);
-	}
+	if (NULL == (fpbuf = malloc(fprsz * 2 + 1)))
+		err(EXIT_FAILURE, NULL);
+
+	for (i = 0; i < fprsz; i++)
+		snprintf(&fpbuf[i * 2], 3, "%02X", fpr[i]);
+
+	if (verbose)
+		fprintf(stderr, "Dive: number=%zu, "
+			"size=%u, fingerprint=%s\n", 
+			dd->number, size, fpbuf);
 
 	/* 
 	 * Keep a copy of the most recent fingerprint. Because dives are
@@ -76,15 +82,15 @@ dive_cb(const unsigned char *data, unsigned int size,
 	 * dive is always the first dive.
 	 */
 
-	if (divedata->number == 1) {
-		fp = dc_buffer_new(fsize);
-		dc_buffer_append(fp, fingerprint, fsize);
-		*divedata->fingerprint = fp;
+	if (dd->number == 1) {
+		fp = dc_buffer_new(fprsz);
+		dc_buffer_append(fp, fpr, fprsz);
+		*dd->fingerprint = fp;
 	}
 
 	/* Create the parser. */
 
-	rc = dc_parser_new(&parser, divedata->device);
+	rc = dc_parser_new(&parser, dd->device);
 	if (rc != DC_STATUS_SUCCESS)
 		goto cleanup;
 
@@ -96,23 +102,38 @@ dive_cb(const unsigned char *data, unsigned int size,
 
 	/* Parse the dive data. */
 
-	switch (divedata->type) {
+	switch (dd->type) {
 	case (DC_OUTPUT_XML):
-		rc = output_xml_write(divedata->output, 
-			parser, fingerprint, fsize);
+		rc = output_xml_write(dd->output, 
+			dd->number, parser, fpbuf);
 		break;
 	case (DC_OUTPUT_LIST):
-		rc = output_list_write(divedata->output, 
-			parser, fingerprint, fsize);
+		rc = output_list_write
+			(dd->output, dd->number, parser, fpbuf);
 		break;
 	}
 
 	if (rc != DC_STATUS_SUCCESS)
 		goto cleanup;
 
+	/*
+	 * If we were asked only to print one dive, then stop processing
+	 * right now.
+	 */
+
+	if (NULL != dd->ofp &&
+	    dc_buffer_get_size(dd->ofp) == fprsz &&
+	    0 == memcmp(dc_buffer_get_data(dd->ofp), fpr, fprsz)) {
+		if (verbose)
+			fprintf(stderr, "Dive: fingerprint match\n");
+		goto cleanup;
+	}
+
+	retc = 1;
 cleanup:
 	dc_parser_destroy(parser);
-	return(1);
+	free(fpbuf);
+	return(retc);
 }
 
 static void
@@ -143,17 +164,17 @@ event_cb(dc_device_t *device, dc_event_type_t event,
 static dc_status_t
 parse(dc_context_t *context, dc_descriptor_t *descriptor, 
 	const char *devname, struct dcmd_out *output,
-	enum dcmd_type type)
+	enum dcmd_type type, dc_buffer_t *fprint, dc_buffer_t *ofprint)
 {
 	dc_status_t	 rc = DC_STATUS_SUCCESS;
 	dc_device_t	*device = NULL;
 	dc_buffer_t	*ofingerprint = NULL;
 	int		 events;
 	event_data_t	 eventdata;
-	dive_data_t	 divedata;
+	dive_data_t	 dd;
 
 	memset(&eventdata, 0, sizeof(event_data_t));
-	memset(&divedata, 0, sizeof(dive_data_t));
+	memset(&dd, 0, sizeof(dive_data_t));
 
 	/* Open the device. */
 
@@ -167,6 +188,15 @@ parse(dc_context_t *context, dc_descriptor_t *descriptor,
 	if (-1 == pledge("stdio", NULL))
 		err(EXIT_FAILURE, "pledge");
 #endif
+
+	if (NULL != fprint && NULL == ofprint) {
+		rc = dc_device_set_fingerprint(device,
+			dc_buffer_get_data(fprint),
+			dc_buffer_get_size(fprint));
+		if (DC_STATUS_SUCCESS != rc &&
+	 	    DC_STATUS_UNSUPPORTED != rc)
+			err(EXIT_FAILURE, "%s", dctool_errmsg(rc));
+	}
 
 	/* Register the event handler. */
 
@@ -190,15 +220,15 @@ parse(dc_context_t *context, dc_descriptor_t *descriptor,
 
 	/* Initialize the dive data. */
 
-	divedata.device = device;
-	divedata.fingerprint = &ofingerprint;
-	divedata.number = 0;
-	divedata.output = output;
-	divedata.type = type;
+	dd.device = device;
+	dd.fingerprint = &ofingerprint;
+	dd.output = output;
+	dd.type = type;
+	dd.ofp = ofprint;
 
 	/* Download the dives. */
 
-	rc = dc_device_foreach(device, dive_cb, &divedata);
+	rc = dc_device_foreach(device, dive_cb, &dd);
 	if (rc != DC_STATUS_SUCCESS) {
 		warnx("%s: %s", devname, dctool_errmsg(rc));
 		goto cleanup;
@@ -212,7 +242,8 @@ cleanup:
 
 int
 download(dc_context_t *context, dc_descriptor_t *descriptor, 
-	const char *udev, enum dcmd_type type)
+	const char *udev, enum dcmd_type type,
+	dc_buffer_t *fprint, dc_buffer_t *ofprint)
 {
 	int		 exitcode = EXIT_FAILURE;
 	dc_status_t	 status = DC_STATUS_SUCCESS;
@@ -232,7 +263,8 @@ download(dc_context_t *context, dc_descriptor_t *descriptor,
 	/* Parse the dives. */
 
 	assert(NULL != output);
-	status = parse(context, descriptor, udev, output, type);
+	status = parse(context, descriptor, 
+		udev, output, type, fprint, ofprint);
 
 	if (status != DC_STATUS_SUCCESS) {
 		warnx("%s", dctool_errmsg(status));

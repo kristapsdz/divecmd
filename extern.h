@@ -40,17 +40,18 @@ const char	*dctool_errmsg(dc_status_t);
 void		 dctool_event_cb(dc_device_t *, 
 			dc_event_type_t, const void *, void *);
 int		 download(dc_context_t *, dc_descriptor_t *, 
-			const char *, enum dcmd_type);
+			const char *, enum dcmd_type,
+			dc_buffer_t *, dc_buffer_t *);
 
 dc_status_t	 output_list_free(struct dcmd_out *);
 struct dcmd_out *output_list_new(void);
-dc_status_t	 output_list_write(struct dcmd_out *, dc_parser_t *, 
-			const unsigned char[], unsigned int);
+dc_status_t	 output_list_write(struct dcmd_out *, 
+			size_t, dc_parser_t *, const char *);
 
 dc_status_t	 output_xml_free(struct dcmd_out *);
 struct dcmd_out *output_xml_new(void);
-dc_status_t	 output_xml_write(struct dcmd_out *, dc_parser_t *, 
-			const unsigned char[], unsigned int);
+dc_status_t	 output_xml_write(struct dcmd_out *, 
+			size_t, dc_parser_t *, const char *);
 
 int		 dctool_cancel_cb(void *userdata);
 
