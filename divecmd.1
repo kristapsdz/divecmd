@@ -28,7 +28,8 @@
 .Op Fl v
 .Fl s
 .Nm divecmd
-.Op Fl v
+.Op Fl lv
+.Op Fl f Ar fingerprint
 .Fl d Ar computer
 .Op Ar device
 .Sh DESCRIPTION
@@ -42,13 +43,15 @@ on a serial (or USB)
 and converts it to a regular XML output format on standard output.
 The arguments are as follows:
 .Bl -tag -width Ds
+.It Fl l
+Lists the dives in short format: date, time, type, and fingerprint.
+.It Fl s
+Shows all known device computers instead of trying to download data.
 .It Fl v
 Increase verbosity.
 One more, emits informational messages.
 Twice, debugging messages.
 Three times, inundation.
-.It Fl s
-Shows all known device computers instead of trying to download data.
 .It Fl d Ar computer
 The case-insensitive full vendor and product, e.g.,
 .Dq suunto d6i
@@ -58,6 +61,8 @@ You can also just specify the product, e.g.,
 .Dq d6i ,
 but if there are multiple vendors with the same product, they may
 conflict.
+.It Fl f Ar fingerprint
+Only show the given device-specific fingerprint, if found.
 .El
 .Pp
 In the default behaviour (i.e.,
@@ -78,7 +83,7 @@ this format may change as the tool progresses, my diving progresses, and
 I acquire more dive computers.
 If you want good support, send me diving with a new computer!
 .Pp
-The output is arranged as follows, with comments inline:
+The XML output is arranged as follows, with comments inline:
 .Bd -literal
 <?xml version="1.0" encoding="UTF-8" ?>
 <divelog program="divecmd" version="0.0.1">
