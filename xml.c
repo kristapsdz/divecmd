@@ -88,8 +88,10 @@ sample_cb(dc_sample_type_t type, dc_sample_value_t value, void *userdata)
 			" temp=\"%.2f\"", value.temperature);
 		break;
 	default:
-		fprintf(stderr, "unhandled type: %s\n",
-			dcmd_events[type]);
+		if ( ! verbose)
+			break;
+		fprintf(stderr, "Unhandled type: "
+			"%s\n", dcmd_events[type]);
 		break;
 	}
 }
