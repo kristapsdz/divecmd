@@ -164,11 +164,11 @@ event_cb(dc_device_t *device, dc_event_type_t event,
 static dc_status_t
 parse(dc_context_t *context, dc_descriptor_t *descriptor, 
 	const char *devname, struct dcmd_out *output,
-	enum dcmd_type type, dc_buffer_t *fprint, dc_buffer_t *ofprint)
+	enum dcmd_type type, dc_buffer_t *fprint, 
+	dc_buffer_t *ofprint, dc_buffer_t **lfprint)
 {
 	dc_status_t	 rc = DC_STATUS_SUCCESS;
 	dc_device_t	*device = NULL;
-	dc_buffer_t	*ofingerprint = NULL;
 	int		 events;
 	event_data_t	 eventdata;
 	dive_data_t	 dd;
@@ -221,7 +221,7 @@ parse(dc_context_t *context, dc_descriptor_t *descriptor,
 	/* Initialize the dive data. */
 
 	dd.device = device;
-	dd.fingerprint = &ofingerprint;
+	dd.fingerprint = lfprint;
 	dd.output = output;
 	dd.type = type;
 	dd.ofp = ofprint;
@@ -235,7 +235,6 @@ parse(dc_context_t *context, dc_descriptor_t *descriptor,
 	}
 
 cleanup:
-	dc_buffer_free(ofingerprint);
 	dc_device_close(device);
 	return(rc);
 }
@@ -243,7 +242,8 @@ cleanup:
 int
 download(dc_context_t *context, dc_descriptor_t *descriptor, 
 	const char *udev, enum dcmd_type type,
-	dc_buffer_t *fprint, dc_buffer_t *ofprint)
+	dc_buffer_t *fprint, dc_buffer_t *ofprint, 
+	dc_buffer_t **lfprint)
 {
 	int		 exitcode = EXIT_FAILURE;
 	dc_status_t	 status = DC_STATUS_SUCCESS;
@@ -263,8 +263,8 @@ download(dc_context_t *context, dc_descriptor_t *descriptor,
 	/* Parse the dives. */
 
 	assert(NULL != output);
-	status = parse(context, descriptor, 
-		udev, output, type, fprint, ofprint);
+	status = parse(context, descriptor, udev, 
+		output, type, fprint, ofprint, lfprint);
 
 	if (status != DC_STATUS_SUCCESS) {
 		warnx("%s", dctool_errmsg(status));
