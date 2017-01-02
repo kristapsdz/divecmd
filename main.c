@@ -50,8 +50,14 @@ int verbose = 0;
  */
 static volatile sig_atomic_t g_cancel = 0;
 
+/*
+ * Iterate over all descriptors in the system.
+ * Return the one matching "name", which is presumed to be a product or
+ * a vendor and product.
+ * The first match returns.
+ */
 static dc_status_t
-dctool_descriptor_search(dc_descriptor_t **out, const char *name)
+search_descr(dc_descriptor_t **out, const char *name)
 {
 	dc_status_t	 rc = DC_STATUS_SUCCESS;
 	dc_iterator_t	*iterator = NULL;
@@ -99,7 +105,7 @@ dctool_descriptor_search(dc_descriptor_t **out, const char *name)
 /*
  * Iterate over all devices supported by libdivecomputer.
  */
-static int
+static void
 show_devices(void)
 {
 	dc_iterator_t	*iter = NULL;
@@ -112,11 +118,9 @@ show_devices(void)
 		err(EXIT_FAILURE, "pledge");
 #endif
 
-	if (DC_STATUS_SUCCESS != 
-	    (st = dc_descriptor_iterator(&iter))) {
-		warnx("%s", dctool_errmsg(st));
-		return(EXIT_FAILURE);
-	}
+    	st = dc_descriptor_iterator(&iter);
+	if (DC_STATUS_SUCCESS != st)
+		errx(EXIT_FAILURE, "%s", dctool_errmsg(st));
 
 	while (DC_STATUS_SUCCESS == 
 	       (st = dc_iterator_next(iter, &desc))) {
@@ -128,15 +132,10 @@ show_devices(void)
 		dc_descriptor_free(desc);
 	}
 
-	/* We don't care about errors now. */
-
 	if (DC_STATUS_DONE != st)
-		warnx("%s", dctool_errmsg(st));
-
+		errx(EXIT_FAILURE, "%s", dctool_errmsg(st));
 	if (DC_STATUS_SUCCESS != (st = dc_iterator_free(iter)))
-		warnx("%s", dctool_errmsg(st));
-
-	return(EXIT_SUCCESS);
+		errx(EXIT_FAILURE, "%s", dctool_errmsg(st));
 }
 
 int
@@ -186,15 +185,16 @@ hex2bin(const char *str)
 	size_t 		 i, nbytes = (str ? strlen (str) / 2 : 0);
 	unsigned int	 in;
 	unsigned char	 byte;
+	dc_buffer_t 	*buffer;
 
 	/* Get the length of the fingerprint data. */
 
 	if (nbytes == 0)
 		return NULL;
 
-	/* Allocate a memory buffer. */
+	/* Allocate and fill the memory buffer. */
 
-	dc_buffer_t *buffer = dc_buffer_new (nbytes);
+	buffer = dc_buffer_new (nbytes);
 
 	for (i = 0; i < nbytes; i++) {
 		sscanf(&str[i * 2], "%02X", &in);
@@ -207,7 +207,7 @@ hex2bin(const char *str)
 }
 
 static dc_buffer_t *
-fingerprint_get(const char *device)
+fingerprint_get(int *fd, const char *device)
 {
 	char		*cp, *ccp, *file;
 	char		 buf[1024];
@@ -215,7 +215,8 @@ fingerprint_get(const char *device)
 	struct stat	 st;
 	size_t		 sz;
 	ssize_t		 ssz;
-	int		 fd = -1;
+
+	*fd = -1;
 
 	if (NULL == device)
 		return(NULL);
@@ -232,9 +233,9 @@ fingerprint_get(const char *device)
 
 	if (asprintf(&file, "%s/.divecmd/%s", getenv("HOME"), cp) < 0)
 		err(EXIT_FAILURE, NULL);
-	if (-1 == (fd = open(file, O_RDONLY, 0)))
+	if (-1 == (*fd = open(file, O_RDONLY, 0)))
 		goto out;
-	else if (-1 == fstat(fd, &st))
+	else if (-1 == fstat(*fd, &st))
 		err(EXIT_FAILURE, "%s", file);
 
 	/* Copy the entire file (fingerprint) into buffer. */
@@ -245,7 +246,7 @@ fingerprint_get(const char *device)
 		err(EXIT_FAILURE, NULL);
 
 	for (;;) {
-		if (-1 == (ssz = read(fd, buf, sizeof(buf))))
+		if (-1 == (ssz = read(*fd, buf, sizeof(buf))))
 			err(EXIT_FAILURE, "%s", file);
 		else if (0 == ssz)
 			break;
@@ -259,8 +260,7 @@ out:
 		fprintf(stderr, "%s: good fingerprint\n", file);
 	if (NULL == res && verbose > 0)
 		fprintf(stderr, "%s: no fingerprint\n", file);
-	if (-1 != fd)
-		close(fd);
+		
 	free(cp);
 	free(file);
 	return(res);
@@ -276,8 +276,8 @@ main(int argc, char *argv[])
 	dc_loglevel_t 	 loglevel = DC_LOGLEVEL_WARNING;
 	const char 	*device = NULL, *ofp = NULL;
 	const char	*udev = "/dev/ttyU0";
-	int 		 show = 0, ch;
-	dc_buffer_t	*fprint = NULL, *ofprint = NULL;
+	int 		 show = 0, ch, ofd = -1;
+	dc_buffer_t	*fprint = NULL, *ofprint = NULL, *lprint = NULL;
 	enum dcmd_type	 out = DC_OUTPUT_XML;
 
 #if defined(__OpenBSD__) && OpenBSD > 201510
@@ -322,7 +322,7 @@ main(int argc, char *argv[])
 	if (NULL != ofp)
 		ofprint = hex2bin(ofp);
 
-	fprint = fingerprint_get(device);
+	fprint = fingerprint_get(&ofd, device);
 
 	/* Setup the cancel signal handler. */
 
@@ -342,7 +342,7 @@ main(int argc, char *argv[])
 	dc_context_set_logfunc(context, logfunc, NULL);
 
 	if (0 == show) {
-		status = dctool_descriptor_search
+		status = search_descr
 			(&descriptor, device);
 		if (status != DC_STATUS_SUCCESS) {
 			warnx("%s", dctool_errmsg(status));
@@ -353,12 +353,21 @@ main(int argc, char *argv[])
 		}
 	}
 
-	exitcode = show ? show_devices() : download
-		(context, descriptor, udev, out, fprint, ofprint);
+	if (show) {
+		show_devices();
+		exitcode = EXIT_SUCCESS;
+		goto cleanup;
+	} 
 
+	exitcode = download
+		(context, descriptor, udev, 
+		 out, fprint, ofprint, &lprint);
 cleanup:
+	if (-1 != ofd)
+		close(ofd);
 	dc_descriptor_free(descriptor);
 	dc_context_free(context);
+	dc_buffer_free(lprint);
 	free(fprint);
 	return(exitcode);
 usage:
