@@ -28,7 +28,7 @@
 .Op Fl v
 .Fl s
 .Nm divecmd
-.Op Fl lnv
+.Op Fl alnv
 .Op Fl f Ar fingerprint
 .Fl d Ar computer
 .Op Ar device
@@ -43,6 +43,8 @@ on a serial (or USB)
 and converts them to a regular XML output format on standard output.
 The arguments are as follows:
 .Bl -tag -width Ds
+.It Fl a
+Ignore the last-seen fingerprint and fetch all dives.
 .It Fl l
 Lists the dives in short format, one per line: time, type, and
 fingerprint.
@@ -88,8 +90,16 @@ This suppresses old dives from being re-downloaded every time
 .Nm
 is invoked.
 The
+.Pa DEVICE
+file is a binary fingerprint.
+The
+.Fl a
+and
 .Fl n
-flag restricts usage of this file.
+flags restrict usage of this file.
+If
+.Pa ~/.divecmd
+does not exist, it is created.
 .Ss Output
 .Nm
 outputs an XML file describing the dive.

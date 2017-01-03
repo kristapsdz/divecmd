@@ -208,7 +208,7 @@ hex2bin(const char *str)
 }
 
 static void
-fingerprint_set(int fd, const char *file, dc_buffer_t *buf)
+fprint_set(int fd, const char *file, dc_buffer_t *buf)
 {
 	ssize_t	 ssz;
 
@@ -232,7 +232,7 @@ fingerprint_set(int fd, const char *file, dc_buffer_t *buf)
  * the file is open anyway.
  */
 static dc_buffer_t *
-fingerprint_get(int *fd, char **filep, const char *device)
+fprint_get(int *fd, char **filep, int all, const char *device)
 {
 	char		*cp, *ccp, *file;
 	char		 buf[1024];
@@ -288,6 +288,7 @@ fingerprint_get(int *fd, char **filep, const char *device)
 	else if (-1 == fstat(*fd, &st))
 		err(EXIT_FAILURE, "%s", file);
 
+
 	/* Empty file: we just created it? */
 
 	if (0 == st.st_size) {
@@ -295,6 +296,13 @@ fingerprint_get(int *fd, char **filep, const char *device)
 			fprintf(stderr, "%s: creating\n", file);
 		goto out;
 	}
+
+	/* Check if don't read fingerprint. */
+
+	if (all && verbose)
+		fprintf(stderr, "%s: ignoring contents", file);
+	if (all)
+		goto out;
 
 	/* Copy the entire file (fingerprint) into buffer. */
 
@@ -332,7 +340,7 @@ main(int argc, char *argv[])
 	dc_loglevel_t 	 loglevel = DC_LOGLEVEL_WARNING;
 	const char 	*device = NULL, *ofp = NULL;
 	const char	*udev = "/dev/ttyU0";
-	int 		 show = 0, ch, ofd = -1, nofp = 0;
+	int 		 show = 0, ch, ofd = -1, nofp = 0, all = 0;
 	dc_buffer_t	*fprint = NULL, *ofprint = NULL, *lprint = NULL;
 	enum dcmd_type	 out = DC_OUTPUT_XML;
 	char		*ofile = NULL;
@@ -342,8 +350,11 @@ main(int argc, char *argv[])
 		err(EXIT_FAILURE, "pledge");
 #endif
 
-	while (-1 != (ch = getopt (argc, argv, "d:f:lnsv"))) {
+	while (-1 != (ch = getopt (argc, argv, "ad:f:lnsv"))) {
 		switch (ch) {
+		case 'a':
+			all = 1;
+			break;
 		case 'd':
 			device = optarg;
 			break;
@@ -387,7 +398,7 @@ main(int argc, char *argv[])
 	if (NULL != ofp)
 		ofprint = hex2bin(ofp);
 
-	fprint = fingerprint_get(&ofd, &ofile, device);
+	fprint = fprint_get(&ofd, &ofile, all, device);
 
 	/* Setup the cancel signal handler. */
 
@@ -439,8 +450,12 @@ main(int argc, char *argv[])
 	 * says so (-n), the parse failed, or no fingerprint was parsed.
 	 */
 
-	if (0 == nofp && exitcode && NULL != lprint && -1 != ofd)
-		fingerprint_set(ofd, ofile, lprint);
+	if (exitcode && NULL != lprint && -1 != ofd) {
+		if (nofp && verbose)
+			fprintf(stderr, "%s: suppressing write\n", ofile);
+		else if (0 == nofp)
+			fprint_set(ofd, ofile, lprint);
+	}
 
 cleanup:
 	if (-1 != ofd)
@@ -452,7 +467,7 @@ cleanup:
 	free(ofile);
 	return(exitcode ? EXIT_SUCCESS : EXIT_FAILURE);
 usage:
-	fprintf(stderr, "usage: %s [-nv] [-d computer] [-f fingerprint] [device]\n"
+	fprintf(stderr, "usage: %s [-anv] [-d computer] [-f fingerprint] [device]\n"
 			"       %s [-v] -s\n",
 			getprogname(), getprogname());
 	return(EXIT_FAILURE);
