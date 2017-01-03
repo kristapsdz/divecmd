@@ -245,7 +245,7 @@ download(dc_context_t *context, dc_descriptor_t *descriptor,
 	dc_buffer_t *fprint, dc_buffer_t *ofprint, 
 	dc_buffer_t **lfprint)
 {
-	int		 exitcode = EXIT_FAILURE;
+	int		 exitcode = 0;
 	dc_status_t	 status = DC_STATUS_SUCCESS;
 	struct dcmd_out	*output = NULL;
 
@@ -271,7 +271,8 @@ download(dc_context_t *context, dc_descriptor_t *descriptor,
 		goto cleanup;
 	}
 
-	exitcode = EXIT_SUCCESS;
+	exitcode = 1;
+
 cleanup:
 	switch (type) {
 	case (DC_OUTPUT_XML):
