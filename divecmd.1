@@ -22,29 +22,32 @@
 .Os
 .Sh NAME
 .Nm divecmd
-.Nd download dive computer data as structured XML files
+.Nd download dive computer data
 .Sh SYNOPSIS
 .Nm divecmd
 .Op Fl v
 .Fl s
 .Nm divecmd
-.Op Fl lv
+.Op Fl lnv
 .Op Fl f Ar fingerprint
 .Fl d Ar computer
 .Op Ar device
 .Sh DESCRIPTION
 The
 .Nm
-utility downloads data from a dive
+utility downloads recent dives from a dive
 .Ar computer
 on a serial (or USB)
 .Ar device
 .Pq defaulting to Pa /dev/ttyU0
-and converts it to a regular XML output format on standard output.
+and converts them to a regular XML output format on standard output.
 The arguments are as follows:
 .Bl -tag -width Ds
 .It Fl l
-Lists the dives in short format: date, time, type, and fingerprint.
+Lists the dives in short format, one per line: time, type, and
+fingerprint.
+.It Fl n
+Do not set the last-seen dive fingerprint.
 .It Fl s
 Shows all known device computers instead of trying to download data.
 .It Fl v
@@ -74,6 +77,19 @@ is opened and its contents downloaded and formatted as XML.
 .Em Be careful :
 many dive computers don't charge when connected to a computer.
 Plug it in, suck down your data, and unplug it as soon as possible.
+.Pp
+By default, the file
+.Pa ~/.divecmd/DEVICE ,
+where
+.Dq DEVICE
+is the dive computer device name rendered as a filename,
+is used to get (and/or initialise) and set the last known dive.
+This suppresses old dives from being re-downloaded every time
+.Nm
+is invoked.
+The
+.Fl n
+flag restricts usage of this file.
 .Ss Output
 .Nm
 outputs an XML file describing the dive.
