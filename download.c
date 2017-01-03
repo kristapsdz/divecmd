@@ -36,11 +36,6 @@
 
 #include "extern.h"
 
-typedef struct event_data_t {
-	const char	  *cachedir;
-	dc_event_devinfo_t devinfo;
-} event_data_t;
-
 typedef struct dive_data_t {
 	dc_device_t	 *device; /* device */
 	dc_buffer_t	**fingerprint; /* first fingerprint */
@@ -136,25 +131,56 @@ cleanup:
 	return(retc);
 }
 
+/*
+ * Print information about an event.
+ * We only do this when we're running in high-verbosity mode.
+ */
 static void
 event_cb(dc_device_t *device, dc_event_type_t event, 
 	const void *data, void *userdata)
 {
-	const dc_event_devinfo_t *devinfo = (const dc_event_devinfo_t *)data;
-	event_data_t	*eventdata = (event_data_t *)userdata;
+	const dc_event_progress_t *progress;
+	const dc_event_devinfo_t  *devinfo;
+	const dc_event_clock_t    *clock;
+	const dc_event_vendor_t   *vendor;
+	unsigned int	 	   i;
 
-	/* Forward to the default event handler. */
+	(void)device;
+	(void)userdata;
 
-	dctool_event_cb(device, event, data, userdata);
+	if (verbose < 2)
+		return;
 
-	switch(event) {
+	switch (event) {
+	case DC_EVENT_WAITING:
+		fprintf(stderr, "Event: waiting for user action\n");
+		break;
+	case DC_EVENT_PROGRESS:
+		progress = data;
+		fprintf(stderr, "Event: progress %3.2f%% (%u/%u)\n",
+			100.0 * (double) progress->current / 
+			(double) progress->maximum,
+			progress->current, progress->maximum);
+		break;
 	case DC_EVENT_DEVINFO:
-		/* 
-		 * Keep a copy of the event data. It will be used for
-		 * generating the fingerprint filename again after a
-		 * (successful) download.
-		 */
-		eventdata->devinfo = *devinfo;
+		devinfo = data;
+		fprintf(stderr, "Event: model=%u (0x%08x), "
+			"firmware=%u (0x%08x), serial=%u (0x%08x)\n",
+			devinfo->model, devinfo->model,
+			devinfo->firmware, devinfo->firmware,
+			devinfo->serial, devinfo->serial);
+		break;
+	case DC_EVENT_CLOCK:
+		clock = data;
+		fprintf(stderr, "Event: systime=%lld, devtime=%u\n",
+			(long long)clock->systime, clock->devtime);
+		break;
+	case DC_EVENT_VENDOR:
+		vendor = data;
+		fprintf(stderr, "Event: vendor=");
+		for (i = 0; i < vendor->size; ++i)
+			fprintf(stderr, "%02X", vendor->data[i]);
+		fputc('\n', stderr);
 		break;
 	default:
 		break;
@@ -170,10 +196,8 @@ parse(dc_context_t *context, dc_descriptor_t *descriptor,
 	dc_status_t	 rc = DC_STATUS_SUCCESS;
 	dc_device_t	*device = NULL;
 	int		 events;
-	event_data_t	 eventdata;
 	dive_data_t	 dd;
 
-	memset(&eventdata, 0, sizeof(event_data_t));
 	memset(&dd, 0, sizeof(dive_data_t));
 
 	/* Open the device. */
@@ -204,7 +228,8 @@ parse(dc_context_t *context, dc_descriptor_t *descriptor,
 		 DC_EVENT_DEVINFO | DC_EVENT_CLOCK | 
 		 DC_EVENT_VENDOR;
 
-	rc = dc_device_set_events(device, events, event_cb, &eventdata);
+	rc = dc_device_set_events
+		(device, events, event_cb, NULL);
 	if (rc != DC_STATUS_SUCCESS) {
 		warnx("%s: %s", devname, dctool_errmsg(rc));
 		goto cleanup;
@@ -212,7 +237,8 @@ parse(dc_context_t *context, dc_descriptor_t *descriptor,
 
 	/* Register the cancellation handler. */
 
-	rc = dc_device_set_cancel(device, dctool_cancel_cb, NULL);
+	rc = dc_device_set_cancel
+		(device, dctool_cancel_cb, NULL);
 	if (rc != DC_STATUS_SUCCESS) {
 		warnx("%s: %s", devname, dctool_errmsg(rc));
 		goto cleanup;

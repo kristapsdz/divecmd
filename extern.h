@@ -37,8 +37,7 @@ enum	dcmd_type {
 __BEGIN_DECLS
 
 const char	*dctool_errmsg(dc_status_t);
-void		 dctool_event_cb(dc_device_t *, 
-			dc_event_type_t, const void *, void *);
+
 int		 download(dc_context_t *, dc_descriptor_t *, 
 			const char *, enum dcmd_type, dc_buffer_t *, 
 			dc_buffer_t *, dc_buffer_t **);
