@@ -181,14 +181,14 @@ output_xml_write(struct dcmd_out *abstract,
 	}
 
 	if (status != DC_STATUS_UNSUPPORTED) {
-		if (0 == divemode) 
-			dm = "Freedive";
-		else if (1 == divemode)
-			dm = "Gauge";
-		else if (2 == divemode)
-			dm = "Opencircuit";
-		else if (3 == divemode)
-			dm = "Closedcircuit";
+		if (DC_DIVEMODE_FREEDIVE == divemode) 
+			dm = "freedive";
+		else if (DC_DIVEMODE_GAUGE == divemode)
+			dm = "gauge";
+		else if (DC_DIVEMODE_OC == divemode)
+			dm = "opencircuit";
+		else if (DC_DIVEMODE_CC == divemode)
+			dm = "closedcircuit";
 	}
 
 	fprintf(output->ostream, 
