@@ -71,6 +71,23 @@ dive_cb(const unsigned char *data, unsigned int size,
 			"size=%u, fingerprint=%s\n", 
 			dd->number, size, fpbuf);
 
+	/*
+	 * If we were asked only to print one dive, then stop processing
+	 * right now.
+	 */
+
+	if (NULL != dd->ofp &&
+	    dc_buffer_get_size(dd->ofp) == fprsz &&
+	    0 == memcmp(dc_buffer_get_data(dd->ofp), fpr, fprsz)) {
+		if (verbose)
+			fprintf(stderr, "Dive: fingerprint match\n");
+	} else {
+		if (verbose)
+			fprintf(stderr, "Dive: no fingerprint match\n");
+		retc = 1;
+		goto cleanup;
+	}
+
 	/* 
 	 * Keep a copy of the most recent fingerprint. Because dives are
 	 * guaranteed to be downloaded in reverse order, the most recent
@@ -110,19 +127,6 @@ dive_cb(const unsigned char *data, unsigned int size,
 
 	if (rc != DC_STATUS_SUCCESS)
 		goto cleanup;
-
-	/*
-	 * If we were asked only to print one dive, then stop processing
-	 * right now.
-	 */
-
-	if (NULL != dd->ofp &&
-	    dc_buffer_get_size(dd->ofp) == fprsz &&
-	    0 == memcmp(dc_buffer_get_data(dd->ofp), fpr, fprsz)) {
-		if (verbose)
-			fprintf(stderr, "Dive: fingerprint match\n");
-		goto cleanup;
-	}
 
 	retc = 1;
 cleanup:
