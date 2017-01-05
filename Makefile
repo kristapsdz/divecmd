@@ -1,7 +1,8 @@
 .PHONY: clean
 
+VERSION		 = 0.0.1
 LDFLAGS		+= -L/usr/local/lib -ldivecomputer
-CFLAGS		+= -g -I/usr/local/include -W -Wall
+CFLAGS		+= -g -I/usr/local/include -W -Wall -DVERSION="\"$(VERSION)\""
 OBJS		 = common.o \
 		   main.o \
 		   download.o \

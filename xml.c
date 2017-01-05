@@ -54,6 +54,9 @@ static	const char *dcmd_types[] = {
 	"gasmix", /* DC_SAMPLE_GASMIX */
 };
 
+/*
+ * A DC_SAMPLE_TIME means that we're encountering a new sample.
+ */
 static void
 sample_cb(dc_sample_type_t type, dc_sample_value_t value, void *userdata)
 {
@@ -61,21 +64,25 @@ sample_cb(dc_sample_type_t type, dc_sample_value_t value, void *userdata)
 
 	switch (type) {
 	case DC_SAMPLE_TIME:
-		/* Starting new sample output. */
-
 		if (sampledata->nsamples++)
 			fputs(" />\n", sampledata->ostream);
 		fprintf(sampledata->ostream, 
-			"     <sample time=\"%02u:%02u\"", 
+			"     <sample time=\"%02u:%02u\" ", 
 			value.time / 60, value.time % 60);
 		break;
 	case DC_SAMPLE_DEPTH:
 		fprintf(sampledata->ostream, 
-			" depth=\"%.2f\"", value.depth);
+			"depth=\"%.2f\" ", value.depth);
+		break;
+	case DC_SAMPLE_PRESSURE:
+		fprintf(sampledata->ostream, 
+			"pressure=\"%.2f\" tank=\"%u\" ", 
+			value.pressure.value,
+			value.pressure.tank + 1);
 		break;
 	case DC_SAMPLE_TEMPERATURE:
 		fprintf(sampledata->ostream, 
-			" temp=\"%.2f\"", value.temperature);
+			"temp=\"%.2f\" ", value.temperature);
 		break;
 	default:
 		if ( ! verbose)
