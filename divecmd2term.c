@@ -20,6 +20,7 @@
 #include <sys/ioctl.h>
 #include <sys/queue.h>
 
+#include <assert.h>
 #include <err.h>
 #include <math.h>
 #include <stdlib.h>
@@ -37,8 +38,10 @@ print_dive(const struct dive *d)
 {
 	struct samp	*samp;
 	struct winsize	 ws;
-	size_t		 x, nsamps, cursamps, y, lasty;
+	size_t		 x, nsamps, cursamps, y;
 	double		 accum, incr, bucket, lastavg, avg;
+	int		 lasty;
+	int		*cols = NULL;
 
 	/* Get the number of depth-related samples. */
 
@@ -65,9 +68,11 @@ print_dive(const struct dive *d)
 	if (ws.ws_col == 0)
 		ws.ws_col = 80;
 
-	/* Clear the screen. */
-
-	printf("\e[1;1H\e[2J");
+	cols = calloc(ws.ws_col, sizeof(int));
+	if (NULL == cols)
+		err(EXIT_FAILURE, NULL);
+	for (x = 0; x < (size_t)ws.ws_col; x++)
+		cols[x] = -1;
 
 	/*
 	 * Compute how many samples should go in each column.
@@ -75,7 +80,7 @@ print_dive(const struct dive *d)
 	 * regardless the imbalance.
 	 */
 
-	incr = (double)ws.ws_col / nsamps;
+	incr = (double)(ws.ws_col - 1) / nsamps;
 	x = 0;
 	accum = lastavg = 0.0;
 
@@ -103,13 +108,43 @@ print_dive(const struct dive *d)
 
 		/* Draw on the screen. */
 
-	        printf("\033[%zu;%zuH%s", y, x, "_");
-		lasty = y;
+		assert(x < ws.ws_col);
+		assert(y < ws.ws_row);
+		cols[x] = y;
+	}
+
+	/* Clear the screen. */
+
+	printf("\e[1;1H\e[2J");
+
+	lasty = 0;
+	for (x = 0; x < (size_t)ws.ws_col; x++) {
+		/* TODO */
+		if (-1 == cols[x])
+			continue;
+
+		/* Join lines. */
+
+		if (cols[x] > lasty) {
+			lasty++;
+			while (lasty < cols[x]) {
+				printf("\033[1;36m\033[%d;%zuH%s", lasty, x, "|");
+				lasty++;
+			}
+		} else if (cols[x] < lasty) {
+			lasty--;
+			while (lasty > cols[x]) {
+				printf("\033[1;36m\033[%d;%zuH%s", lasty, x, "|");
+				lasty--;
+			}
+		}
+
+	        printf("\033[1;36m\033[%d;%zuH%s", cols[x], x, "_");
 	}
 
 	/* Put as at the bottom of the screen. */
 
-        printf("\033[%d;%dH", ws.ws_row, 0);
+        printf("\033[0m\033[%d;%dH", ws.ws_row, 0);
 }
 
 int
