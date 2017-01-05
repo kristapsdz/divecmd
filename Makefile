@@ -14,10 +14,11 @@ all: divecmd divecmd2term
 divecmd: $(OBJS)
 	$(CC) -o $@ $(OBJS) $(LDFLAGS) 
 
-divecmd2term: divecmd2term.o
-	$(CC) -o $@ divecmd2term.o -lexpat
+divecmd2term: divecmd2term.o parser.o
+	$(CC) -o $@ divecmd2term.o parser.o -lexpat -lm
 
 $(OBJS): extern.h
 
 clean:
-	rm -f $(OBJS) divecmd
+	rm -f $(OBJS) divecmd 
+	rm -f divecmd2term.o parser.o divecmd2term

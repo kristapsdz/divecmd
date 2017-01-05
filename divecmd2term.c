@@ -1,119 +1,115 @@
+/*	$Id$ */
+/*
+ * Copyright (c) 2016 Kristaps Dzonsons <kristaps@bsd.lv>,
+ *
+ * Permission to use, copy, modify, and distribute this software for any
+ * purpose with or without fee is hereby granted, provided that the above
+ * copyright notice and this permission notice appear in all copies.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES
+ * WITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF
+ * MERCHANTABILITY AND FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR
+ * ANY SPECIAL, DIRECT, INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES
+ * WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN
+ * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
+ * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
+ */
 #ifdef __OpenBSD_
 # include <sys/param.h>
 #endif
+#include <sys/ioctl.h>
 #include <sys/queue.h>
 
 #include <err.h>
-#include <fcntl.h>
-#include <stdarg.h>
+#include <math.h>
 #include <stdlib.h>
 #include <stdio.h>
-#include <string.h>
 #include <unistd.h>
 
 #include <expat.h>
 
-struct	dive {
-	size_t		  num;
-	TAILQ_ENTRY(dive) entries;
-};
+#include "parser.h"
 
-TAILQ_HEAD(diveq, dive);
-
-struct	parse {
-	XML_Parser	 p; /* parser routine */
-	const char	*file; /* parsed filename */
-	struct dive	*curdive; /* current dive */
-	struct diveq	*dives;
-};
+int verbose = 0;
 
 static void
-logerrx(const struct parse *p, const char *fmt, ...)
+print_dive(const struct dive *d)
 {
-	va_list	 ap;
+	struct samp	*samp;
+	struct winsize	 ws;
+	size_t		 x, nsamps, cursamps, y, lasty;
+	double		 accum, incr, bucket, lastavg, avg;
 
-	fprintf(stderr, "%s:%zu:%zu: ", p->file,
-		XML_GetCurrentLineNumber(p->p),
-		XML_GetCurrentColumnNumber(p->p));
-	va_start(ap, fmt);
-	vfprintf(stderr, fmt, ap);
-	va_end(ap);
-}
+	/* Get the number of depth-related samples. */
 
-static void
-logerr(const struct parse *p)
-{
+	nsamps = 0;
+	TAILQ_FOREACH(samp, &d->samps, entries)
+		if (SAMP_DEPTH & samp->flags)
+			nsamps++;
+	if (0 == nsamps)
+		return;
 
-	logerrx(p, "%s\n", XML_ErrorString(XML_GetErrorCode(p->p)));
-}
+	/*
+	 * Initialise screen real estate.
+	 * By default, pretend we're a 80x25.
+	 * Otherwise, use the terminal's reported dimensions.
+	 */
 
-static void
-parse_open(void *dat, const XML_Char *s, const XML_Char **atts)
-{
-	struct parse	 *p = dat;
-	const XML_Char	**attp;
+	if (-1 == ioctl(0, TIOCGWINSZ, &ws)) {
+		ws.ws_row = 25;
+		ws.ws_col = 80;
+	}
 
-	if (0 == strcmp(s, "dive")) {
-		p->curdive = calloc(1, sizeof(struct dive));
-		if (NULL == p->curdive)
-			err(EXIT_FAILURE, NULL);
-		TAILQ_INSERT_TAIL(p->dives, p->curdive, entries);
-		for (attp = atts; NULL != *attp; attp += 2) {
-			if (0 == strcmp(attp[0], "number"))
-				p->curdive->num = atoi(attp[1]);
+	if (ws.ws_row == 0)
+		ws.ws_row = 25;
+	if (ws.ws_col == 0)
+		ws.ws_col = 80;
+
+	/* Clear the screen. */
+
+	printf("\e[1;1H\e[2J");
+
+	/*
+	 * Compute how many samples should go in each column.
+	 * This is floating-point so that we have a smooth transition
+	 * regardless the imbalance.
+	 */
+
+	incr = (double)ws.ws_col / nsamps;
+	x = 0;
+	accum = lastavg = 0.0;
+
+	TAILQ_FOREACH(samp, &d->samps, entries) {
+		if ( ! (SAMP_DEPTH & samp->flags))
+			continue;
+
+		accum += incr;
+		bucket = 0.0;
+		cursamps = 0;
+
+		/* Walk columns, averaging samples. */
+
+		while (x < (size_t)floor(accum)) {
+			bucket += samp->depth;
+			cursamps++;
+			x++;
 		}
-	}
-}
+		avg = 0 == cursamps ? lastavg : bucket / cursamps;
+		lastavg = avg;
 
-static void
-parse_close(void *dat, const XML_Char *s)
-{
-	struct parse	*p = dat;
+		/* Now compute our y-position. */
 
-	if (0 == strcmp(s, "dive"))
-		p->curdive = NULL;
-}
+		y = (size_t)(ws.ws_row * (avg / d->maxdepth));
 
-static int
-parse(const char *fname, XML_Parser p, struct diveq *dq)
-{
-	int	 	 fd;
-	struct parse	 pp;
-	ssize_t		 ssz;
-	char		 buf[BUFSIZ];
-	enum XML_Status	 st;
+		/* Draw on the screen. */
 
-	fd = strcmp("-", fname) ? 
-		open(fname, O_RDONLY, 0) : STDIN_FILENO;
-	if (-1 == fd) {
-		warn("%s", fname);
-		return(0);
+	        printf("\033[%zu;%zuH%s", y, x, "_");
+		lasty = y;
 	}
 
-	memset(&pp, 0, sizeof(struct parse));
+	/* Put as at the bottom of the screen. */
 
-	pp.file = STDIN_FILENO == fd ? "<stdin>" : fname;
-	pp.p = p;
-	pp.dives = dq;
-
-	XML_ParserReset(p, NULL);
-	XML_SetElementHandler(p, parse_open, parse_close);
-	XML_SetUserData(p, &pp);
-
-	while ((ssz = read(fd, buf, sizeof(buf))) > 0) {
-	       st = XML_Parse(p, buf, (int)ssz, 0 == ssz ? 1 : 0);
-	       if (XML_STATUS_OK != st) {
-		       logerr(&pp);
-		       break;
-	       } else if (0 == ssz)
-		       break;
-	}
-
-	if (ssz < 0)
-		warn("%s", fname);
-
-	close(fd);
-	return(0 == ssz);
+        printf("\033[%d;%dH", ws.ws_row, 0);
 }
 
 int
@@ -124,14 +120,23 @@ main(int argc, char *argv[])
 	XML_Parser	 p;
 	struct diveq	 dq;
 	struct dive	*d;
+	struct samp	*samp;
+
+	/* Pledge us early: only reading files. */
 
 #if defined(__OpenBSD__) && OpenBSD > 201510
 	if (-1 == pledge("stdio rpath", NULL))
 		err(EXIT_FAILURE, "pledge");
 #endif
 
-	while (-1 != (c = getopt(argc, argv, "")))
-		goto usage;
+	while (-1 != (c = getopt(argc, argv, "v")))
+		switch (c) {
+		case ('v'):
+			verbose = 1;
+			break;
+		default:
+			goto usage;
+		}
 
 	argc -= optind;
 	argv += optind;
@@ -141,6 +146,11 @@ main(int argc, char *argv[])
 
 	TAILQ_INIT(&dq);
 
+	/* 
+	 * Handle all files or stdin.
+	 * File "-" is interpreted as stdin.
+	 */
+
 	if (0 == argc)
 		rc = parse("-", p, &dq);
 	for (i = 0; i < (size_t)argc; i++)
@@ -149,21 +159,35 @@ main(int argc, char *argv[])
 
 	XML_ParserFree(p);
 
-	/* Narrow the pledge to just stdio. */
+	/* 
+	 * Parsing is finished.
+	 * Narrow the pledge to just stdio.
+	 * From now on, we process and paint.
+	 */
 
 #if defined(__OpenBSD__) && OpenBSD > 201510
 	if (-1 == pledge("stdio", NULL))
 		err(EXIT_FAILURE, "pledge");
 #endif
 
+	if ( ! TAILQ_EMPTY(&dq))
+		print_dive(TAILQ_FIRST(&dq));
+
+	/* Free all memory from the dives. */
+
 	while ( ! TAILQ_EMPTY(&dq)) {
 		d = TAILQ_FIRST(&dq);
 		TAILQ_REMOVE(&dq, d, entries);
+		while ( ! TAILQ_EMPTY(&d->samps)) {
+			samp = TAILQ_FIRST(&d->samps);
+			TAILQ_REMOVE(&d->samps, samp, entries);
+			free(samp);
+		}
 		free(d);
 	}
 
 	return(rc ? EXIT_SUCCESS : EXIT_FAILURE);
 usage:
-	fprintf(stderr, "usage: %s [file]\n", getprogname());
+	fprintf(stderr, "usage: %s [-v] [file]\n", getprogname());
 	return(EXIT_FAILURE);
 }
