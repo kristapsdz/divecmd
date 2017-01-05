@@ -275,6 +275,8 @@ fprint_get(int *fd, char **filep, int all, const char *device)
 	for (ccp = cp; '\0' != *ccp; ccp++)
 		if (isspace((int)*ccp) || '(' == *ccp || ')' == *ccp)
 			*ccp = '_';
+		else if (isalpha((int)*ccp))
+			*ccp = tolower((int)*ccp);
 
 	/* Open ~/.divecmd/DEVICE, exiting on new file or fail. */
 
@@ -300,7 +302,7 @@ fprint_get(int *fd, char **filep, int all, const char *device)
 	/* Check if don't read fingerprint. */
 
 	if (all && verbose)
-		fprintf(stderr, "%s: ignoring contents", file);
+		fprintf(stderr, "%s: ignoring contents\n", file);
 	if (all)
 		goto out;
 
