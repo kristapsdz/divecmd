@@ -67,8 +67,7 @@ sample_cb(dc_sample_type_t type, dc_sample_value_t value, void *userdata)
 		if (sampledata->nsamples++)
 			fputs(" />\n", sampledata->ostream);
 		fprintf(sampledata->ostream, 
-			"     <sample time=\"%02u:%02u\" ", 
-			value.time / 60, value.time % 60);
+			"     <sample time=\"%u\" ", value.time);
 		break;
 	case DC_SAMPLE_DEPTH:
 		fprintf(sampledata->ostream, 
@@ -146,8 +145,7 @@ output_xml_write_dive(FILE *f, dc_parser_t *parser, size_t num)
 		warnx("error parsing the divetime");
 		return(0);
 	} else if (DC_STATUS_SUCCESS == st)
-		fprintf(f, "duration=\"%02u:%02u\" ", 
-			divetime / 60, divetime % 60);
+		fprintf(f, "duration=\"%u\" ", divetime);
 
 	st = dc_parser_get_field
 		(parser, DC_FIELD_DIVEMODE, 0, &dm);
@@ -196,7 +194,7 @@ output_xml_write_depth(FILE *f, dc_parser_t *parser)
 	    DC_STATUS_SUCCESS != stavg)
 		return(1);
 
-	fprintf(f, "    <depth ");
+	fprintf(f, "   <depth ");
 	if (DC_STATUS_SUCCESS == stmax && max > 0.0)
 		fprintf(f, "max=\"%.2f\" ", max);
 	if (DC_STATUS_SUCCESS == stavg && avg > 0.0)

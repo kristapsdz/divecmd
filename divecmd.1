@@ -140,13 +140,12 @@ any time multiple dives have been exported.
 .Bd -literal
     <dive number="n"
      [date="yyyy-mm-dd" time="hh:mm:ss"]
-     [duration="mm:ss"] [mode="YYYY"]>
+     [duration="ss"] [mode="YYYY"]>
 .Ed
 .Pp
 Each dive is numbered in a device-specific way.
 The time, if supported by the device, is in local time.
-The dive time, also if supported, is always shown by minutes and
-seconds: it will not show an hour field.
+The dive time, also if supported, is always shown in seconds.
 The mode is one of
 .Li freedive
 .Pq obviously free-diving ,
@@ -181,6 +180,7 @@ or by the tanks.
          beginpressure="xxx" endpressure="xxx" />
       </tanks>
 .Ed
+.Pp
 Tanks (optional element).
 A tank defines the tank parameters itself, including the referenced
 gasmix (also if applicable), volume and work pressure, and the start and
@@ -194,7 +194,7 @@ This sets either (or both) the maximum and average non-zero depth.
 And now, the samples...
 .Bd -literal
       <samples>
-        <sample time="mm:ss"
+        <sample time="ss"
          [depth="xxx"]
          [temp="xxx"]
          [pressure="xxx" tank="nnn"]
@@ -202,7 +202,7 @@ And now, the samples...
       </samples>
 .Ed
 .Pp
-The sample time is in minutes and seconds from the dive start and is
+The sample time is in seconds from the dive start and is
 always specified.
 The remaining options are as follows:
 .Bl -tag -width Ds
