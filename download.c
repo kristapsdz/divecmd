@@ -76,16 +76,17 @@ dive_cb(const unsigned char *data, unsigned int size,
 	 * right now.
 	 */
 
-	if (NULL != dd->ofp &&
-	    dc_buffer_get_size(dd->ofp) == fprsz &&
-	    0 == memcmp(dc_buffer_get_data(dd->ofp), fpr, fprsz)) {
-		if (verbose)
-			fprintf(stderr, "Dive: fingerprint match\n");
-	} else {
-		if (verbose)
-			fprintf(stderr, "Dive: no fingerprint match\n");
-		retc = 1;
-		goto cleanup;
+	if (NULL != dd->ofp) {
+		if (dc_buffer_get_size(dd->ofp) == fprsz &&
+		    0 == memcmp(dc_buffer_get_data(dd->ofp), fpr, fprsz)) {
+			if (verbose)
+				fprintf(stderr, "Dive: fingerprint match\n");
+		} else {
+			if (verbose)
+				fprintf(stderr, "Dive: no fingerprint match\n");
+			retc = 1;
+			goto cleanup;
+		}
 	}
 
 	/* 
