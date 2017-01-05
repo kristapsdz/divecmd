@@ -9,8 +9,13 @@ OBJS		 = common.o \
 		   list.o \
 		   xml.o
 
+all: divecmd divecmd2term
+
 divecmd: $(OBJS)
 	$(CC) -o $@ $(OBJS) $(LDFLAGS) 
+
+divecmd2term: divecmd2term.o
+	$(CC) -o $@ divecmd2term.o -lexpat
 
 $(OBJS): extern.h
 
