@@ -104,7 +104,7 @@ print_dive(const struct dive *d)
 
 		/* Now compute our y-position. */
 
-		y = (size_t)(ws.ws_row * (avg / d->maxdepth));
+		y = (size_t)((ws.ws_row - 1) * (avg / d->maxdepth));
 
 		/* Draw on the screen. */
 
