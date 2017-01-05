@@ -356,7 +356,7 @@ main(int argc, char *argv[])
 			all = 1;
 			break;
 		case 'd':
-			device = optarg;
+			udev = optarg;
 			break;
 		case 'f':
 			ofp = optarg;
@@ -383,10 +383,10 @@ main(int argc, char *argv[])
 	argc -= optind;
 	argv += optind;
 
-	if (0 == show && NULL == device)
+	if (0 == show && 0 == argc)
 		goto usage;
-	else if (0 == show && argc)
-		udev = argv[0];
+	else if (0 == show)
+		device = argv[0];
 
 	/* 
 	 * Convert desired fingerprint into binary.
@@ -469,7 +469,7 @@ cleanup:
 	free(ofile);
 	return(exitcode ? EXIT_SUCCESS : EXIT_FAILURE);
 usage:
-	fprintf(stderr, "usage: %s [-anv] [-d computer] [-f fingerprint] [device]\n"
+	fprintf(stderr, "usage: %s [-anv] [-d device] [-f fingerprint] computer\n"
 			"       %s [-v] -s\n",
 			getprogname(), getprogname());
 	return(EXIT_FAILURE);

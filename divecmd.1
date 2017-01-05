@@ -29,9 +29,9 @@
 .Fl s
 .Nm divecmd
 .Op Fl alnv
+.Op Fl d Ar device
 .Op Fl f Ar fingerprint
-.Fl d Ar computer
-.Op Ar device
+.Ar computer
 .Sh DESCRIPTION
 The
 .Nm
@@ -57,7 +57,16 @@ Increase verbosity.
 One more, emits informational messages.
 Twice, debugging messages.
 Three times, inundation.
-.It Fl d Ar computer
+.It Fl d Ar device
+The hardware device connected to the
+.Ar computer .
+.It Fl f Ar fingerprint
+Only show the given device-specific fingerprint, if found.
+Implies
+.Fl a
+and
+.fl n .
+.It Ar computer
 The case-insensitive full vendor and product, e.g.,
 .Dq suunto d6i
 or
@@ -66,12 +75,6 @@ You can also just specify the product, e.g.,
 .Dq d6i ,
 but if there are multiple vendors with the same product, they may
 conflict.
-.It Fl f Ar fingerprint
-Only show the given device-specific fingerprint, if found.
-Implies
-.Fl a
-and
-.fl n .
 .El
 .Pp
 In the default behaviour (i.e.,
@@ -227,4 +230,7 @@ utility was forked by
 .An Kristaps Dzonsons ,
 .Mt kristaps@bsd.lv ,
 from the exemplar utility bundled with
-.Xr libdivecomputer 3 .
+.Xr libdivecomputer 3 ,
+written by
+.An Jef Driesen
+.Mt jef@libdivecomputer.org .
