@@ -68,6 +68,10 @@ but if there are multiple vendors with the same product, they may
 conflict.
 .It Fl f Ar fingerprint
 Only show the given device-specific fingerprint, if found.
+Implies
+.Fl a
+and
+.fl n .
 .El
 .Pp
 In the default behaviour (i.e.,
@@ -103,6 +107,10 @@ does not exist, it is created.
 .Ss Output
 .Nm
 outputs an XML file describing the dive.
+In this description, attributes offset by brackets
+.Pq Do \(lB Dc and Do \(rB Dc
+are optional.
+Optional elements are specifically marked as such.
 All units are metric.
 .Em Note :
 this format may change as the tool progresses, my diving progresses, and
@@ -120,55 +128,69 @@ Now begins the dives.
 There may be multiple dives, which is often the case with free-diving or
 any time multiple dives have been exported.
 .Bd -literal
-    <dive number="n" date="yyyy-mm-dd"
-     time="hh:mm:ss" duration="mm:ss">
+    <dive number="n" 
+     [date="yyyy-mm-dd" time="hh:mm:ss"]
+     [duration="mm:ss"] [mode="YYYY"]>
 .Ed
 .Pp
 Each dive is numbered in a device-specific way.
-The time is usually in local time, but it depends upon the device.
-The dive time is always shown by minutes and seconds: it will not show
-an hour field.
+The time, if supported by the device, is in local time.
+The dive time, also if supported, is always shown by minutes and
+seconds: it will not show an hour field.
+The mode is one of
+.Li freedive
+.Pq obviously free-diving ,
+.Li gauge
+.Pq recorded directly from a tank gauge ,
+.Li opencircuit
+.Pq open-circuit standard diving ,
+or
+.Li closedcircuit
+.Pq closed-circuit rebreathing .
 .Bd -literal
       <fingerprint>xxx-yyy-zzz</fingerprint>
 .Ed
 .Pp
 A unique, alphanumeric fingerprint for the dive.
 .Bd -literal
-      <cylinder [o2="xxx"] />
+      <gasmixes>
+        <gasmix num="NNN" [o2="xxx" n2="xxx" he="xxx"] />
+      </gasmixes>
 .Ed
 .Pp
-Cylinders used and the gas mix.
-Multiple cylinders are indicated by several entries.
-If the mix is regular air (>20%, <22%), the mix is omitted.
-.Pq Helium is not yet supported.
+Gas mixes used in this dive (optional element).
+.Pq Not to be confused with tanks.
+A gas mix should have its mix value, but that's not guaranteed: it will
+at least show the mix number.
+This number may later be referenced in the samples when switching gases,
+or by the tanks.
 .Bd -literal
-      <divecomputer dctype="xxxx">
-        <depth max="xxx" mean="yyy" />
+      <tanks>
+        <tank num="NNN" [gasmix="NNN"]
+         [volume="xxx" [workpressure="xxx"]]
+         beginpressure="xxx" endpressure="xxx" />
+      </tanks>
+.Ed
+Tanks (optional element).
+A tank defines the tank parameters itself, including the referenced
+gasmix (also if applicable), volume and work pressure, and the start and
+end pressure over the course of the dive.
+.Bd -literal
+      <depth [max="xxx"] [mean="xxx"] />
 .Ed
 .Pp
-Now the information from the dive computer.
-First, the type of dive recorded.
-This can be
-.Li Freedive
-.Pq obviously free-diving ,
-.Li Gauge
-.Pq recorded directly from a tank gauge ,
-.Li Opencircuit
-.Pq open-circuit standard diving ,
-.Li Closedcircuit
-.Pq closed-circuit rebreathing
-or
-.Li unknown .
-The mean depth is zero if it is not supported by your device.
+The depth field (optional).
+This sets either (or both) the maximum and average non-zero depth.
 And now, the samples...
 .Bd -literal
-        <sample time="mm:ss" depth="xx" temp="xx" />
+      <samples>
+        <sample time="mm:ss" depth="xx" temp="xx"></sample>
+      </samples>
 .Ed
 .Pp
 The sample time is in minutes and seconds from the dive start and both
 depth and temperature are metric.
 .Bd -literal
-      </divecomputer>
     </dive>
   </dives>
 </divelog>
