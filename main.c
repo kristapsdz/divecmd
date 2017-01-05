@@ -395,8 +395,10 @@ main(int argc, char *argv[])
 	 * report to the operator.
 	 */
 
-	if (NULL != ofp)
+	if (NULL != ofp) {
 		ofprint = hex2bin(ofp);
+		all = nofp = 1;
+	}
 
 	fprint = fprint_get(&ofd, &ofile, all, device);
 
