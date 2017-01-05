@@ -111,6 +111,13 @@ In this description, attributes offset by brackets
 .Pq Do \(lB Dc and Do \(rB Dc
 are optional.
 Optional elements are specifically marked as such.
+Values with
+.Dq xxx
+are floating-point,
+.Dq nnn
+are integral, and
+.Dq uuu
+are unit-interval floating point.
 All units are metric.
 .Em Note :
 this format may change as the tool progresses, my diving progresses, and
@@ -128,7 +135,7 @@ Now begins the dives.
 There may be multiple dives, which is often the case with free-diving or
 any time multiple dives have been exported.
 .Bd -literal
-    <dive number="n" 
+    <dive number="n"
      [date="yyyy-mm-dd" time="hh:mm:ss"]
      [duration="mm:ss"] [mode="YYYY"]>
 .Ed
@@ -158,7 +165,7 @@ A unique, alphanumeric fingerprint for the dive.
       </gasmixes>
 .Ed
 .Pp
-Gas mixes used in this dive (optional element).
+Gas mixes (in percent) used in this dive (optional element).
 .Pq Not to be confused with tanks.
 A gas mix should have its mix value, but that's not guaranteed: it will
 at least show the mix number.
@@ -166,7 +173,7 @@ This number may later be referenced in the samples when switching gases,
 or by the tanks.
 .Bd -literal
       <tanks>
-        <tank num="NNN" [gasmix="NNN"]
+        <tank num="nnn" [gasmix="nnn"]
          [volume="xxx" [workpressure="xxx"]]
          beginpressure="xxx" endpressure="xxx" />
       </tanks>
@@ -184,12 +191,28 @@ This sets either (or both) the maximum and average non-zero depth.
 And now, the samples...
 .Bd -literal
       <samples>
-        <sample time="mm:ss" depth="xx" temp="xx"></sample>
+        <sample time="mm:ss"
+         [depth="xxx"]
+         [temp="xxx"]
+         [pressure="xxx" tank="nnn"]
+        />
       </samples>
 .Ed
 .Pp
-The sample time is in minutes and seconds from the dive start and both
-depth and temperature are metric.
+The sample time is in minutes and seconds from the dive start and is
+always specified.
+The remaining options are as follows:
+.Bl -tag -width Ds
+.It Li depth
+Depth (metres) at sampling time.
+.It Li temp
+Temperature (celsiu) at sampling time.
+.It Li pressure , tank
+Tank pressure (in bar).
+References a tank number in the
+.Li <tanks>
+section.
+.El
 .Bd -literal
     </dive>
   </dives>
