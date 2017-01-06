@@ -76,6 +76,16 @@ parse_open(void *dat, const XML_Char *s, const XML_Char **atts)
 		for (attp = atts; NULL != *attp; attp += 2) {
 			if (0 == strcmp(attp[0], "number")) {
 				dive->num = atoi(attp[1]);
+			} else if (0 == strcmp(attp[0], "date")) {
+				free(dive->date);
+				dive->date = strdup(attp[1]);
+				if (NULL == dive->date)
+					err(EXIT_FAILURE, NULL);
+			} else if (0 == strcmp(attp[0], "time")) {
+				free(dive->time);
+				dive->time = strdup(attp[1]);
+				if (NULL == dive->time)
+					err(EXIT_FAILURE, NULL);
 			} else if (0 == strcmp(attp[0], "mode")) {
 				if (0 == strcmp(attp[1], "freedive"))
 					dive->mode = MODE_FREEDIVE;
@@ -163,4 +173,27 @@ parse(const char *fname, XML_Parser p, struct diveq *dq)
 
 	close(fd);
 	return(0 == ssz);
+}
+
+void
+parse_free(struct diveq *dq)
+{
+	struct dive	*d;
+	struct samp	*samp;
+
+	if (NULL == dq)
+		return;
+
+	while ( ! TAILQ_EMPTY(dq)) {
+		d = TAILQ_FIRST(dq);
+		TAILQ_REMOVE(dq, d, entries);
+		while ( ! TAILQ_EMPTY(&d->samps)) {
+			samp = TAILQ_FIRST(&d->samps);
+			TAILQ_REMOVE(&d->samps, samp, entries);
+			free(samp);
+		}
+		free(d->date);
+		free(d->time);
+		free(d);
+	}
 }
