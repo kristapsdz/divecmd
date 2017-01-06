@@ -1,7 +1,10 @@
 ## Synopsis
 
 *divecmd* drives [libdivecomputer](http://www.libdivecomputer.org) to
-extract the contents of your dive computer in a safe, simple manner.
+extract the contents of your dive computer in a safe, simple manner.  It
+has two programs: *divecmd*, which downloads, parses, and formats dives;
+and *divecmd2term*, which graphs formatted dives in an ANSI/VT100
+terminal.
 
 I forked [libdivecomputer](http://www.libdivecomputer.org)'s *dctool* to
 do so --- originally to provide output like
