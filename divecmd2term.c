@@ -26,6 +26,7 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <unistd.h>
+#include <string.h>
 
 #include <expat.h>
 
@@ -40,14 +41,25 @@ struct	win {
 	size_t		 left;
 };
 
+static	const char *modes[] = {
+	"Unknown-mode", /* MODE_NONE */
+	"Free", /* MODE_FREEDIVE */
+	"Gauge", /* MODE_GAUGE */
+	"Open-circuit", /* MODE_OC */
+	"Closed-circuit" /* MODE_CC */
+};
+
 static void
 print_depths(const struct dive *d, const struct win *win)
 {
 	struct samp	*samp;
-	size_t		 x, nsamps, cursamps, y, lasty, lastt, lbuf;
+	size_t		 x, nsamps, cursamps, y, lasty, lastt, 
+			 lbuf, titlesz;
 	double		 accum, incr, bucket, lastavg, avg;
 	size_t		*cols = NULL, *labels = NULL;
 	struct win	 iwin;
+	char		*title;
+	int		 c;
 
 	/* Get the number of depth-related samples. */
 
@@ -58,6 +70,7 @@ print_depths(const struct dive *d, const struct win *win)
 
 	if (0 == nsamps)
 		return;
+
 
 	/* Create the "inner window" plotting area. */
 
@@ -74,14 +87,20 @@ print_depths(const struct dive *d, const struct win *win)
 
 	iwin.cols -= lbuf;
 	iwin.left += lbuf;
-	iwin.rows -= 2;
+	iwin.top += 1;
+	iwin.rows -= 3;
 
 	/* Initialise our data buckets. */
 
 	cols = calloc(win->cols, sizeof(size_t));
 	labels = calloc(win->cols, sizeof(size_t));
+	if (NULL != d->date && NULL != d->time)
+		c = asprintf(&title, "%s Dive #%zu on %s %s", 
+			modes[d->mode], d->num, d->date, d->time);
+	else
+		c = asprintf(&title, "%s Dive #%zu", modes[d->mode], d->num);
 
-	if (NULL == cols || NULL == labels)
+	if (NULL == cols || NULL == labels || c < 0)
 		err(EXIT_FAILURE, NULL);
 
 	/*
@@ -159,7 +178,20 @@ print_depths(const struct dive *d, const struct win *win)
 		labels[x] = labels[x - 1];
 	}
 
-	/* First, make our y-axis and y-axis labels. */
+	/* Title: centre, bold. */
+
+	titlesz = strlen(title);
+	if (titlesz >= win->cols) {
+		title[win->cols - 2] = '\0';
+		titlesz = strlen(title);
+	}
+
+       	printf("\033[%zu;%zuH\033[1m%s\033[0m", 
+		iwin.top - 1 + 1, 
+		win->left + ((win->cols - titlesz) / 2) + 1,
+		title);
+
+	/* Make our y-axis and y-axis labels. */
 
 	for (y = 0; y < iwin.rows; y++)
         	printf("\033[%zu;%zuH|", 
@@ -222,6 +254,7 @@ print_depths(const struct dive *d, const struct win *win)
 
 	free(cols);
 	free(labels);
+	free(title);
 }
 
 int
@@ -231,8 +264,6 @@ main(int argc, char *argv[])
 	size_t		 i;
 	XML_Parser	 p;
 	struct diveq	 dq;
-	struct dive	*d;
-	struct samp	*samp;
 	struct winsize	 ws;
 	struct win	 win;
 
@@ -243,7 +274,7 @@ main(int argc, char *argv[])
 		err(EXIT_FAILURE, "pledge");
 #endif
 
-	while (-1 != (c = getopt(argc, argv, "v")))
+	while (-1 != (c = getopt(argc, argv, "f:v")))
 		switch (c) {
 		case ('v'):
 			verbose = 1;
@@ -272,6 +303,11 @@ main(int argc, char *argv[])
 			break;
 
 	XML_ParserFree(p);
+
+	if (TAILQ_EMPTY(&dq)) {
+		warnx("no dives to display");
+		return(EXIT_FAILURE);
+	}
 
 	/* 
 	 * Parsing is finished.
@@ -322,16 +358,7 @@ main(int argc, char *argv[])
 
 	/* Free all memory from the dives. */
 
-	while ( ! TAILQ_EMPTY(&dq)) {
-		d = TAILQ_FIRST(&dq);
-		TAILQ_REMOVE(&dq, d, entries);
-		while ( ! TAILQ_EMPTY(&d->samps)) {
-			samp = TAILQ_FIRST(&d->samps);
-			TAILQ_REMOVE(&d->samps, samp, entries);
-			free(samp);
-		}
-		free(d);
-	}
+	parse_free(&dq);
 
 	/* Put as at the bottom of the screen. */
 
