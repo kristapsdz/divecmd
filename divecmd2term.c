@@ -1,6 +1,6 @@
 /*	$Id$ */
 /*
- * Copyright (c) 2016 Kristaps Dzonsons <kristaps@bsd.lv>,
+ * Copyright (c) 2016 Kristaps Dzonsons <kristaps@bsd.lv>
  *
  * Permission to use, copy, modify, and distribute this software for any
  * purpose with or without fee is hereby granted, provided that the above
@@ -35,10 +35,16 @@
 int verbose = 0;
 
 struct	win {
-	size_t		 rows;
-	size_t		 cols;
-	size_t		 top;
-	size_t		 left;
+	size_t		 rows; /* vertical space */
+	size_t		 cols; /* horizontal space */
+	size_t		 top; /* top offset */
+	size_t		 left; /* left offset */
+};
+
+struct	graph {
+	size_t		*labels;
+	size_t		*cols;
+	size_t		 nsamps;
 };
 
 static	const char *modes[] = {
@@ -49,58 +55,29 @@ static	const char *modes[] = {
 	"Closed-circuit" /* MODE_CC */
 };
 
-static void
-print_depths(const struct dive *d, const struct win *win)
+static int
+collect_depths(const struct dive *d, struct graph *g, 
+	size_t innercols, size_t innerrows)
 {
 	struct samp	*samp;
-	size_t		 x, nsamps, cursamps, y, lasty, lastt, 
-			 lbuf, titlesz;
 	double		 accum, incr, bucket, lastavg, avg;
-	size_t		*cols = NULL, *labels = NULL;
-	struct win	 iwin;
-	char		*title;
-	int		 c;
+	size_t		 x, y, lastt, cursamps;
 
-	/* Get the number of depth-related samples. */
+	memset(g, 0, sizeof(struct graph));
 
-	nsamps = 0;
 	TAILQ_FOREACH(samp, &d->samps, entries)
 		if (SAMP_DEPTH & samp->flags)
-			nsamps++;
+			g->nsamps++;
 
-	if (0 == nsamps)
-		return;
-
-
-	/* Create the "inner window" plotting area. */
-
-	iwin = *win;
-
-	/* 
-	 * Now make room for our border and label.
-	 * The y-axis gets the number of metres, up to xxx.y, then the
-	 * border.
-	 * The x-axis gets the border, then the labels.
-	 */
-
-	lbuf = d->maxdepth >= 100.0 ? 6 : 5;
-
-	iwin.cols -= lbuf;
-	iwin.left += lbuf;
-	iwin.top += 1;
-	iwin.rows -= 3;
+	if (0 == g->nsamps)
+		return(0);
 
 	/* Initialise our data buckets. */
 
-	cols = calloc(win->cols, sizeof(size_t));
-	labels = calloc(win->cols, sizeof(size_t));
-	if (NULL != d->date && NULL != d->time)
-		c = asprintf(&title, "%s Dive #%zu on %s %s", 
-			modes[d->mode], d->num, d->date, d->time);
-	else
-		c = asprintf(&title, "%s Dive #%zu", modes[d->mode], d->num);
+	g->cols = calloc(innercols, sizeof(size_t));
+	g->labels = calloc(innercols, sizeof(size_t));
 
-	if (NULL == cols || NULL == labels || c < 0)
+	if (NULL == g->cols || NULL == g->labels)
 		err(EXIT_FAILURE, NULL);
 
 	/*
@@ -121,7 +98,7 @@ print_depths(const struct dive *d, const struct win *win)
 	 * the data not quite representative.
 	 */
 
-	incr = (double)iwin.cols / nsamps;
+	incr = (double)innercols / g->nsamps;
 	x = lastt = cursamps = 0;
 	accum = lastavg = bucket = 0.0;
 
@@ -151,15 +128,15 @@ print_depths(const struct dive *d, const struct win *win)
 
 		avg = 0 == cursamps ? lastavg : bucket / cursamps;
 		lastavg = avg;
-		y = (size_t)((iwin.rows - 1) * (avg / d->maxdepth));
-		assert(y < iwin.rows);
+		y = (size_t)((innerrows - 1) * (avg / d->maxdepth));
+		assert(y < innerrows);
 
 		/* Skip to the next x-value. */
 
 		for ( ; x < (size_t)floor(accum); x++) {
-			assert(x < iwin.cols);
-			labels[x] = lastt;
-			cols[x] = y;
+			assert(x < innercols);
+			g->labels[x] = lastt;
+			g->cols[x] = y;
 		}
 
 		/* Reset our bucket accumulation. */
@@ -172,11 +149,55 @@ print_depths(const struct dive *d, const struct win *win)
 
 	/* Off-by-one: rounding errors. */
 
-	if (x < iwin.cols) {
-		assert(x == iwin.cols - 1);
-		cols[x] = cols[x - 1];
-		labels[x] = labels[x - 1];
+	if (x < innercols) {
+		assert(x == innercols - 1);
+		g->cols[x] = g->cols[x - 1];
+		g->labels[x] = g->labels[x - 1];
 	}
+
+	return(1);
+}
+
+static void
+print_depths(const struct dive *d, const struct win *win)
+{
+	struct graph	 g;
+	size_t		 x, y, lasty, lbuf, titlesz, ytics, xtics;
+	struct win	 iwin;
+	char		*title;
+	int		 c;
+
+	/* Create the "inner window" plotting area. */
+
+
+	/* 
+	 * Now make room for our border and label.
+	 * The y-axis gets the number of metres, up to xxx.y, then the
+	 * border.
+	 * The x-axis gets the border, then the labels.
+	 */
+
+	iwin = *win;
+	lbuf = d->maxdepth >= 100.0 ? 6 : 5;
+
+	iwin.cols -= lbuf;
+	iwin.left += lbuf;
+	iwin.top += 1;
+	iwin.rows -= 3;
+
+	/* Get the number of depth-related samples. */
+
+	if ( ! collect_depths(d, &g, iwin.cols, iwin.rows))
+		return;
+
+	c = NULL != d->date && NULL != d->time ?
+		asprintf(&title, "%s Dive #%zu on %s, %s",
+			modes[d->mode], d->num, d->date, d->time) :
+		asprintf(&title, "%s Dive #%zu",
+			modes[d->mode], d->num);
+
+	if (c < 0)
+		err(EXIT_FAILURE, NULL);
 
 	/* Title: centre, bold. */
 
@@ -202,14 +223,32 @@ print_depths(const struct dive *d, const struct win *win)
 		iwin.top + y + 1, 
 		iwin.left - 1 + 1);
 
-	for (y = 0; y < iwin.rows; y += 10) {
+	if (iwin.rows > 50)
+		ytics = (iwin.rows - 1) / 8;
+	else
+		ytics = (iwin.rows - 1) / 4;
+
+	for (y = 0; y < iwin.rows; y += ytics) {
         	printf("\033[%zu;%zuH-", 
 			iwin.top + y + 1, 
 			iwin.left - 1 + 1);
-        	printf("\033[%zu;%zuH%5.1f", 
+        	printf("\033[%zu;%zuH%*.1f", 
 			iwin.top + y + 1, 
-			iwin.left - lbuf + 1,
+			iwin.left - lbuf + 1, (int)lbuf - 1,
 			d->maxdepth * (double)y / iwin.rows);
+	}
+
+	/* Make sure we have a value at the maxdepth. */
+
+	if ((iwin.rows > 50 && 0 != (iwin.rows - 1) % 8) ||
+	    0 != (iwin.rows - 1) % 4) {
+        	printf("\033[%zu;%zuH%*.1f", 
+			iwin.top + (iwin.rows - 1) + 1, 
+			iwin.left - lbuf + 1, (int)lbuf - 1,
+			d->maxdepth * (double)(iwin.rows - 1) / iwin.rows);
+        	printf("\033[%zu;%zuH-", 
+			iwin.top + (iwin.rows - 1) + 1, 
+			iwin.left - 1 + 1);
 	}
 
 	/* Now make the x-axis and x-axis label. */
@@ -219,18 +258,23 @@ print_depths(const struct dive *d, const struct win *win)
 			iwin.top + iwin.rows + 1, 
 			iwin.left + x + 1);
 
-	for (x = 0; x < iwin.cols; x += 10) {
+	if (iwin.cols > 100)
+		xtics = (iwin.cols - 6) / 8;
+	else
+		xtics = (iwin.cols - 6) / 4;
+
+	for (x = 0; x < iwin.cols; x += xtics) {
         	printf("\033[%zu;%zuH|", 
 			iwin.top + iwin.rows + 1, 
 			iwin.left + x + 1);
         	printf("\033[%zu;%zuH%03zu:%02zu", 
 			iwin.top + iwin.rows + 2, 
 			iwin.left + x + 1,
-			labels[x] / 60, labels[x] % 60);
+			g.labels[x] / 60, g.labels[x] % 60);
 	}
 
 	for (lasty = x = 0; x < iwin.cols; x++) {
-		y = (size_t)cols[x];
+		y = (size_t)g.cols[x];
 
 		/* Join from above and below. */
 
@@ -252,8 +296,6 @@ print_depths(const struct dive *d, const struct win *win)
 			iwin.left + x + 1);
 	}
 
-	free(cols);
-	free(labels);
 	free(title);
 }
 
