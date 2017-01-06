@@ -33,15 +33,21 @@
 
 int verbose = 0;
 
+struct	win {
+	size_t		 rows;
+	size_t		 cols;
+	size_t		 top;
+	size_t		 left;
+};
+
 static void
-print_dive(const struct dive *d)
+print_depths(const struct dive *d, const struct win *win)
 {
 	struct samp	*samp;
-	struct winsize	 ws;
-	size_t		 x, nsamps, cursamps, y;
+	size_t		 x, nsamps, cursamps, y, lasty, lastt, lbuf;
 	double		 accum, incr, bucket, lastavg, avg;
-	int		 lasty;
-	int		*cols = NULL;
+	size_t		*cols = NULL, *labels = NULL;
+	struct win	 iwin;
 
 	/* Get the number of depth-related samples. */
 
@@ -49,102 +55,173 @@ print_dive(const struct dive *d)
 	TAILQ_FOREACH(samp, &d->samps, entries)
 		if (SAMP_DEPTH & samp->flags)
 			nsamps++;
+
 	if (0 == nsamps)
 		return;
 
-	/*
-	 * Initialise screen real estate.
-	 * By default, pretend we're a 80x25.
-	 * Otherwise, use the terminal's reported dimensions.
+	/* Create the "inner window" plotting area. */
+
+	iwin = *win;
+
+	/* 
+	 * Now make room for our border and label.
+	 * The y-axis gets the number of metres, up to xxx.y, then the
+	 * border.
+	 * The x-axis gets the border, then the labels.
 	 */
 
-	if (-1 == ioctl(0, TIOCGWINSZ, &ws)) {
-		ws.ws_row = 25;
-		ws.ws_col = 80;
-	}
+	lbuf = d->maxdepth >= 100.0 ? 6 : 5;
 
-	if (ws.ws_row == 0)
-		ws.ws_row = 25;
-	if (ws.ws_col == 0)
-		ws.ws_col = 80;
+	iwin.cols -= lbuf;
+	iwin.left += lbuf;
+	iwin.rows -= 2;
 
-	cols = calloc(ws.ws_col, sizeof(int));
-	if (NULL == cols)
+	/* Initialise our data buckets. */
+
+	cols = calloc(win->cols, sizeof(size_t));
+	labels = calloc(win->cols, sizeof(size_t));
+
+	if (NULL == cols || NULL == labels)
 		err(EXIT_FAILURE, NULL);
-	for (x = 0; x < (size_t)ws.ws_col; x++)
-		cols[x] = -1;
 
 	/*
 	 * Compute how many samples should go in each column.
 	 * This is floating-point so that we have a smooth transition
 	 * regardless the imbalance.
+	 * It goes like this:
+	 *
+	 *   |x0 x1 x2||y0 y1 y2||z0 z1|| <- samples w/depth
+	 *   +---x----++---y----++--z--+  <- buckets
+	 *
+	 * The number of x,y,z we travel depends on how the buckets
+	 * divide into the samples.
+	 * This also works if the number of buckets is greater than the
+	 * number of samples, in which we case we spread them out.
+	 *
+	 * FIXME: we might have staggered sampling time, which will make
+	 * the data not quite representative.
 	 */
 
-	incr = (double)(ws.ws_col - 1) / nsamps;
-	x = 0;
-	accum = lastavg = 0.0;
+	incr = (double)iwin.cols / nsamps;
+	x = lastt = cursamps = 0;
+	accum = lastavg = bucket = 0.0;
 
 	TAILQ_FOREACH(samp, &d->samps, entries) {
+		lastt = samp->time;
+
+		/* Skip over non-depth samples. */
+
 		if ( ! (SAMP_DEPTH & samp->flags))
 			continue;
 
+		/*
+		 * Accumulate samples until our accumulated number of
+		 * buckets is greater than the next output column.
+		 */
+
 		accum += incr;
-		bucket = 0.0;
-		cursamps = 0;
+		bucket += samp->depth;
+		cursamps++;
 
-		/* Walk columns, averaging samples. */
-
-		while (x < (size_t)floor(accum)) {
-			bucket += samp->depth;
-			cursamps++;
-			x++;
-		}
-		avg = 0 == cursamps ? lastavg : bucket / cursamps;
-		lastavg = avg;
-
-		/* Now compute our y-position. */
-
-		y = (size_t)((ws.ws_row - 1) * (avg / d->maxdepth));
-
-		/* Draw on the screen. */
-
-		assert(x < ws.ws_col);
-		assert(y < ws.ws_row);
-		cols[x] = y;
-	}
-
-	/* Clear the screen. */
-
-	printf("\e[1;1H\e[2J");
-
-	lasty = 0;
-	for (x = 0; x < (size_t)ws.ws_col; x++) {
-		/* TODO */
-		if (-1 == cols[x])
+		if ((x + 1) > (size_t)floor(accum)) 
 			continue;
 
-		/* Join lines. */
+		/* 
+		 * Now we have enough data for at least one bucket. 
+		 * Compute the y-value appropriately. */
 
-		if (cols[x] > lasty) {
-			lasty++;
-			while (lasty < cols[x]) {
-				printf("\033[1;36m\033[%d;%zuH%s", lasty, x, "|");
-				lasty++;
-			}
-		} else if (cols[x] < lasty) {
-			lasty--;
-			while (lasty > cols[x]) {
-				printf("\033[1;36m\033[%d;%zuH%s", lasty, x, "|");
-				lasty--;
-			}
+		avg = 0 == cursamps ? lastavg : bucket / cursamps;
+		lastavg = avg;
+		y = (size_t)((iwin.rows - 1) * (avg / d->maxdepth));
+		assert(y < iwin.rows);
+
+		/* Skip to the next x-value. */
+
+		for ( ; x < (size_t)floor(accum); x++) {
+			assert(x < iwin.cols);
+			labels[x] = lastt;
+			cols[x] = y;
 		}
 
-	        printf("\033[1;36m\033[%d;%zuH%s", cols[x], x, "_");
+		/* Reset our bucket accumulation. */
+
+		bucket = 0.0;
+		cursamps = 0;
 	}
 
-	/* Put as at the bottom of the screen. */
+	assert(NULL == samp);
 
-        printf("\033[0m\033[%d;%dH", ws.ws_row, 0);
+	/* Off-by-one: rounding errors. */
+
+	if (x < iwin.cols) {
+		assert(x == iwin.cols - 1);
+		cols[x] = cols[x - 1];
+		labels[x] = labels[x - 1];
+	}
+
+	/* First, make our y-axis and y-axis labels. */
+
+	for (y = 0; y < iwin.rows; y++)
+        	printf("\033[%zu;%zuH|", 
+			iwin.top + y + 1, 
+			iwin.left - 1 + 1);
+
+       	printf("\033[%zu;%zuH\\", 
+		iwin.top + y + 1, 
+		iwin.left - 1 + 1);
+
+	for (y = 0; y < iwin.rows; y += 10) {
+        	printf("\033[%zu;%zuH-", 
+			iwin.top + y + 1, 
+			iwin.left - 1 + 1);
+        	printf("\033[%zu;%zuH%5.1f", 
+			iwin.top + y + 1, 
+			iwin.left - lbuf + 1,
+			d->maxdepth * (double)y / iwin.rows);
+	}
+
+	/* Now make the x-axis and x-axis label. */
+
+	for (x = 0; x < iwin.cols; x++)
+        	printf("\033[%zu;%zuH-", 
+			iwin.top + iwin.rows + 1, 
+			iwin.left + x + 1);
+
+	for (x = 0; x < iwin.cols; x += 10) {
+        	printf("\033[%zu;%zuH|", 
+			iwin.top + iwin.rows + 1, 
+			iwin.left + x + 1);
+        	printf("\033[%zu;%zuH%03zu:%02zu", 
+			iwin.top + iwin.rows + 2, 
+			iwin.left + x + 1,
+			labels[x] / 60, labels[x] % 60);
+	}
+
+	for (lasty = x = 0; x < iwin.cols; x++) {
+		y = (size_t)cols[x];
+
+		/* Join from above and below. */
+
+		if (y > lasty)
+			for (++lasty; lasty < y; lasty++) 
+				printf("\033[1;36m\033[%zu;%zuH|",
+					iwin.top + lasty + 1, 
+					iwin.left + x + 1);
+		else if (y < lasty)
+			for (--lasty; lasty > y; lasty--)
+				printf("\033[1;36m\033[%zu;%zuH|", 
+					iwin.top + lasty + 1, 
+					iwin.left + x + 1);
+
+		/* Print our marker. */
+
+	        printf("\033[1;36m\033[%zu;%zuH+", 
+			iwin.top + y + 1, 
+			iwin.left + x + 1);
+	}
+
+	free(cols);
+	free(labels);
 }
 
 int
@@ -156,6 +233,8 @@ main(int argc, char *argv[])
 	struct diveq	 dq;
 	struct dive	*d;
 	struct samp	*samp;
+	struct winsize	 ws;
+	struct win	 win;
 
 	/* Pledge us early: only reading files. */
 
@@ -205,8 +284,41 @@ main(int argc, char *argv[])
 		err(EXIT_FAILURE, "pledge");
 #endif
 
+	/*
+	 * Initialise screen real estate.
+	 * By default, pretend we're a 80x25, which will also be our
+	 * minimum size.
+	 * Otherwise, use the terminal's reported dimensions.
+	 */
+
+	if (-1 == ioctl(0, TIOCGWINSZ, &ws)) {
+		warnx("TIOCGWINSZ");
+		ws.ws_row = 25;
+		ws.ws_col = 80;
+	}
+
+	if (ws.ws_row < 25)
+		ws.ws_row = 25;
+	if (ws.ws_col < 80)
+		ws.ws_col = 80;
+
+	/* Clear the screen. */
+
+	printf("\e[1;1H\e[2J");
+
+	/* 
+	 * Include a margin: 3 vertical (one at the top, two on the
+	 * bottom, one being for the next prompt) and 2 horizontal (one
+	 * on either side).
+	 */
+
+	win.rows = ws.ws_row - 3;
+	win.cols = ws.ws_col - 2;
+	win.top = 1;
+	win.left = 1;
+
 	if ( ! TAILQ_EMPTY(&dq))
-		print_dive(TAILQ_FIRST(&dq));
+		print_depths(TAILQ_FIRST(&dq), &win);
 
 	/* Free all memory from the dives. */
 
@@ -220,6 +332,10 @@ main(int argc, char *argv[])
 		}
 		free(d);
 	}
+
+	/* Put as at the bottom of the screen. */
+
+        printf("\033[0m\033[%d;%dH", ws.ws_row, 0);
 
 	return(rc ? EXIT_SUCCESS : EXIT_FAILURE);
 usage:
