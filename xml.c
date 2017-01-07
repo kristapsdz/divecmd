@@ -29,11 +29,11 @@
 #include "extern.h"
 
 struct	dcmd_xml {
-	FILE		*ostream; /* output stream */
+	FILE		*f; /* output stream */
 };
 
 struct	dcmd_samp {
-	FILE		*ostream; /* output stream */
+	FILE		*f; /* output stream */
 	unsigned int	 nsamples; /* num samples parsed */
 };
 
@@ -58,30 +58,31 @@ static	const char *dcmd_types[] = {
  * A DC_SAMPLE_TIME means that we're encountering a new sample.
  */
 static void
-sample_cb(dc_sample_type_t type, dc_sample_value_t value, void *userdata)
+sample_cb(dc_sample_type_t type, dc_sample_value_t v, void *userdata)
 {
-	struct dcmd_samp *sampledata = userdata;
+	struct dcmd_samp *sd = userdata;
 
 	switch (type) {
 	case DC_SAMPLE_TIME:
-		if (sampledata->nsamples++)
-			fputs(" />\n", sampledata->ostream);
-		fprintf(sampledata->ostream, 
-			"     <sample time=\"%u\" ", value.time);
+		if (sd->nsamples++)
+			fputs("\t\t\t\t</sample>\n", sd->f);
+		fprintf(sd->f, "\t\t\t\t"
+			"<sample time=\"%u\">\n", v.time);
 		break;
 	case DC_SAMPLE_DEPTH:
-		fprintf(sampledata->ostream, 
-			"depth=\"%.2f\" ", value.depth);
+		fprintf(sd->f, "\t\t\t\t\t"
+			"<depth value=\"%.2f\" />\n", v.depth);
 		break;
 	case DC_SAMPLE_PRESSURE:
-		fprintf(sampledata->ostream, 
-			"pressure=\"%.2f\" tank=\"%u\" ", 
-			value.pressure.value,
-			value.pressure.tank + 1);
+		fprintf(sd->f, "\t\t\t\t\t"
+			"<pressure value=\"%.2f\" tank=\"%u\" />\n", 
+			v.pressure.value,
+			v.pressure.tank + 1);
 		break;
 	case DC_SAMPLE_TEMPERATURE:
-		fprintf(sampledata->ostream, 
-			"temp=\"%.2f\" ", value.temperature);
+		fprintf(sd->f, "\t\t\t\t\t"
+			"<temp value=\"%.2f\" />", 
+			v.temperature);
 		break;
 	default:
 		if ( ! verbose)
@@ -100,11 +101,11 @@ output_xml_new(void)
 	if (NULL == (p = malloc(sizeof(struct dcmd_xml))))
 		err(EXIT_FAILURE, NULL);
 
-	p->ostream = stdout;
+	p->f = stdout;
 
 	fputs("<?xml version=\"1.0\" encoding=\"UTF-8\" ?>\n"
 	      "<divelog program=\"divecmd\" version=\"" VERSION "\">\n"
-	      " <dives>\n", p->ostream);
+	      "\t<dives>\n", p->f);
 
 	return((struct dcmd_out *)p);
 }
@@ -125,7 +126,7 @@ output_xml_write_dive(FILE *f, dc_parser_t *parser, size_t num)
 
 	memset(&dt, 0, sizeof(struct dc_datetime_t));
 
-	fprintf(f, "  <dive number=\"%zu\" ", num);
+	fprintf(f, "\t\t<dive number=\"%zu\" ", num);
 
 	st = dc_parser_get_datetime(parser, &dt);
 	if (st != DC_STATUS_SUCCESS && 
@@ -155,16 +156,16 @@ output_xml_write_dive(FILE *f, dc_parser_t *parser, size_t num)
 		return(0);
 	} else if (DC_STATUS_SUCCESS == st) {
 		if (DC_DIVEMODE_FREEDIVE == dm) 
-			fprintf(f, "mode=\"freedive\" ");
+			fprintf(f, "mode=\"freedive\"");
 		else if (DC_DIVEMODE_GAUGE == dm)
-			fprintf(f, "mode=\"gauge\" ");
+			fprintf(f, "mode=\"gauge\"");
 		else if (DC_DIVEMODE_OC == dm)
-			fprintf(f, "mode=\"opencircuit\" ");
+			fprintf(f, "mode=\"opencircuit\"");
 		else if (DC_DIVEMODE_CC == dm)
-			fprintf(f, "mode=\"closedcircuit\" ");
+			fprintf(f, "mode=\"closedcircuit\"");
 	}
 
-	fprintf(f, ">\n");
+	fputs(">\n", f);
 	return(1);
 }
 
@@ -194,7 +195,7 @@ output_xml_write_depth(FILE *f, dc_parser_t *parser)
 	    DC_STATUS_SUCCESS != stavg)
 		return(1);
 
-	fprintf(f, "   <depth ");
+	fputs("\t\t\t<depth ", f);
 	if (DC_STATUS_SUCCESS == stmax && max > 0.0)
 		fprintf(f, "max=\"%.2f\" ", max);
 	if (DC_STATUS_SUCCESS == stavg && avg > 0.0)
@@ -231,7 +232,7 @@ output_xml_write_tanks(FILE *f, dc_parser_t *parser)
 	} else if (DC_STATUS_SUCCESS != st || 0 == ntanks)
 		return(1);
 
-	fprintf(f, "   <tanks>\n");
+	fputs("\t\t\t<tanks>\n", f);
 
 	for (i = 0; i < ntanks; ++i) {
 		fprintf(f, "    <tank num=\"%u\" ", i + 1);
@@ -264,7 +265,7 @@ output_xml_write_tanks(FILE *f, dc_parser_t *parser)
 			tank.beginpressure, tank.endpressure);
 	}
 
-	fprintf(f, "   </tanks>\n");
+	fputs("\t\t\t</tanks>\n", f);
 	return(1);
 }
 
@@ -295,10 +296,10 @@ output_xml_write_gasses(FILE *f, dc_parser_t *parser)
 	} else if (DC_STATUS_SUCCESS != st || 0 == ngases)
 		return(1);
 
-	fprintf(f, "   <gasmixes>\n");
+	fputs("\t\t\t<gasmixes>\n", f);
 
 	for (i = 0; i < ngases; ++i) {
-		fprintf(f, "    <gasmix num=\"%u\" ", i + 1);
+		fprintf(f, "\t\t\t\t<gasmix num=\"%u\" ", i + 1);
 		st = dc_parser_get_field
 			(parser, DC_FIELD_GASMIX, i, &gm);
 		if (st != DC_STATUS_SUCCESS && 
@@ -306,7 +307,7 @@ output_xml_write_gasses(FILE *f, dc_parser_t *parser)
 			warnx("error parsing the gas mix");
 			return(0);
 		} else if (DC_STATUS_SUCCESS != st) {
-			fprintf(f, ">\n");
+			fputs("/>\n", f);
 			continue;
 		}
 
@@ -315,7 +316,7 @@ output_xml_write_gasses(FILE *f, dc_parser_t *parser)
 			gm.nitrogen * 100.0, gm.helium * 100.0);
 	}
 
-	fprintf(f, "   </gasmixes>\n");
+	fputs("\t\t\t</gasmixes>\n", f);
 	return(1);
 }
 
@@ -330,22 +331,22 @@ output_xml_write(struct dcmd_out *abstract,
 
 	memset(&sampledata, 0, sizeof(struct dcmd_samp));
 
-	sampledata.ostream = output->ostream;
+	sampledata.f = output->f;
 
-	if ( ! output_xml_write_dive(output->ostream, parser, num))
+	if ( ! output_xml_write_dive(output->f, parser, num))
 		goto cleanup;
 
-	fprintf(output->ostream, 
-		"   <fingerprint>%s</fingerprint>\n", fpr);
+	fprintf(output->f, "\t\t\t"
+		"<fingerprint>%s</fingerprint>\n", fpr);
 
-	if ( ! output_xml_write_gasses(output->ostream, parser))
+	if ( ! output_xml_write_gasses(output->f, parser))
 		goto cleanup;
-	if ( ! output_xml_write_tanks(output->ostream, parser))
+	if ( ! output_xml_write_tanks(output->f, parser))
 		goto cleanup;
-	if ( ! output_xml_write_depth(output->ostream, parser))
+	if ( ! output_xml_write_depth(output->f, parser))
 		goto cleanup;
 
-	fprintf(output->ostream, "   <samples>\n");
+	fputs("\t\t\t<samples>\n", output->f);
 
 	status = dc_parser_samples_foreach
 		(parser, sample_cb, &sampledata);
@@ -355,14 +356,14 @@ output_xml_write(struct dcmd_out *abstract,
 	}
 
 	if (sampledata.nsamples)
-		fputs(" />\n", output->ostream);
+		fputs("\t\t\t\t</sample>\n", output->f);
 
 	rc = 1;
 cleanup:
 
 	if (1 == rc)
-		fputs("   </samples>\n"
-		      "  </dive>\n", output->ostream);
+		fputs("\t\t\t</samples>\n"
+		      "\t\t</dive>\n", output->f);
 
 	return(DC_STATUS_SUCCESS);
 }
@@ -375,9 +376,9 @@ output_xml_free(struct dcmd_out *abstract)
 	if (NULL == output)
 		return(DC_STATUS_SUCCESS);
 
-	fputs(" </dives>\n"
-      	      "</divelog>\n", output->ostream);
+	fputs("\t</dives>\n"
+      	      "</divelog>\n", output->f);
 
-	fclose(output->ostream);
+	fclose(output->f);
 	return(DC_STATUS_SUCCESS);
 }
