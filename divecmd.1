@@ -194,17 +194,17 @@ This sets either (or both) the maximum and average non-zero depth.
 And now, the samples...
 .Bd -literal
       <samples>
-        <sample time="ss"
-         [depth="xxx"]
-         [temp="xxx"]
-         [pressure="xxx" tank="nnn"]
-        />
+        <sample time="ss">
+         [<depth value="xxx" />]
+         [<temp value="xxx" />]
+         [<pressure value="xxx" tank="nnn" />]
+        </sample>
       </samples>
 .Ed
 .Pp
 The sample time is in seconds from the dive start and is
 always specified.
-The remaining options are as follows:
+The remaining optional sub-elements are as follows:
 .Bl -tag -width Ds
 .It Li depth
 Depth (metres) at sampling time.
@@ -216,6 +216,15 @@ References a tank number in the
 .Li <tanks>
 section.
 .El
+.Pp
+In theory, it's possible for a sample to have no inner elements at all,
+but in all cases I've observed, there is at least one.
+.Po
+Usually the
+.Li <depth>
+element is specified for all samples, but of course this isn't
+guaranteed.
+.Pc
 .Bd -literal
     </dive>
   </dives>
