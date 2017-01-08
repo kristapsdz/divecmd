@@ -32,6 +32,7 @@ struct	parse {
 	XML_Parser	 p; /* parser routine */
 	const char	*file; /* parsed filename */
 	struct dive	*curdive; /* current dive */
+	struct samp	*cursamp; /* current sample */
 	struct diveq	*dives; /* all dives */
 };
 
@@ -46,13 +47,14 @@ logerrx(const struct parse *p, const char *fmt, ...)
 	va_start(ap, fmt);
 	vfprintf(stderr, fmt, ap);
 	va_end(ap);
+	fputc('\n', stderr);
 }
 
 static void
 logerr(const struct parse *p)
 {
 
-	logerrx(p, "%s\n", XML_ErrorString(XML_GetErrorCode(p->p)));
+	logerrx(p, "%s", XML_ErrorString(XML_GetErrorCode(p->p)));
 }
 
 static void
@@ -64,6 +66,10 @@ parse_open(void *dat, const XML_Char *s, const XML_Char **atts)
 	const XML_Char	**attp;
 
 	if (0 == strcmp(s, "dive")) {
+		if (NULL != p->cursamp) {
+			logerrx(p, "depth outside sample");
+			p->cursamp = NULL;
+		}
 		p->curdive = dive = 
 			calloc(1, sizeof(struct dive));
 		if (NULL == dive)
@@ -102,25 +108,53 @@ parse_open(void *dat, const XML_Char *s, const XML_Char **atts)
 			logerrx(p, "sample outside dive");
 			return;
 		}
-		if (NULL == (samp = calloc(1, sizeof(struct samp))))
+		for (attp = atts; NULL != attp[0]; attp += 2)
+			if (0 == strcmp(attp[0], "time"))
+				break;
+		if (NULL == attp[0]) {
+			logerrx(p, "sample without time");
+			return;
+		}
+		p->cursamp = samp = 
+			calloc(1, sizeof(struct samp));
+		if (NULL == samp)
 			err(EXIT_FAILURE, NULL);
+		samp->time = atoi(attp[1]);
 		TAILQ_INSERT_TAIL(&dive->samps, samp, entries);
 		dive->nsamps++;
-		for (attp = atts; NULL != *attp; attp += 2) {
-			if (0 == strcmp(attp[0], "time")) {
-				samp->time = atoi(attp[1]);
-				if (samp->time > dive->maxtime)
-					dive->maxtime = samp->time;
-			} else if (0 == strcmp(attp[0], "depth")) {
-				samp->flags |= SAMP_DEPTH;
-				samp->depth = atof(attp[1]);
-				if (samp->depth > dive->maxdepth)
-					dive->maxdepth = samp->depth;
-			}
-		}
+		if (samp->time > dive->maxtime)
+			dive->maxtime = samp->time;
 		if (verbose)
 			fprintf(stderr, "%s: new sample: %zu, %zu\n", 
 				p->file, dive->num, samp->time);
+	} else if (0 == strcmp(s, "depth")) {
+		if (NULL == (samp = p->cursamp)) {
+			logerrx(p, "depth outside sample");
+			return;
+		}
+		for (attp = atts; NULL != attp[0]; attp += 2)
+			if (0 == strcmp(attp[0], "value")) 
+				break;
+		if (NULL == attp[0]) {
+			logerrx(p, "depth without value");
+			return;
+		}
+		samp->depth = atof(attp[1]);
+		samp->flags |= SAMP_DEPTH;
+	} else if (0 == strcmp(s, "temp")) {
+		if (NULL == (samp = p->cursamp)) {
+			logerrx(p, "temperature outside sample");
+			return;
+		}
+		for (attp = atts; NULL != attp[0]; attp += 2)
+			if (0 == strcmp(attp[0], "value")) 
+				break;
+		if (NULL == attp[0]) {
+			logerrx(p, "temperature without value");
+			return;
+		}
+		samp->temp = atof(attp[1]);
+		samp->flags |= SAMP_TEMP;
 	}
 }
 
@@ -131,6 +165,8 @@ parse_close(void *dat, const XML_Char *s)
 
 	if (0 == strcmp(s, "dive"))
 		p->curdive = NULL;
+	else if (0 == strcmp(s, "sample"))
+		p->cursamp = NULL;
 }
 
 int
