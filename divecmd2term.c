@@ -23,6 +23,7 @@
 #include <assert.h>
 #include <err.h>
 #include <float.h>
+#include <locale.h>
 #include <math.h>
 #include <stdlib.h>
 #include <stdio.h>
@@ -34,6 +35,7 @@
 #include "parser.h"
 
 int verbose = 0;
+int utf8 = 0;
 
 enum	grapht {
 	GRAPH_TEMP,
@@ -100,13 +102,23 @@ print_avgs(const struct avg *const *avgs, size_t avgsz,
 	/* Make our y-axis and y-axis labels. */
 
 	for (y = 0; y < iwin->rows; y++)
-        	printf("\033[%zu;%zuH|", 
+		if (utf8)
+			printf("\033[%zu;%zuH%lc", 
+				iwin->top + y + 1, 
+				iwin->left - 1 + 1, L'\x2502');
+		else
+			printf("\033[%zu;%zuH|", 
+				iwin->top + y + 1, 
+				iwin->left - 1 + 1);
+
+	if (utf8)
+		printf("\033[%zu;%zuH%lc", 
+			iwin->top + y + 1, 
+			iwin->left - 1 + 1, L'\x2514');
+	else
+		printf("\033[%zu;%zuH\\", 
 			iwin->top + y + 1, 
 			iwin->left - 1 + 1);
-
-       	printf("\033[%zu;%zuH\\", 
-		iwin->top + y + 1, 
-		iwin->left - 1 + 1);
 
 	if (iwin->rows > 50)
 		ytics = (iwin->rows - 1) / 8;
@@ -117,9 +129,14 @@ print_avgs(const struct avg *const *avgs, size_t avgsz,
 		v = dir ?
 			max - (max - min) * (double)y / iwin->rows :
 			min + (max - min) * (double)y / iwin->rows;
-        	printf("\033[%zu;%zuH-", 
-			iwin->top + y + 1, 
-			iwin->left - 1 + 1);
+		if (utf8)
+			printf("\033[%zu;%zuH%lc", 
+				iwin->top + y + 1, 
+				iwin->left - 1 + 1, L'\x251c');
+		else
+			printf("\033[%zu;%zuH-", 
+				iwin->top + y + 1, 
+				iwin->left - 1 + 1);
         	printf("\033[%zu;%zuH%*.1f", 
 			iwin->top + y + 1, 
 			iwin->left - lbuf + 1, (int)lbuf - 1, v);
@@ -138,17 +155,27 @@ print_avgs(const struct avg *const *avgs, size_t avgsz,
 			iwin->top + (iwin->rows - 1) + 1, 
 			iwin->left - lbuf + 1, (int)lbuf - 1,
 			v);
-        	printf("\033[%zu;%zuH-", 
-			iwin->top + (iwin->rows - 1) + 1, 
-			iwin->left - 1 + 1);
+		if (utf8)
+			printf("\033[%zu;%zuH%lc", 
+				iwin->top + (iwin->rows - 1) + 1, 
+				iwin->left - 1 + 1, L'\x251c');
+		else
+			printf("\033[%zu;%zuH-", 
+				iwin->top + (iwin->rows - 1) + 1, 
+				iwin->left - 1 + 1);
 	}
 
 	/* Now make the x-axis and x-axis label. */
 
 	for (x = 0; x < iwin->cols; x++)
-        	printf("\033[%zu;%zuH-", 
-			iwin->top + iwin->rows + 1, 
-			iwin->left + x + 1);
+		if (utf8)
+			printf("\033[%zu;%zuH%lc", 
+				iwin->top + iwin->rows + 1, 
+				iwin->left + x + 1, L'\x2500');
+		else
+			printf("\033[%zu;%zuH-", 
+				iwin->top + iwin->rows + 1, 
+				iwin->left + x + 1);
 
 	if (iwin->cols > 100)
 		xtics = (iwin->cols - 6) / 8;
@@ -157,9 +184,14 @@ print_avgs(const struct avg *const *avgs, size_t avgsz,
 
 	for (x = 0; x < iwin->cols; x += xtics) {
 		t = maxt * ((double)x / iwin->cols);
-        	printf("\033[%zu;%zuH|", 
-			iwin->top + iwin->rows + 1, 
-			iwin->left + x + 1);
+		if (utf8)
+			printf("\033[%zu;%zuH%lc", 
+				iwin->top + iwin->rows + 1, 
+				iwin->left + x + 1, L'\x253c');
+		else
+			printf("\033[%zu;%zuH|", 
+				iwin->top + iwin->rows + 1, 
+				iwin->left + x + 1);
         	printf("\033[%zu;%zuH%03zu:%02zu", 
 			iwin->top + iwin->rows + 2, 
 			iwin->left + x + 1,
@@ -182,10 +214,16 @@ print_avgs(const struct avg *const *avgs, size_t avgsz,
 				(iwin->rows - 1) * 
 				((v - min) / (max - min));
 
-			printf("\033[1;3%zum\033[%zu;%zuH+", 
-				(i % 7) + 1,
-				iwin->top + y + 1, 
-				iwin->left + x + 1);
+			if (utf8)
+				printf("\033[1;3%zum\033[%zu;%zuH%lc", 
+					(i % 7) + 1,
+					iwin->top + y + 1, 
+					iwin->left + x + 1, L'\x2022');
+			else
+				printf("\033[1;3%zum\033[%zu;%zuH+", 
+					(i % 7) + 1,
+					iwin->top + y + 1, 
+					iwin->left + x + 1);
 		}
 
 	/* Reset terminal attributes. */
@@ -416,6 +454,8 @@ main(int argc, char *argv[])
 	struct diveq	 dq;
 	struct winsize	 ws;
 
+	setlocale(LC_ALL, "");
+
 	/* Pledge us early: only reading files. */
 
 #if defined(__OpenBSD__) && OpenBSD > 201510
@@ -423,8 +463,11 @@ main(int argc, char *argv[])
 		err(EXIT_FAILURE, "pledge");
 #endif
 
-	while (-1 != (c = getopt(argc, argv, "f:v")))
+	while (-1 != (c = getopt(argc, argv, "f:uv")))
 		switch (c) {
+		case ('u'):
+			utf8 = 1;
+			break;
 		case ('v'):
 			verbose = 1;
 			break;
@@ -495,6 +538,6 @@ main(int argc, char *argv[])
 	parse_free(&dq);
 	return(rc ? EXIT_SUCCESS : EXIT_FAILURE);
 usage:
-	fprintf(stderr, "usage: %s [-v] [file]\n", getprogname());
+	fprintf(stderr, "usage: %s [-uv] [file]\n", getprogname());
 	return(EXIT_FAILURE);
 }
