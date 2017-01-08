@@ -79,13 +79,22 @@ static	const char *modes[] = {
 	"Closed-circuit" /* MODE_CC */
 };
 
+/*
+ * Print a set of averages.
+ * Accepts the averages, "avgs", and the window in which to print,
+ * "iwin".
+ * The "min" and "max" are the total range of all points, and "maxt" is
+ * the maximum x-axis value.
+ * The "lbuf" tells us the left-hand buffer (for formatting axes.)
+ * Finally, "dir" tells us whether the direction to show the y-axis
+ * values, upward (1) or downward (0).
+ */
 static void
-print_avgs(const struct avg *avgs, 
-	const struct win *iwin, 
-	double min, double max,
+print_avgs(const struct avg *const *avgs, size_t avgsz,
+	const struct win *iwin, double min, double max, 
 	size_t maxt, size_t lbuf, int dir)
 {
-	size_t		 x, y, lasty, ytics, xtics, t;
+	size_t		 i, x, y, t, ytics, xtics;
 	double		 v;
 
 	/* Make our y-axis and y-axis labels. */
@@ -121,8 +130,10 @@ print_avgs(const struct avg *avgs,
 	if ((iwin->rows > 50 && 0 != (iwin->rows - 1) % 8) ||
 	    0 != (iwin->rows - 1) % 4) {
 		v = dir ?
-			max - (max - min) * (double)(iwin->rows - 1) / iwin->rows :
-			min + (max - min) * (double)(iwin->rows - 1) / iwin->rows;
+			max - (max - min) * 
+				(double)(iwin->rows - 1) / iwin->rows :
+			min + (max - min) * 
+				(double)(iwin->rows - 1) / iwin->rows;
         	printf("\033[%zu;%zuH%*.1f", 
 			iwin->top + (iwin->rows - 1) + 1, 
 			iwin->left - lbuf + 1, (int)lbuf - 1,
@@ -155,39 +166,37 @@ print_avgs(const struct avg *avgs,
 			t / 60, t % 60);
 	}
 
-	for (lasty = x = 0; x < iwin->cols; x++) {
-		if (0 == avgs[x].sz)
-			continue;
-		v = avgs[x].accum / (double)avgs[x].sz;
-		y = dir ?
-			(iwin->rows - 1) * ((max - v) / (max - min)) :
-			(iwin->rows - 1) * ((v - min) / (max - min));
+	/* Draw graph values, if applicable. */
 
-		/* Join from above and below. */
+	for (i = 0; i < avgsz; i++)
+		for (x = 0; x < iwin->cols; x++) {
+			/* No values to sample? */
 
-#if 0
-		if (y > lasty)
-			for (++lasty; lasty < y; lasty++) 
-				printf("\033[1;36m\033[%zu;%zuH|",
-					iwin->top + lasty + 1, 
-					iwin->left + x + 1);
-		else if (y < lasty)
-			for (--lasty; lasty > y; lasty--)
-				printf("\033[1;36m\033[%zu;%zuH|", 
-					iwin->top + lasty + 1, 
-					iwin->left + x + 1);
-#endif
+			if (0 == avgs[i][x].sz)
+				continue;
 
-		/* Print our marker. */
+			v = avgs[i][x].accum / (double)avgs[i][x].sz;
+			y = dir ?
+				(iwin->rows - 1) * 
+				((max - v) / (max - min)) :
+				(iwin->rows - 1) * 
+				((v - min) / (max - min));
 
-	        printf("\033[1;36m\033[%zu;%zuH+", 
-			iwin->top + y + 1, 
-			iwin->left + x + 1);
-	}
+			printf("\033[1;3%zum\033[%zu;%zuH+", 
+				(i % 7) + 1,
+				iwin->top + y + 1, 
+				iwin->left + x + 1);
+		}
+
+	/* Reset terminal attributes. */
 
         printf("\033[0m");
 }
 
+/*
+ * Sort values into the column-width bins.
+ * Returns the bins allocated of size "cols".
+ */
 static struct avg *
 collect(const struct dive *d, size_t cols, 
 	size_t maxt, enum grapht type)
@@ -228,15 +237,16 @@ collect(const struct dive *d, size_t cols,
  * everything onto the screen.
  */
 static int
-print_all(const struct dive *d, const struct winsize *ws)
+print_all(const struct diveq *dq, const struct winsize *ws)
 {
-	struct graph	 temp, depth;
-	struct samp	*samp;
-	int		 c, dtemp = 0, ddepth = 0;
-	struct win	 win, iwin;
-	size_t		 lbuf, maxt, titlesz;
-	struct avg	*avg;
-	char		*title;
+	struct dive	 *d;
+	struct graph	  temp, depth;
+	struct samp	 *samp;
+	int		  c, dtemp = 0, ddepth = 0;
+	struct win	  win, iwin;
+	size_t		  i, lbuf, maxt, titlesz, avgsz;
+	struct avg	**avg;
+	char		 *title;
 
 	memset(&temp, 0, sizeof(struct graph));
 	memset(&depth, 0, sizeof(struct graph));
@@ -251,26 +261,33 @@ print_all(const struct dive *d, const struct winsize *ws)
 	 * difference between maximum and minimum.
 	 */
 
-	TAILQ_FOREACH(samp, &d->samps, entries) {
-		if (SAMP_DEPTH & samp->flags) {
-			depth.nsamps++;
-			if (samp->time > depth.maxtime)
-				depth.maxtime = samp->time;
-			if (samp->depth > depth.maxvalue)
-				depth.maxvalue = samp->depth;
-			if (samp->depth < depth.minvalue)
-				depth.minvalue = samp->depth;
-		}
-		if (SAMP_TEMP & samp->flags) {
-			temp.nsamps++;
-			if (samp->time > temp.maxtime)
-				temp.maxtime = samp->time;
-			if (samp->temp > temp.maxvalue)
-				temp.maxvalue = samp->temp;
-			if (samp->temp < temp.minvalue)
-				temp.minvalue = samp->temp;
+	avgsz = 0;
+	TAILQ_FOREACH(d, dq, entries) {
+		avgsz++;
+		TAILQ_FOREACH(samp, &d->samps, entries) {
+			if (SAMP_DEPTH & samp->flags) {
+				depth.nsamps++;
+				if (samp->time > depth.maxtime)
+					depth.maxtime = samp->time;
+				if (samp->depth > depth.maxvalue)
+					depth.maxvalue = samp->depth;
+				if (samp->depth < depth.minvalue)
+					depth.minvalue = samp->depth;
+			}
+			if (SAMP_TEMP & samp->flags) {
+				temp.nsamps++;
+				if (samp->time > temp.maxtime)
+					temp.maxtime = samp->time;
+				if (samp->temp > temp.maxvalue)
+					temp.maxvalue = samp->temp;
+				if (samp->temp < temp.minvalue)
+					temp.minvalue = samp->temp;
+			}
 		}
 	}
+
+	if (NULL == (avg = calloc(avgsz, sizeof(struct avg *))))
+		err(EXIT_FAILURE, NULL);
 
 	if (temp.nsamps >= 2 && 
 	    fabs(temp.maxvalue - temp.minvalue) > FLT_EPSILON)
@@ -284,20 +301,11 @@ print_all(const struct dive *d, const struct winsize *ws)
 		return(0);
 	}
 
-	/* Get the maximum time. */
+	/*
+	 * Begin by clearing our workspace.
+	 */
 
-	maxt = depth.maxtime;
-	if (temp.maxtime > maxt)
-		maxt = temp.maxtime;
-
-	c = NULL != d->date && NULL != d->time ?
-		asprintf(&title, "%s Dive #%zu on %s, %s",
-			modes[d->mode], d->num, d->date, d->time) :
-		asprintf(&title, "%s Dive #%zu",
-			modes[d->mode], d->num);
-
-	if (c < 0)
-		err(EXIT_FAILURE, NULL);
+	printf("\e[1;1H\e[2J");
 
 	/* 
 	 * Include a margin: 4 vertical (one at the top, two on the
@@ -310,25 +318,37 @@ print_all(const struct dive *d, const struct winsize *ws)
 	win.top = 1;
 	win.left = 1;
 
-	/*
-	 * We're going to graph at least one of the types.
-	 * Begin by clearing our workspace.
-	 */
+	/* Get the maximum time. */
 
-	printf("\e[1;1H\e[2J");
+	maxt = depth.maxtime;
+	if (temp.maxtime > maxt)
+		maxt = temp.maxtime;
 
-	/* Title: centre, bold. */
+	i = 0;
+	TAILQ_FOREACH(d, dq, entries) {
+		c = NULL != d->date && NULL != d->time ?
+			asprintf(&title, "%s Dive #%zu on %s, %s",
+				modes[d->mode], d->num, d->date, d->time) :
+			asprintf(&title, "%s Dive #%zu",
+				modes[d->mode], d->num);
+		if (c < 0)
+			err(EXIT_FAILURE, NULL);
 
-	titlesz = strlen(title);
-	if (titlesz >= win.cols) {
-		title[win.cols - 2] = '\0';
-		titlesz = strlen(title);
+
+		/* Title: centre, bold.  Room for legend. */
+
+		titlesz = strlen(title) + 2;
+		if (titlesz >= win.cols) {
+			title[win.cols - 4] = '\0';
+			titlesz = strlen(title) + 2;
+		}
+
+		printf("\033[%zu;%zuH\033[1m%s \033[3%zum+\033[0m", 
+			win.top + i + 1, 
+			win.left + ((win.cols - titlesz) / 2) + 1,
+			title, i + 1);
+		i++;
 	}
-
-       	printf("\033[%zu;%zuH\033[1m%s\033[0m", 
-		win.top + 1, 
-		win.left + ((win.cols - titlesz) / 2) + 1,
-		title);
 
 	lbuf = (dtemp && temp.maxvalue >= 100.0) || 
 	       (ddepth && depth.maxvalue >= 100.0) ? 6 : 5;
@@ -337,16 +357,22 @@ print_all(const struct dive *d, const struct winsize *ws)
 		iwin = win;
 		iwin.cols -= lbuf;
 		iwin.left += lbuf;
-		iwin.top += 1;
+		iwin.top += avgsz;
 		if (ddepth)
 			iwin.rows = (win.rows / 2) - 3;
 		else
-			iwin.rows -= 3;
+			iwin.rows -= (avgsz + 1);
 
-		avg = collect(d, iwin.cols, maxt, GRAPH_TEMP);
-		print_avgs(avg, &iwin, temp.minvalue, 
+		i = 0;
+		TAILQ_FOREACH(d, dq, entries) 
+			avg[i++] = collect(d, 
+				iwin.cols, maxt, GRAPH_TEMP);
+
+		print_avgs((const struct avg *const *)avg, avgsz, 
+			&iwin, temp.minvalue, 
 			temp.maxvalue, maxt, lbuf, 1);
-		free(avg);
+		for (i = 0; i < avgsz; i++)
+			free(avg[i]);
 	}
 
 	if (ddepth) {
@@ -354,23 +380,29 @@ print_all(const struct dive *d, const struct winsize *ws)
 		iwin.cols -= lbuf;
 		iwin.left += lbuf;
 		if (dtemp) {
-			iwin.top = (win.rows / 2) + 2;
-			iwin.rows = (win.rows / 2) - 3;
+			iwin.top = (win.rows / 2) + avgsz + 1;
+			iwin.rows = (win.rows / 2) - (avgsz + 1);
 		} else {
-			iwin.rows -= 3;
-			iwin.top += 1;
+			iwin.rows -= (avgsz + 1);
+			iwin.top += avgsz;
 		}
 
-		avg = collect(d, iwin.cols, maxt, GRAPH_DEPTH);
-		print_avgs(avg, &iwin, depth.minvalue, 
+		i = 0;
+		TAILQ_FOREACH(d, dq, entries)
+			avg[i++] = collect(d, 
+				iwin.cols, maxt, GRAPH_DEPTH);
+		print_avgs((const struct avg *const *)avg, avgsz, 
+			&iwin, depth.minvalue, 
 			depth.maxvalue, maxt, lbuf, 0);
-		free(avg);
+		for (i = 0; i < avgsz; i++)
+			free(avg[i]);
 	}
 
 	/* Put as at the bottom of the screen. */
 
         printf("\033[%d;%dH", ws->ws_row, 0);
 
+	free(avg);
 	free(title);
 	return(1);
 }
@@ -456,7 +488,7 @@ main(int argc, char *argv[])
 		ws.ws_col = 80;
 
 	if ( ! TAILQ_EMPTY(&dq))
-		rc = print_all(TAILQ_FIRST(&dq), &ws);
+		rc = print_all(&dq, &ws);
 
 	/* Free all memory from the dives. */
 
