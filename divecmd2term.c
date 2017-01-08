@@ -22,6 +22,7 @@
 
 #include <assert.h>
 #include <err.h>
+#include <float.h>
 #include <math.h>
 #include <stdlib.h>
 #include <stdio.h>
@@ -34,6 +35,23 @@
 
 int verbose = 0;
 
+enum	grapht {
+	GRAPH_TEMP,
+	GRAPH_DEPTH
+};
+
+/*
+ * Used for computing averages.
+ */
+struct	avg {
+	double		 accum;
+	size_t		 sz;
+};
+
+/*
+ * Drawing area size.
+ * All values are absolute to the total screen size.
+ */
 struct	win {
 	size_t		 rows; /* vertical space */
 	size_t		 cols; /* horizontal space */
@@ -41,10 +59,16 @@ struct	win {
 	size_t		 left; /* left offset */
 };
 
+/*
+ * A single graph type.
+ */
 struct	graph {
 	size_t		*labels;
 	size_t		*cols;
 	size_t		 nsamps;
+	size_t		 maxtime;
+	double		 maxvalue;
+	double		 minvalue;
 };
 
 static	const char *modes[] = {
@@ -55,140 +79,209 @@ static	const char *modes[] = {
 	"Closed-circuit" /* MODE_CC */
 };
 
-static int
-collect_depths(const struct dive *d, struct graph *g, 
-	size_t innercols, size_t innerrows)
+static void
+print_avgs(const struct avg *avgs, 
+	const struct win *iwin, 
+	double min, double max,
+	size_t maxt, size_t lbuf)
 {
-	struct samp	*samp;
-	double		 accum, incr, bucket, lastavg, avg;
-	size_t		 x, y, lastt, cursamps;
+	size_t		 x, y, lasty, ytics, xtics, t;
+	double		 v;
 
-	memset(g, 0, sizeof(struct graph));
+	/* Make our y-axis and y-axis labels. */
 
-	TAILQ_FOREACH(samp, &d->samps, entries)
-		if (SAMP_DEPTH & samp->flags)
-			g->nsamps++;
+	for (y = 0; y < iwin->rows; y++)
+        	printf("\033[%zu;%zuH|", 
+			iwin->top + y + 1, 
+			iwin->left - 1 + 1);
 
-	if (0 == g->nsamps)
-		return(0);
+       	printf("\033[%zu;%zuH\\", 
+		iwin->top + y + 1, 
+		iwin->left - 1 + 1);
 
-	/* Initialise our data buckets. */
+	if (iwin->rows > 50)
+		ytics = (iwin->rows - 1) / 8;
+	else
+		ytics = (iwin->rows - 1) / 4;
 
-	g->cols = calloc(innercols, sizeof(size_t));
-	g->labels = calloc(innercols, sizeof(size_t));
-
-	if (NULL == g->cols || NULL == g->labels)
-		err(EXIT_FAILURE, NULL);
-
-	/*
-	 * Compute how many samples should go in each column.
-	 * This is floating-point so that we have a smooth transition
-	 * regardless the imbalance.
-	 * It goes like this:
-	 *
-	 *   |x0 x1 x2||y0 y1 y2||z0 z1|| <- samples w/depth
-	 *   +---x----++---y----++--z--+  <- buckets
-	 *
-	 * The number of x,y,z we travel depends on how the buckets
-	 * divide into the samples.
-	 * This also works if the number of buckets is greater than the
-	 * number of samples, in which we case we spread them out.
-	 *
-	 * FIXME: we might have staggered sampling time, which will make
-	 * the data not quite representative.
-	 */
-
-	incr = (double)innercols / g->nsamps;
-	x = lastt = cursamps = 0;
-	accum = lastavg = bucket = 0.0;
-
-	TAILQ_FOREACH(samp, &d->samps, entries) {
-		lastt = samp->time;
-
-		/* Skip over non-depth samples. */
-
-		if ( ! (SAMP_DEPTH & samp->flags))
-			continue;
-
-		/*
-		 * Accumulate samples until our accumulated number of
-		 * buckets is greater than the next output column.
-		 */
-
-		accum += incr;
-		bucket += samp->depth;
-		cursamps++;
-
-		if ((x + 1) > (size_t)floor(accum)) 
-			continue;
-
-		/* 
-		 * Now we have enough data for at least one bucket. 
-		 * Compute the y-value appropriately. */
-
-		avg = 0 == cursamps ? lastavg : bucket / cursamps;
-		lastavg = avg;
-		y = (size_t)((innerrows - 1) * (avg / d->maxdepth));
-		assert(y < innerrows);
-
-		/* Skip to the next x-value. */
-
-		for ( ; x < (size_t)floor(accum); x++) {
-			assert(x < innercols);
-			g->labels[x] = lastt;
-			g->cols[x] = y;
-		}
-
-		/* Reset our bucket accumulation. */
-
-		bucket = 0.0;
-		cursamps = 0;
+	for (y = 0; y < iwin->rows; y += ytics) {
+        	printf("\033[%zu;%zuH-", 
+			iwin->top + y + 1, 
+			iwin->left - 1 + 1);
+        	printf("\033[%zu;%zuH%*.1f", 
+			iwin->top + y + 1, 
+			iwin->left - lbuf + 1, (int)lbuf - 1,
+			min + (max - min) * (double)y / iwin->rows);
 	}
 
-	assert(NULL == samp);
+	/* Make sure we have a value at the maximum. */
 
-	/* Off-by-one: rounding errors. */
-
-	if (x < innercols) {
-		assert(x == innercols - 1);
-		g->cols[x] = g->cols[x - 1];
-		g->labels[x] = g->labels[x - 1];
+	if ((iwin->rows > 50 && 0 != (iwin->rows - 1) % 8) ||
+	    0 != (iwin->rows - 1) % 4) {
+        	printf("\033[%zu;%zuH%*.1f", 
+			iwin->top + (iwin->rows - 1) + 1, 
+			iwin->left - lbuf + 1, (int)lbuf - 1,
+			min + (max - min) * (double)(iwin->rows - 1) / iwin->rows);
+        	printf("\033[%zu;%zuH-", 
+			iwin->top + (iwin->rows - 1) + 1, 
+			iwin->left - 1 + 1);
 	}
 
-	return(1);
+	/* Now make the x-axis and x-axis label. */
+
+	for (x = 0; x < iwin->cols; x++)
+        	printf("\033[%zu;%zuH-", 
+			iwin->top + iwin->rows + 1, 
+			iwin->left + x + 1);
+
+	if (iwin->cols > 100)
+		xtics = (iwin->cols - 6) / 8;
+	else
+		xtics = (iwin->cols - 6) / 4;
+
+	for (x = 0; x < iwin->cols; x += xtics) {
+		t = maxt * ((double)x / iwin->cols);
+        	printf("\033[%zu;%zuH|", 
+			iwin->top + iwin->rows + 1, 
+			iwin->left + x + 1);
+        	printf("\033[%zu;%zuH%03zu:%02zu", 
+			iwin->top + iwin->rows + 2, 
+			iwin->left + x + 1,
+			t / 60, t % 60);
+	}
+
+	for (lasty = x = 0; x < iwin->cols; x++) {
+		if (0 == avgs[x].sz)
+			continue;
+		v = avgs[x].accum / (double)avgs[x].sz;
+		y = (iwin->rows - 1) * ((v - min) / (max - min));
+
+		/* Join from above and below. */
+
+#if 0
+		if (y > lasty)
+			for (++lasty; lasty < y; lasty++) 
+				printf("\033[1;36m\033[%zu;%zuH|",
+					iwin->top + lasty + 1, 
+					iwin->left + x + 1);
+		else if (y < lasty)
+			for (--lasty; lasty > y; lasty--)
+				printf("\033[1;36m\033[%zu;%zuH|", 
+					iwin->top + lasty + 1, 
+					iwin->left + x + 1);
+#endif
+
+		/* Print our marker. */
+
+	        printf("\033[1;36m\033[%zu;%zuH+", 
+			iwin->top + y + 1, 
+			iwin->left + x + 1);
+	}
+
+        printf("\033[0m");
 }
 
-static void
-print_depths(const struct dive *d, const struct win *win)
+static struct avg *
+collect(const struct dive *d, size_t cols, 
+	size_t maxt, enum grapht type)
 {
-	struct graph	 g;
-	size_t		 x, y, lasty, lbuf, titlesz, ytics, xtics;
-	struct win	 iwin;
+	struct samp	*samp;
+	double		 frac;
+	size_t		 idx;
+	struct avg	*avg = NULL;
+
+	if (NULL == (avg = calloc(cols, sizeof(struct avg))))
+		err(EXIT_FAILURE, NULL);
+
+	TAILQ_FOREACH(samp, &d->samps, entries) {
+		if (GRAPH_DEPTH == type &&
+		    ! (SAMP_DEPTH & samp->flags))
+			continue;
+		if (GRAPH_TEMP == type &&
+		    ! (SAMP_TEMP & samp->flags))
+			continue;
+
+		frac = (double)samp->time / maxt;
+		idx = floor(frac * (cols - 1));
+		assert(idx < cols);
+		if (GRAPH_DEPTH == type)
+			avg[idx].accum += samp->depth;
+		else if (GRAPH_TEMP == type)
+			avg[idx].accum += samp->temp;
+		avg[idx].sz++;
+	}
+
+	return(avg);
+}
+
+/*
+ * Print all graphs to the screen.
+ * This first checks to see which graphs it should produce (trying for
+ * all of them, if the data's there), preprocesses the data, then puts
+ * everything onto the screen.
+ */
+static int
+print_all(const struct dive *d, const struct winsize *ws)
+{
+	struct graph	 temp, depth;
+	struct samp	*samp;
+	int		 c, dtemp = 0, ddepth = 0;
+	struct win	 win, iwin;
+	size_t		 lbuf, maxt, titlesz;
+	struct avg	*avg;
 	char		*title;
-	int		 c;
 
-	/* Create the "inner window" plotting area. */
+	memset(&temp, 0, sizeof(struct graph));
+	memset(&depth, 0, sizeof(struct graph));
 
+	depth.minvalue = temp.minvalue = DBL_MAX;
+	depth.maxvalue = temp.maxvalue = -DBL_MAX;
 
-	/* 
-	 * Now make room for our border and label.
-	 * The y-axis gets the number of metres, up to xxx.y, then the
-	 * border.
-	 * The x-axis gets the border, then the labels.
+	/*
+	 * First, establish whether we should do any graphing at all for
+	 * the temperature or depth.
+	 * Requirements are (1) at least 2 samples and (2) a non-zero
+	 * difference between maximum and minimum.
 	 */
 
-	iwin = *win;
-	lbuf = d->maxdepth >= 100.0 ? 6 : 5;
+	TAILQ_FOREACH(samp, &d->samps, entries) {
+		if (SAMP_DEPTH & samp->flags) {
+			depth.nsamps++;
+			if (samp->time > depth.maxtime)
+				depth.maxtime = samp->time;
+			if (samp->depth > depth.maxvalue)
+				depth.maxvalue = samp->depth;
+			if (samp->depth < depth.minvalue)
+				depth.minvalue = samp->depth;
+		}
+		if (SAMP_TEMP & samp->flags) {
+			temp.nsamps++;
+			if (samp->time > temp.maxtime)
+				temp.maxtime = samp->time;
+			if (samp->temp > temp.maxvalue)
+				temp.maxvalue = samp->temp;
+			if (samp->temp < temp.minvalue)
+				temp.minvalue = samp->temp;
+		}
+	}
 
-	iwin.cols -= lbuf;
-	iwin.left += lbuf;
-	iwin.top += 1;
-	iwin.rows -= 3;
+	if (temp.nsamps >= 2 && 
+	    fabs(temp.maxvalue - temp.minvalue) > FLT_EPSILON)
+		dtemp = 1;
+	if (depth.nsamps >= 2 && 
+	    fabs(depth.maxvalue - depth.minvalue) > FLT_EPSILON)
+		ddepth = 1;
 
-	/* Get the number of depth-related samples. */
+	if (0 == dtemp && 0 == ddepth) {
+		warnx("nothing to graph");
+		return(0);
+	}
 
-	if ( ! collect_depths(d, &g, iwin.cols, iwin.rows))
-		return;
+	/* Get the maximum time. */
+
+	maxt = depth.maxtime;
+	if (temp.maxtime > maxt)
+		maxt = temp.maxtime;
 
 	c = NULL != d->date && NULL != d->time ?
 		asprintf(&title, "%s Dive #%zu on %s, %s",
@@ -199,104 +292,80 @@ print_depths(const struct dive *d, const struct win *win)
 	if (c < 0)
 		err(EXIT_FAILURE, NULL);
 
+	/* 
+	 * Include a margin: 4 vertical (one at the top, two on the
+	 * bottom, one being for the next prompt) and 2 horizontal (one
+	 * on either side).
+	 */
+
+	win.rows = ws->ws_row - 4;
+	win.cols = ws->ws_col - 2;
+	win.top = 1;
+	win.left = 1;
+
+	/*
+	 * We're going to graph at least one of the types.
+	 * Begin by clearing our workspace.
+	 */
+
+	printf("\e[1;1H\e[2J");
+
 	/* Title: centre, bold. */
 
 	titlesz = strlen(title);
-	if (titlesz >= win->cols) {
-		title[win->cols - 2] = '\0';
+	if (titlesz >= win.cols) {
+		title[win.cols - 2] = '\0';
 		titlesz = strlen(title);
 	}
 
        	printf("\033[%zu;%zuH\033[1m%s\033[0m", 
-		iwin.top - 1 + 1, 
-		win->left + ((win->cols - titlesz) / 2) + 1,
+		win.top + 1, 
+		win.left + ((win.cols - titlesz) / 2) + 1,
 		title);
 
-	/* Make our y-axis and y-axis labels. */
+	lbuf = (dtemp && temp.maxvalue >= 100.0) || 
+	       (ddepth && depth.maxvalue >= 100.0) ? 6 : 5;
 
-	for (y = 0; y < iwin.rows; y++)
-        	printf("\033[%zu;%zuH|", 
-			iwin.top + y + 1, 
-			iwin.left - 1 + 1);
+	if (dtemp) {
+		iwin = win;
+		iwin.cols -= lbuf;
+		iwin.left += lbuf;
+		iwin.top += 1;
+		if (ddepth)
+			iwin.rows = (win.rows / 2) - 3;
+		else
+			iwin.rows -= 3;
 
-       	printf("\033[%zu;%zuH\\", 
-		iwin.top + y + 1, 
-		iwin.left - 1 + 1);
-
-	if (iwin.rows > 50)
-		ytics = (iwin.rows - 1) / 8;
-	else
-		ytics = (iwin.rows - 1) / 4;
-
-	for (y = 0; y < iwin.rows; y += ytics) {
-        	printf("\033[%zu;%zuH-", 
-			iwin.top + y + 1, 
-			iwin.left - 1 + 1);
-        	printf("\033[%zu;%zuH%*.1f", 
-			iwin.top + y + 1, 
-			iwin.left - lbuf + 1, (int)lbuf - 1,
-			d->maxdepth * (double)y / iwin.rows);
+		avg = collect(d, iwin.cols, maxt, GRAPH_TEMP);
+		print_avgs(avg, &iwin, temp.minvalue, 
+			temp.maxvalue, maxt, lbuf);
+		free(avg);
 	}
 
-	/* Make sure we have a value at the maxdepth. */
+	if (ddepth) {
+		iwin = win;
+		iwin.cols -= lbuf;
+		iwin.left += lbuf;
+		if (dtemp) {
+			iwin.top = (win.rows / 2) + 2;
+			iwin.rows = (win.rows / 2) - 3;
+		} else {
+			iwin.rows -= 3;
+			iwin.top += 1;
+		}
 
-	if ((iwin.rows > 50 && 0 != (iwin.rows - 1) % 8) ||
-	    0 != (iwin.rows - 1) % 4) {
-        	printf("\033[%zu;%zuH%*.1f", 
-			iwin.top + (iwin.rows - 1) + 1, 
-			iwin.left - lbuf + 1, (int)lbuf - 1,
-			d->maxdepth * (double)(iwin.rows - 1) / iwin.rows);
-        	printf("\033[%zu;%zuH-", 
-			iwin.top + (iwin.rows - 1) + 1, 
-			iwin.left - 1 + 1);
+		avg = collect(d, iwin.cols, maxt, GRAPH_DEPTH);
+		print_avgs(avg, &iwin, depth.minvalue, 
+			depth.maxvalue, maxt, lbuf);
+		free(avg);
 	}
 
-	/* Now make the x-axis and x-axis label. */
+	/* Put as at the bottom of the screen. */
 
-	for (x = 0; x < iwin.cols; x++)
-        	printf("\033[%zu;%zuH-", 
-			iwin.top + iwin.rows + 1, 
-			iwin.left + x + 1);
-
-	if (iwin.cols > 100)
-		xtics = (iwin.cols - 6) / 8;
-	else
-		xtics = (iwin.cols - 6) / 4;
-
-	for (x = 0; x < iwin.cols; x += xtics) {
-        	printf("\033[%zu;%zuH|", 
-			iwin.top + iwin.rows + 1, 
-			iwin.left + x + 1);
-        	printf("\033[%zu;%zuH%03zu:%02zu", 
-			iwin.top + iwin.rows + 2, 
-			iwin.left + x + 1,
-			g.labels[x] / 60, g.labels[x] % 60);
-	}
-
-	for (lasty = x = 0; x < iwin.cols; x++) {
-		y = (size_t)g.cols[x];
-
-		/* Join from above and below. */
-
-		if (y > lasty)
-			for (++lasty; lasty < y; lasty++) 
-				printf("\033[1;36m\033[%zu;%zuH|",
-					iwin.top + lasty + 1, 
-					iwin.left + x + 1);
-		else if (y < lasty)
-			for (--lasty; lasty > y; lasty--)
-				printf("\033[1;36m\033[%zu;%zuH|", 
-					iwin.top + lasty + 1, 
-					iwin.left + x + 1);
-
-		/* Print our marker. */
-
-	        printf("\033[1;36m\033[%zu;%zuH+", 
-			iwin.top + y + 1, 
-			iwin.left + x + 1);
-	}
+        printf("\033[%d;%dH", ws->ws_row, 0);
 
 	free(title);
+	return(1);
 }
 
 int
@@ -307,7 +376,6 @@ main(int argc, char *argv[])
 	XML_Parser	 p;
 	struct diveq	 dq;
 	struct winsize	 ws;
-	struct win	 win;
 
 	/* Pledge us early: only reading files. */
 
@@ -380,32 +448,12 @@ main(int argc, char *argv[])
 	if (ws.ws_col < 80)
 		ws.ws_col = 80;
 
-	/* Clear the screen. */
-
-	printf("\e[1;1H\e[2J");
-
-	/* 
-	 * Include a margin: 3 vertical (one at the top, two on the
-	 * bottom, one being for the next prompt) and 2 horizontal (one
-	 * on either side).
-	 */
-
-	win.rows = ws.ws_row - 3;
-	win.cols = ws.ws_col - 2;
-	win.top = 1;
-	win.left = 1;
-
 	if ( ! TAILQ_EMPTY(&dq))
-		print_depths(TAILQ_FIRST(&dq), &win);
+		rc = print_all(TAILQ_FIRST(&dq), &ws);
 
 	/* Free all memory from the dives. */
 
 	parse_free(&dq);
-
-	/* Put as at the bottom of the screen. */
-
-        printf("\033[0m\033[%d;%dH", ws.ws_row, 0);
-
 	return(rc ? EXIT_SUCCESS : EXIT_FAILURE);
 usage:
 	fprintf(stderr, "usage: %s [-v] [file]\n", getprogname());
