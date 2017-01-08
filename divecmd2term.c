@@ -83,7 +83,7 @@ static void
 print_avgs(const struct avg *avgs, 
 	const struct win *iwin, 
 	double min, double max,
-	size_t maxt, size_t lbuf)
+	size_t maxt, size_t lbuf, int dir)
 {
 	size_t		 x, y, lasty, ytics, xtics, t;
 	double		 v;
@@ -105,23 +105,28 @@ print_avgs(const struct avg *avgs,
 		ytics = (iwin->rows - 1) / 4;
 
 	for (y = 0; y < iwin->rows; y += ytics) {
+		v = dir ?
+			max - (max - min) * (double)y / iwin->rows :
+			min + (max - min) * (double)y / iwin->rows;
         	printf("\033[%zu;%zuH-", 
 			iwin->top + y + 1, 
 			iwin->left - 1 + 1);
         	printf("\033[%zu;%zuH%*.1f", 
 			iwin->top + y + 1, 
-			iwin->left - lbuf + 1, (int)lbuf - 1,
-			min + (max - min) * (double)y / iwin->rows);
+			iwin->left - lbuf + 1, (int)lbuf - 1, v);
 	}
 
 	/* Make sure we have a value at the maximum. */
 
 	if ((iwin->rows > 50 && 0 != (iwin->rows - 1) % 8) ||
 	    0 != (iwin->rows - 1) % 4) {
+		v = dir ?
+			max - (max - min) * (double)(iwin->rows - 1) / iwin->rows :
+			min + (max - min) * (double)(iwin->rows - 1) / iwin->rows;
         	printf("\033[%zu;%zuH%*.1f", 
 			iwin->top + (iwin->rows - 1) + 1, 
 			iwin->left - lbuf + 1, (int)lbuf - 1,
-			min + (max - min) * (double)(iwin->rows - 1) / iwin->rows);
+			v);
         	printf("\033[%zu;%zuH-", 
 			iwin->top + (iwin->rows - 1) + 1, 
 			iwin->left - 1 + 1);
@@ -154,7 +159,9 @@ print_avgs(const struct avg *avgs,
 		if (0 == avgs[x].sz)
 			continue;
 		v = avgs[x].accum / (double)avgs[x].sz;
-		y = (iwin->rows - 1) * ((v - min) / (max - min));
+		y = dir ?
+			(iwin->rows - 1) * ((max - v) / (max - min)) :
+			(iwin->rows - 1) * ((v - min) / (max - min));
 
 		/* Join from above and below. */
 
@@ -338,7 +345,7 @@ print_all(const struct dive *d, const struct winsize *ws)
 
 		avg = collect(d, iwin.cols, maxt, GRAPH_TEMP);
 		print_avgs(avg, &iwin, temp.minvalue, 
-			temp.maxvalue, maxt, lbuf);
+			temp.maxvalue, maxt, lbuf, 1);
 		free(avg);
 	}
 
@@ -356,7 +363,7 @@ print_all(const struct dive *d, const struct winsize *ws)
 
 		avg = collect(d, iwin.cols, maxt, GRAPH_DEPTH);
 		print_avgs(avg, &iwin, depth.minvalue, 
-			depth.maxvalue, maxt, lbuf);
+			depth.maxvalue, maxt, lbuf, 0);
 		free(avg);
 	}
 
