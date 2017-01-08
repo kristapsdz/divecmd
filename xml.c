@@ -81,7 +81,7 @@ sample_cb(dc_sample_type_t type, dc_sample_value_t v, void *userdata)
 		break;
 	case DC_SAMPLE_TEMPERATURE:
 		fprintf(sd->f, "\t\t\t\t\t"
-			"<temp value=\"%.2f\" />", 
+			"<temp value=\"%.2f\" />\n", 
 			v.temperature);
 		break;
 	default:
