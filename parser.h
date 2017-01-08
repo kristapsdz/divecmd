@@ -26,18 +26,20 @@ enum	mode {
 };
 
 struct	samp {
-	size_t		  time;
-	double		  depth;
-	unsigned int	  flags;
+	size_t		  time; /* seconds since start */
+	double		  depth; /* metres */
+	double		  temp; /* celsius */
+	unsigned int	  flags; /* sample contents */
 #define	SAMP_DEPTH	  0x01
+#define	SAMP_TEMP	  0x02
 	TAILQ_ENTRY(samp) entries;
 };
 
 TAILQ_HEAD(sampq, samp);
 
 struct	dive {
-	char		 *date;
-	char		 *time;
+	char		 *date; /* date (or NULL) */
+	char		 *time; /* time (or NULL) */
 	size_t		  num; /* number */
 	enum mode	  mode; /* dive mode */
 	size_t		  duration; /* or zero */
