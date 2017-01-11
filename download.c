@@ -126,7 +126,12 @@ dive_cb(const unsigned char *data, unsigned int size,
 		break;
 	}
 
-	if (rc != DC_STATUS_SUCCESS)
+	/* Exit on error or fingerprint match. */
+
+	if (rc != DC_STATUS_SUCCESS ||
+	    (NULL != dd->ofp &&
+	     dc_buffer_get_size(dd->ofp) == fprsz &&
+	     0 == memcmp(dc_buffer_get_data(dd->ofp), fpr, fprsz)))
 		goto cleanup;
 
 	retc = 1;
