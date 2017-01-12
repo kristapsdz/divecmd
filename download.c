@@ -43,7 +43,50 @@ typedef struct dive_data_t {
 	size_t	  	  number; /* dive number, from 1 */
 	enum dcmd_type 	  type; /* type of output */
 	struct dcmd_out	 *output; /* output handler */
+	const struct dcmd_rng *range; /* range to display */
 } dive_data_t;
+
+/*
+ * Check to see whether we fall within the range we care about.
+ * If there is no range we care about, or if the dive doesn't support
+ * extracting the time and date, return >0.
+ * Else check that we fall (inclusively) within the range, returning
+ * >0 we if do, 0 if we don't.
+ * If errors occur, return <0.
+ */
+static int
+check_range(dc_parser_t *parser, const struct dcmd_rng *rng)
+{
+	int	 	 rc;
+	dc_ticks_t	 dtt;
+	dc_datetime_t	 dt;
+
+	if (NULL == rng)
+		return(1);
+
+	rc = dc_parser_get_datetime(parser, &dt);
+	if (DC_STATUS_SUCCESS != rc) {
+		if (DC_STATUS_UNSUPPORTED == rc)
+			return(1);
+		warnx("cannot extract datetime for range check");
+		return(-1);
+	}
+
+	if ((dtt = dc_datetime_mktime(&dt)) < 0) {
+		warn("cannot convert datetime for range check");
+		return(-1);
+	}
+
+	if (dtt >= rng->start && dtt <= rng->end) {
+		if (verbose)
+			fprintf(stderr, "Dive: date range match\n");
+		return(1);
+	} 
+	
+	if (verbose)
+		fprintf(stderr, "Dive: no date range match\n");
+	return(0);
+}
 
 static int
 dive_cb(const unsigned char *data, unsigned int size, 
@@ -109,8 +152,16 @@ dive_cb(const unsigned char *data, unsigned int size,
 
 	/* Register the data. */
 
-	rc = dc_parser_set_data (parser, data, size);
+	rc = dc_parser_set_data(parser, data, size);
 	if (rc != DC_STATUS_SUCCESS)
+		goto cleanup;
+
+	/* Check our date-time range, if applicable. */
+
+	if (0 == (rc = check_range(parser, dd->range))) {
+		retc = 1;
+		goto cleanup;
+	} else if (rc < 0)
 		goto cleanup;
 
 	/* Parse the dive data. */
@@ -201,7 +252,8 @@ static dc_status_t
 parse(dc_context_t *context, dc_descriptor_t *descriptor, 
 	const char *devname, struct dcmd_out *output,
 	enum dcmd_type type, dc_buffer_t *fprint, 
-	dc_buffer_t *ofprint, dc_buffer_t **lfprint)
+	dc_buffer_t *ofprint, dc_buffer_t **lfprint,
+	const struct dcmd_rng *rng)
 {
 	dc_status_t	 rc = DC_STATUS_SUCCESS;
 	dc_device_t	*device = NULL;
@@ -261,6 +313,7 @@ parse(dc_context_t *context, dc_descriptor_t *descriptor,
 	dd.output = output;
 	dd.type = type;
 	dd.ofp = ofprint;
+	dd.range = rng;
 
 	/* Download the dives. */
 
@@ -279,7 +332,7 @@ int
 download(dc_context_t *context, dc_descriptor_t *descriptor, 
 	const char *udev, enum dcmd_type type,
 	dc_buffer_t *fprint, dc_buffer_t *ofprint, 
-	dc_buffer_t **lfprint)
+	dc_buffer_t **lfprint, const struct dcmd_rng *rng)
 {
 	int		 exitcode = 0;
 	dc_status_t	 status = DC_STATUS_SUCCESS;
@@ -300,7 +353,7 @@ download(dc_context_t *context, dc_descriptor_t *descriptor,
 
 	assert(NULL != output);
 	status = parse(context, descriptor, udev, 
-		output, type, fprint, ofprint, lfprint);
+		output, type, fprint, ofprint, lfprint, rng);
 
 	if (status != DC_STATUS_SUCCESS) {
 		warnx("%s", dctool_errmsg(status));

@@ -332,6 +332,125 @@ out:
 	return(res);
 }
 
+/*
+ * Convert the date-time (or just time) in "val" into the broken-down
+ * local time in "t".
+ * The format is yyyy-mm-dd[Thh:mm:ss].
+ * There is no time-zone designation.
+ */
+static int
+parsedatetime(const char *val, dc_datetime_t *t)
+{
+	int	 rc, hastime;
+
+	memset(t, 0, sizeof(dc_datetime_t));
+
+	hastime = NULL != strchr(val, 'T');
+
+	rc = hastime ?
+		sscanf(val, "%d-%d-%dT%d:%d:%d",
+			&t->year, &t->month,
+			&t->day, &t->hour,
+			&t->minute, &t->second) :
+		sscanf(val, "%d-%d-%d",
+			&t->year, &t->month, &t->day);
+
+	return((hastime && 6 == rc) || (0 == hastime && 3 == rc));
+}
+
+/*
+ * Parse a date range, which looks like:
+ * [start][/[end]]
+ * If there's nothing at all, then assume today.
+ * If there's just a start date, then the end date is 24 hours after the
+ * start date.
+ * If there's a range and the start date is empty, it starts from the
+ * beginning of time.
+ * If there's no end to the range, it goes til now.
+ */
+static int
+parserange(const char *range, struct dcmd_rng **pp)
+{
+	char		*cp, *start, *end;
+	dc_datetime_t	 tstart, tend;
+	dc_ticks_t	 now;
+	struct dcmd_rng	*p;
+
+	if (NULL == (start = cp = strdup(range)))
+		err(EXIT_FAILURE, NULL);
+
+	if (NULL == (p = calloc(1, sizeof(struct dcmd_rng))))
+		err(EXIT_FAILURE, NULL);
+
+	/* No date at all?  Just today's dives. */
+
+	if ('\0' == *start) {
+		now = dc_datetime_now();
+		if (NULL == dc_datetime_localtime(&tstart, now))
+			err(EXIT_FAILURE, NULL);
+		tstart.hour = tstart.minute = tstart.second = 0;
+		if ((p->start = dc_datetime_mktime(&tstart)) < 0)
+			err(EXIT_FAILURE, NULL);
+		p->end = p->start + 24 * 60 * 60;
+		free(cp);
+		*pp = p;
+		return(1);
+	}
+
+	if (NULL != (end = strchr(start, '/'))) 
+		*end++ = '\0';
+
+	/* 
+	 * If we don't have a start date, then we start at the beginning
+	 * of time.
+	 * Otherwise, actually parse the start date.
+	 */
+
+	if ('\0' != *start) {
+		if ( ! parsedatetime(start, &tstart)) {
+			warnx("failed to parse range start");
+			free(cp);
+			return(0);
+		} 
+		if ((p->start = dc_datetime_mktime(&tstart)) < 0)
+			err(EXIT_FAILURE, NULL);
+	}
+
+	/*
+	 * If we don't have an end date at all, then we're only going to
+	 * look for the start date's day, so make the end date the start
+	 * date plus 24 hours.
+	 * However, if we have a range specifier, but the end date is
+	 * blank, then assume we mean til now.
+	 */
+
+	if (NULL == end) {
+		p->end = p->start + 24 * 60 * 60;
+		*pp = p;
+		free(cp);
+		return(1);
+	} else if ('\0' == *end) {
+		if ((p->end = dc_datetime_now()) < 0)
+			err(EXIT_FAILURE, NULL);
+		*pp = p;
+		free(cp);
+		return(1);
+	}
+
+	if ( ! parsedatetime(end, &tend)) {
+		warnx("failed to parse range end");
+		free(cp);
+		return(0);
+	} 
+
+	if ((p->end = dc_datetime_mktime(&tend)) < 0)
+		err(EXIT_FAILURE, NULL);
+
+	*pp = p;
+	free(cp);
+	return(1);
+}
+
 int
 main(int argc, char *argv[])
 {
@@ -340,19 +459,20 @@ main(int argc, char *argv[])
 	dc_context_t	*context = NULL;
 	dc_descriptor_t *descriptor = NULL;
 	dc_loglevel_t 	 loglevel = DC_LOGLEVEL_WARNING;
-	const char 	*device = NULL, *ofp = NULL;
+	const char 	*device = NULL, *ofp = NULL, *range = NULL;
 	const char	*udev = "/dev/ttyU0";
 	int 		 show = 0, ch, ofd = -1, nofp = 0, all = 0;
 	dc_buffer_t	*fprint = NULL, *ofprint = NULL, *lprint = NULL;
 	enum dcmd_type	 out = DC_OUTPUT_XML;
 	char		*ofile = NULL;
+	struct dcmd_rng	*rng = NULL;
 
 #if defined(__OpenBSD__) && OpenBSD > 201510
 	if (-1 == pledge("stdio rpath", NULL))
 		err(EXIT_FAILURE, "pledge");
 #endif
 
-	while (-1 != (ch = getopt (argc, argv, "ad:f:lnsv"))) {
+	while (-1 != (ch = getopt (argc, argv, "ad:f:lnr:sv"))) {
 		switch (ch) {
 		case 'a':
 			all = 1;
@@ -368,6 +488,9 @@ main(int argc, char *argv[])
 			break;
 		case 'n':
 			nofp = 1;
+			break;
+		case 'r':
+			range = optarg;
 			break;
 		case 's':
 			show = 1;
@@ -395,12 +518,24 @@ main(int argc, char *argv[])
 	 * Also read in the last-seen fingerprint.
 	 * We'll [optionally] use these to constrain which dives we
 	 * report to the operator.
+	 * If we have this option, disable the range check.
+	 * (It takes precedence.)
 	 */
 
 	if (NULL != ofp) {
 		ofprint = hex2bin(ofp);
+		range = NULL;
 		all = nofp = 1;
 	}
+
+	/*
+	 * Range check.
+	 * Like with the fingerprint, this triggers that we look over
+	 * all dives.
+	 */
+
+	if (NULL != range && parserange(range, &rng))
+		all = nofp = 1;
 
 	fprint = fprint_get(&ofd, &ofile, all, device);
 
@@ -446,7 +581,7 @@ main(int argc, char *argv[])
 
 	exitcode = download
 		(context, descriptor, udev, 
-		 out, fprint, ofprint, &lprint);
+		 out, fprint, ofprint, &lprint, rng);
 
 	/* 
 	 * If we have a last fingerprint, write it. 
@@ -467,8 +602,10 @@ cleanup:
 	dc_descriptor_free(descriptor);
 	dc_context_free(context);
 	dc_buffer_free(lprint);
-	free(fprint);
+	dc_buffer_free(fprint);
+	dc_buffer_free(ofprint);
 	free(ofile);
+	free(rng);
 	return(exitcode ? EXIT_SUCCESS : EXIT_FAILURE);
 usage:
 	fprintf(stderr, "usage: %s [-anv] [-d device] [-f fingerprint] computer\n"

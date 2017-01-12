@@ -34,13 +34,19 @@ enum	dcmd_type {
 	DC_OUTPUT_LIST
 };
 
+struct	dcmd_rng {
+	dc_ticks_t	 start;
+	dc_ticks_t	 end;
+};
+
 __BEGIN_DECLS
 
 const char	*dctool_errmsg(dc_status_t);
 
 int		 download(dc_context_t *, dc_descriptor_t *, 
 			const char *, enum dcmd_type, dc_buffer_t *, 
-			dc_buffer_t *, dc_buffer_t **);
+			dc_buffer_t *, dc_buffer_t **,
+			const struct dcmd_rng *);
 
 dc_status_t	 output_list_free(struct dcmd_out *);
 struct dcmd_out *output_list_new(void);
