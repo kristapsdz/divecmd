@@ -35,7 +35,19 @@
 #include "parser.h"
 
 int verbose = 0;
-int utf8 = 0;
+
+/*
+ * UTF-8 output mode.
+ * This makes nice boxes and uses pretty characters.
+ */
+static int utf8 = 0;
+
+/*
+ * Aggregate dives.
+ * Assume that this is a sequence (say of free-dives) where we should
+ * graph multiple entries alongside each other.
+ */
+static int aggr = 0;
 
 enum	grapht {
 	GRAPH_TEMP,
@@ -68,7 +80,6 @@ struct	graph {
 	size_t		*labels;
 	size_t		*cols;
 	size_t		 nsamps;
-	size_t		 maxtime;
 	double		 maxvalue;
 	double		 minvalue;
 };
@@ -85,8 +96,8 @@ static	const char *modes[] = {
  * Print a set of averages.
  * Accepts the averages, "avgs", and the window in which to print,
  * "iwin".
- * The "min" and "max" are the total range of all points, and "maxt" is
- * the maximum x-axis value.
+ * The "min" and "max" are the total range of all points, and "mint" and
+ * "maxt" is the x-axis extrema.
  * The "lbuf" tells us the left-hand buffer (for formatting axes.)
  * Finally, "dir" tells us whether the direction to show the y-axis
  * values, upward (1) or downward (0).
@@ -94,12 +105,16 @@ static	const char *modes[] = {
 static void
 print_avgs(const struct avg *const *avgs, size_t avgsz,
 	const struct win *iwin, double min, double max, 
-	size_t maxt, size_t lbuf, int dir)
+	time_t mint, time_t maxt, size_t lbuf, int dir)
 {
 	size_t		 i, x, y, t, ytics, xtics;
 	double		 v;
 
-	/* Make our y-axis and y-axis labels. */
+	/* 
+	 * Make our y-axis and y-axis labels. 
+	 * Start drawing the borders.
+	 * Then draw the labels and tics.
+	 */
 
 	for (y = 0; y < iwin->rows; y++)
 		if (utf8)
@@ -165,7 +180,11 @@ print_avgs(const struct avg *const *avgs, size_t avgsz,
 				iwin->left - 1 + 1);
 	}
 
-	/* Now make the x-axis and x-axis label. */
+	/* 
+	 * Now make the x-axis and x-axis label.
+	 * Again, start with the border.
+	 * Then the tics.
+	 */
 
 	for (x = 0; x < iwin->cols; x++)
 		if (utf8)
@@ -183,7 +202,10 @@ print_avgs(const struct avg *const *avgs, size_t avgsz,
 		xtics = (iwin->cols - 6) / 4;
 
 	for (x = 0; x < iwin->cols; x += xtics) {
-		t = maxt * ((double)x / iwin->cols);
+		t = (maxt - mint) * 
+			((double)x / iwin->cols);
+		if ( ! aggr)
+			t += mint;
 		if (utf8)
 			printf("\033[%zu;%zuH%lc", 
 				iwin->top + iwin->rows + 1, 
@@ -237,11 +259,12 @@ print_avgs(const struct avg *const *avgs, size_t avgsz,
  */
 static struct avg *
 collect(const struct dive *d, size_t cols, 
-	size_t maxt, enum grapht type)
+	time_t mint, time_t maxt, enum grapht type)
 {
 	struct samp	*samp;
 	double		 frac;
 	size_t		 idx;
+	time_t		 t;
 	struct avg	*avg = NULL;
 
 	if (NULL == (avg = calloc(cols, sizeof(struct avg))))
@@ -254,10 +277,19 @@ collect(const struct dive *d, size_t cols,
 		if (GRAPH_TEMP == type &&
 		    ! (SAMP_TEMP & samp->flags))
 			continue;
+		
+		/*
+		 * If we're aggregating, the bucket is going to be
+		 * as a fraction of the total time (mint, maxt).
+		 * Otherwise it's just between 0 and maxt.
+		 */
 
-		frac = (double)samp->time / maxt;
+		t = aggr ? (d->datetime + samp->time) - mint : 
+			samp->time;
+		frac = (double)t / (maxt - mint);
 		idx = floor(frac * (cols - 1));
 		assert(idx < cols);
+
 		if (GRAPH_DEPTH == type)
 			avg[idx].accum += samp->depth;
 		else if (GRAPH_TEMP == type)
@@ -282,9 +314,11 @@ print_all(const struct diveq *dq, const struct winsize *ws)
 	struct samp	 *samp;
 	int		  c, dtemp = 0, ddepth = 0;
 	struct win	  win, iwin;
-	size_t		  i, lbuf, maxt, titlesz, avgsz;
+	size_t		  i, lbuf, titlesz, avgsz;
 	struct avg	**avg;
 	char		 *title;
+	char		  buf[128];
+	time_t		  mint = 0, maxt = 0, t;
 
 	memset(&temp, 0, sizeof(struct graph));
 	memset(&depth, 0, sizeof(struct graph));
@@ -292,11 +326,12 @@ print_all(const struct diveq *dq, const struct winsize *ws)
 	depth.minvalue = temp.minvalue = DBL_MAX;
 	depth.maxvalue = temp.maxvalue = -DBL_MAX;
 
+	assert( ! TAILQ_EMPTY(dq));
+
 	/*
-	 * First, establish whether we should do any graphing at all for
-	 * the temperature or depth.
-	 * Requirements are (1) at least 2 samples and (2) a non-zero
-	 * difference between maximum and minimum.
+	 * Determine the boundaries for the depth and temperature.
+	 * While here, also compute the number of samples for both of
+	 * these measurements.
 	 */
 
 	avgsz = 0;
@@ -305,8 +340,6 @@ print_all(const struct diveq *dq, const struct winsize *ws)
 		TAILQ_FOREACH(samp, &d->samps, entries) {
 			if (SAMP_DEPTH & samp->flags) {
 				depth.nsamps++;
-				if (samp->time > depth.maxtime)
-					depth.maxtime = samp->time;
 				if (samp->depth > depth.maxvalue)
 					depth.maxvalue = samp->depth;
 				if (samp->depth < depth.minvalue)
@@ -314,8 +347,6 @@ print_all(const struct diveq *dq, const struct winsize *ws)
 			}
 			if (SAMP_TEMP & samp->flags) {
 				temp.nsamps++;
-				if (samp->time > temp.maxtime)
-					temp.maxtime = samp->time;
 				if (samp->temp > temp.maxvalue)
 					temp.maxvalue = samp->temp;
 				if (samp->temp < temp.minvalue)
@@ -324,8 +355,48 @@ print_all(const struct diveq *dq, const struct winsize *ws)
 		}
 	}
 
-	if (NULL == (avg = calloc(avgsz, sizeof(struct avg *))))
-		err(EXIT_FAILURE, NULL);
+	/*
+	 * Next, accumulate time boundaries.
+	 * For non-aggregate measurement, we're going to just look for
+	 * maximum duration.
+	 * For aggregate measurement, we compute the maximum by
+	 * offsetting from the minimum value.
+	 * We only allow dives with dates and times for aggregates.
+	 */
+
+	if (aggr) {
+		TAILQ_FOREACH(d, dq, entries) {
+			if (0 == d->datetime) {
+				warnx("date and time required");
+				return(0);
+			}
+			if (0 == mint || d->datetime < mint)
+				mint = d->datetime;
+		}
+		TAILQ_FOREACH(d, dq, entries)
+			TAILQ_FOREACH(samp, &d->samps, entries)
+				if (SAMP_TEMP & samp->flags ||
+				    SAMP_DEPTH & samp->flags) {
+					t = d->datetime + samp->time;
+					if (t > maxt)
+						maxt = t;
+				}
+	} else
+		TAILQ_FOREACH(d, dq, entries) 
+			TAILQ_FOREACH(samp, &d->samps, entries)
+				if (SAMP_DEPTH & samp->flags ||
+				    SAMP_TEMP & samp->flags) {
+					t = samp->time;
+					if (t > maxt)
+						maxt = t;
+				}
+
+	/*
+	 * Establish whether we should do any graphing at all for the
+	 * temperature or depth.
+	 * Requirements are (1) at least 2 samples and (2) a non-zero
+	 * difference between maximum and minimum.
+	 */
 
 	if (temp.nsamps >= 2 && 
 	    fabs(temp.maxvalue - temp.minvalue) > FLT_EPSILON)
@@ -338,6 +409,9 @@ print_all(const struct diveq *dq, const struct winsize *ws)
 		warnx("nothing to graph");
 		return(0);
 	}
+
+	if (NULL == (avg = calloc(avgsz, sizeof(struct avg *))))
+		err(EXIT_FAILURE, NULL);
 
 	/*
 	 * Begin by clearing our workspace.
@@ -356,22 +430,19 @@ print_all(const struct diveq *dq, const struct winsize *ws)
 	win.top = 1;
 	win.left = 1;
 
-	/* Get the maximum time. */
-
-	maxt = depth.maxtime;
-	if (temp.maxtime > maxt)
-		maxt = temp.maxtime;
-
 	i = 0;
 	TAILQ_FOREACH(d, dq, entries) {
-		c = NULL != d->date && NULL != d->time ?
-			asprintf(&title, "%s Dive #%zu on %s, %s",
-				modes[d->mode], d->num, d->date, d->time) :
+		if (d->datetime) {
+			ctime_r(&d->datetime, buf);
+			buf[strlen(buf) - 1] = '\0';
+		}
+		c = 0 != d->datetime ?
+			asprintf(&title, "%s Dive #%zu on %s",
+				modes[d->mode], d->num, buf) :
 			asprintf(&title, "%s Dive #%zu",
 				modes[d->mode], d->num);
 		if (c < 0)
 			err(EXIT_FAILURE, NULL);
-
 
 		/* Title: centre, bold.  Room for legend. */
 
@@ -381,10 +452,17 @@ print_all(const struct diveq *dq, const struct winsize *ws)
 			titlesz = strlen(title) + 2;
 		}
 
-		printf("\033[%zu;%zuH\033[1m%s \033[3%zum+\033[0m", 
-			win.top + i + 1, 
-			win.left + ((win.cols - titlesz) / 2) + 1,
-			title, i + 1);
+		if (utf8)
+			printf("\033[%zu;%zuH\033[1m%s \033[3%zum%lc\033[0m", 
+				win.top + i + 1, 
+				win.left + ((win.cols - titlesz) / 2) + 1,
+				title, i + 1, L'\x2022');
+		else
+			printf("\033[%zu;%zuH\033[1m%s \033[3%zum+\033[0m", 
+				win.top + i + 1, 
+				win.left + ((win.cols - titlesz) / 2) + 1,
+				title, i + 1);
+
 		i++;
 	}
 
@@ -403,12 +481,12 @@ print_all(const struct diveq *dq, const struct winsize *ws)
 
 		i = 0;
 		TAILQ_FOREACH(d, dq, entries) 
-			avg[i++] = collect(d, 
-				iwin.cols, maxt, GRAPH_TEMP);
+			avg[i++] = collect(d, iwin.cols, 
+				mint, maxt, GRAPH_TEMP);
 
 		print_avgs((const struct avg *const *)avg, avgsz, 
-			&iwin, temp.minvalue, 
-			temp.maxvalue, maxt, lbuf, 1);
+			&iwin, temp.minvalue, temp.maxvalue, 
+			mint, maxt, lbuf, 1);
 		for (i = 0; i < avgsz; i++)
 			free(avg[i]);
 	}
@@ -427,11 +505,11 @@ print_all(const struct diveq *dq, const struct winsize *ws)
 
 		i = 0;
 		TAILQ_FOREACH(d, dq, entries)
-			avg[i++] = collect(d, 
-				iwin.cols, maxt, GRAPH_DEPTH);
+			avg[i++] = collect(d, iwin.cols, 
+				mint, maxt, GRAPH_DEPTH);
 		print_avgs((const struct avg *const *)avg, avgsz, 
-			&iwin, depth.minvalue, 
-			depth.maxvalue, maxt, lbuf, 0);
+			&iwin, depth.minvalue, depth.maxvalue, 
+			mint, maxt, lbuf, 0);
 		for (i = 0; i < avgsz; i++)
 			free(avg[i]);
 	}
@@ -463,8 +541,11 @@ main(int argc, char *argv[])
 		err(EXIT_FAILURE, "pledge");
 #endif
 
-	while (-1 != (c = getopt(argc, argv, "f:uv")))
+	while (-1 != (c = getopt(argc, argv, "auv")))
 		switch (c) {
+		case ('a'):
+			aggr = 1;
+			break;
 		case ('u'):
 			utf8 = 1;
 			break;
@@ -538,6 +619,6 @@ main(int argc, char *argv[])
 	parse_free(&dq);
 	return(rc ? EXIT_SUCCESS : EXIT_FAILURE);
 usage:
-	fprintf(stderr, "usage: %s [-uv] [file]\n", getprogname());
+	fprintf(stderr, "usage: %s [-auv] [file]\n", getprogname());
 	return(EXIT_FAILURE);
 }
