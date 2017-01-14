@@ -17,7 +17,7 @@
 .\" Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston,
 .\" MA 02110-1301 USA
 .\" 
-.Dd $Mdocdate: January 8 2017 $
+.Dd $Mdocdate: January 14 2017 $
 .Dt DIVECMD2TERM 1
 .Os
 .Sh NAME
@@ -67,12 +67,27 @@ Multiple graphs are stacked atop each other with the x-axis being the
 relative time into the dive.
 In
 .Fl a
-accumulation mode, however, graphs are shown as starting at the first date and
-time.
+accumulation mode, however, graphs are shown as starting at the first
+date and time.
 .Pq Dives must have been parsed with a date and time .
 This is useful, for example, with a sequence of free-dives.
 .Sh EXIT STATUS
 .Ex -std
+.Sh EXAMPLES
+To pipe the output of the day's free-dives from on a Suunto D6i:
+.Pp
+.Dl divecmd -r \(dq\(dq \(dqsuunto d6i\(dq | divecmd2term -au
+.Pp
+This will extract only the current day's dives, then format them
+alongside (instead of stacked) using UTF-8 characters.
+.Pp
+To compare two dive profiles previously downloaded into
+.Pa dive1.xml
+and
+.Pa dive2.xml ,
+run:
+.Pp
+.D1 divecmd2term -u dive1.xml dive2.xml
 .Sh AUTHORS
 The
 .Nm
