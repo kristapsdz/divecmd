@@ -64,12 +64,26 @@ parse_open(void *dat, const XML_Char *s, const XML_Char **atts)
 	struct samp	 *samp;
 	struct dive	 *dive;
 	const XML_Char	**attp;
+	const char	 *date, *time;
+	struct tm	  tm;
+	int		  rc;
 
 	if (0 == strcmp(s, "dive")) {
 		if (NULL != p->cursamp) {
-			logerrx(p, "depth outside sample");
-			p->cursamp = NULL;
+			logerrx(p, "dive within sample");
+			return;
+		} else if (NULL != p->curdive) {
+			logerrx(p, "recursive dive");
+			return;
 		}
+
+		/*
+		 * We're encountering a new dive.
+		 * Allocate it and zero all values.
+		 * Then walk through the attributes to grab everything
+		 * that's important to us.
+		 */
+
 		p->curdive = dive = 
 			calloc(1, sizeof(struct dive));
 		if (NULL == dive)
@@ -79,19 +93,16 @@ parse_open(void *dat, const XML_Char *s, const XML_Char **atts)
 				p->file, dive->num);
 		TAILQ_INSERT_TAIL(p->dives, dive, entries);
 		TAILQ_INIT(&dive->samps);
+
+		date = time = NULL;
 		for (attp = atts; NULL != *attp; attp += 2) {
+			/* FIXME: use strtonum. */
 			if (0 == strcmp(attp[0], "number")) {
 				dive->num = atoi(attp[1]);
 			} else if (0 == strcmp(attp[0], "date")) {
-				free(dive->date);
-				dive->date = strdup(attp[1]);
-				if (NULL == dive->date)
-					err(EXIT_FAILURE, NULL);
+				date = attp[1];
 			} else if (0 == strcmp(attp[0], "time")) {
-				free(dive->time);
-				dive->time = strdup(attp[1]);
-				if (NULL == dive->time)
-					err(EXIT_FAILURE, NULL);
+				time = attp[1];
 			} else if (0 == strcmp(attp[0], "mode")) {
 				if (0 == strcmp(attp[1], "freedive"))
 					dive->mode = MODE_FREEDIVE;
@@ -101,8 +112,37 @@ parse_open(void *dat, const XML_Char *s, const XML_Char **atts)
 					dive->mode = MODE_CC;
 				else if (0 == strcmp(attp[1], "gauge"))
 					dive->mode = MODE_GAUGE;
+				else
+					logerrx(p, "unknown mode");
 			}
 		}
+
+		/* Attempt to convert the date and time. */
+
+		if (NULL != date && NULL != time) {
+			memset(&tm, 0, sizeof(struct tm));
+			rc = sscanf(date, "%d-%d-%d", 
+				&tm.tm_year, &tm.tm_mon, &tm.tm_mday);
+			if (3 != rc) {
+				logerrx(p, "malformed date");
+				return;
+			}
+			tm.tm_year -= 1900;
+			tm.tm_mon -= 1;
+			rc = sscanf(time, "%d:%d:%d", 
+				&tm.tm_hour, &tm.tm_min, &tm.tm_sec);
+			if (3 != rc) {
+				logerrx(p, "malformed time");
+				return;
+			}
+			tm.tm_isdst = -1;
+			if (-1 == (dive->datetime = mktime(&tm))) {
+				logerrx(p, "malformed date-time");
+				dive->datetime = 0;
+				return;
+			}
+		}
+
 	} else if (0 == strcmp(s, "sample")) {
 		if (NULL == (dive = p->curdive)) { 
 			logerrx(p, "sample outside dive");
@@ -228,8 +268,6 @@ parse_free(struct diveq *dq)
 			TAILQ_REMOVE(&d->samps, samp, entries);
 			free(samp);
 		}
-		free(d->date);
-		free(d->time);
 		free(d);
 	}
 }
