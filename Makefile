@@ -28,6 +28,8 @@ install: all
 
 $(OBJS): extern.h
 
+parser.o divecmd2term.o: parser.h
+
 clean:
 	rm -f $(OBJS) divecmd 
 	rm -f divecmd2term.o parser.o divecmd2term
