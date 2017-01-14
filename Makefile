@@ -9,10 +9,19 @@ OBJS		 = common.o \
 		   download.o \
 		   list.o \
 		   xml.o
+BINOBJS		 = divecmd2grap.o \
+		   divecmd2term.o \
+		   parser.o
 BINDIR 		 = $(PREFIX)/bin
 MANDIR 		 = $(PREFIX)/man
+BINS		 = divecmd \
+		   divecmd2grap \
+		   divecmd2term
+MAN1S		 = divecmd.1 \
+		   divecmd2grap.1 \
+		   divecmd2term.1
 
-all: divecmd divecmd2term
+all: $(BINS)
 
 divecmd: $(OBJS)
 	$(CC) -o $@ $(OBJS) $(LDFLAGS) 
@@ -20,16 +29,18 @@ divecmd: $(OBJS)
 divecmd2term: divecmd2term.o parser.o
 	$(CC) -o $@ divecmd2term.o parser.o -lexpat -lm
 
+divecmd2grap: divecmd2grap.o parser.o
+	$(CC) -o $@ divecmd2grap.o parser.o -lexpat
+
 install: all
 	mkdir -p $(DESTDIR)$(BINDIR)
 	mkdir -p $(DESTDIR)$(MANDIR)/man1
-	install -m 0755 divecmd divecmd2term $(DESTDIR)$(BINDIR)
-	install -m 0444 divecmd.1 divecmd2term.1 $(DESTDIR)$(MANDIR)/man1
+	install -m 0755 $(BINS) $(DESTDIR)$(BINDIR)
+	install -m 0444 $(MAN1S) $(DESTDIR)$(MANDIR)/man1
 
 $(OBJS): extern.h
 
-parser.o divecmd2term.o: parser.h
+$(BINOBJS): parser.h
 
 clean:
-	rm -f $(OBJS) divecmd 
-	rm -f divecmd2term.o parser.o divecmd2term
+	rm -f $(OBJS) $(BINS) $(BINOBJS)
