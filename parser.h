@@ -38,8 +38,7 @@ struct	samp {
 TAILQ_HEAD(sampq, samp);
 
 struct	dive {
-	char		 *date; /* date (or NULL) */
-	char		 *time; /* time (or NULL) */
+	time_t		  datetime; /* time or zero */
 	size_t		  num; /* number */
 	enum mode	  mode; /* dive mode */
 	size_t		  duration; /* or zero */
