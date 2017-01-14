@@ -31,6 +31,7 @@
 .Op Fl alnv
 .Op Fl d Ar device
 .Op Fl f Ar fingerprint
+.Op Fl r Ar range
 .Ar computer
 .Sh DESCRIPTION
 The
@@ -45,18 +46,6 @@ The arguments are as follows:
 .Bl -tag -width Ds
 .It Fl a
 Ignore the last-seen fingerprint and fetch all dives.
-.It Fl l
-Lists the dives in short format, one per line: time, type, and
-fingerprint.
-.It Fl n
-Do not set the last-seen dive fingerprint.
-.It Fl s
-Shows all known device computers instead of trying to download data.
-.It Fl v
-Increase verbosity.
-One more, emits informational messages.
-Twice, debugging messages.
-Three times, inundation.
 .It Fl d Ar device
 The hardware device connected to the
 .Ar computer .
@@ -65,7 +54,34 @@ Only show the given device-specific fingerprint, if found.
 Implies
 .Fl a
 and
-.fl n .
+.Fl n .
+.It Fl l
+Lists the dives in short format, one per line: time, type, and
+fingerprint.
+.It Fl n
+Do not set the last-seen dive fingerprint.
+.It Fl r Ar range
+Process only dives within the given date
+.Ar range .
+Implies
+.Fl a
+and
+.Fl n .
+The range is in the format of
+.Li [start[/end]] .
+If empty, shows only the current day.
+If just the start, shows the full start day.
+If the start is empty (and just the range end), shows from the beginning
+of time to the end.
+The start and end format is
+.Li YYYY-MM-DD[THH:MM:SS] .
+.It Fl s
+Shows all known device computers instead of trying to download data.
+.It Fl v
+Increase verbosity.
+One more, emits informational messages.
+Twice, debugging messages.
+Three times, inundation.
 .It Ar computer
 The case-insensitive full vendor and product, e.g.,
 .Dq suunto d6i
