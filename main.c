@@ -1,7 +1,7 @@
 /*	$Id$ */
 /*
  * Copyright (C) 2015 Jef Driesen
- * Copyright (c) 2016 Kristaps Dzonsons <kristaps@bsd.lv>
+ * Copyright (c) 2016--2017 Kristaps Dzonsons <kristaps@bsd.lv>
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -50,6 +50,12 @@ int verbose = 0;
  * Cancellation (signal-control-c). 
  */
 static volatile sig_atomic_t g_cancel = 0;
+
+struct	descr {
+	char		*vend;
+	char		*prod;
+	unsigned int	 model;
+};
 
 /*
  * Iterate over all descriptors in the system.
@@ -103,8 +109,26 @@ search_descr(dc_descriptor_t **out, const char *name)
 	return DC_STATUS_SUCCESS;
 }
 
+static int
+descr_cmp(const void *p1, const void *p2)
+{
+	const struct descr *d1 = p1, *d2 = p2;
+	int	 c;
+
+	if (0 != (c = strcmp(d1->vend, d2->vend)))
+		return(c);
+	if (0 != (c = strcmp(d1->prod, d2->prod)))
+		return(c);
+	return(d1->model - d2->model);
+}
+
 /*
  * Iterate over all devices supported by libdivecomputer.
+ * We do this in two phases: fill an array of computers, then print
+ * them.
+ * This is to sort them in order to print which ones need model numbers,
+ * i.e., which have multiple products of the same name but with
+ * different model numbers.
  */
 static void
 show_devices(void)
@@ -112,31 +136,83 @@ show_devices(void)
 	dc_iterator_t	*iter = NULL;
 	dc_descriptor_t *desc = NULL;
 	dc_status_t	 st;
-	const char	*vendor, *product;
+	struct descr	*ds = NULL;
+	size_t		 maxds = 0, dsz = 0, i;
 
 #if defined(__OpenBSD__) && OpenBSD > 201510
 	if (-1 == pledge("stdio", NULL))
 		err(EXIT_FAILURE, "pledge");
 #endif
 
+	/* Start with 200 supported computers. */
+
+	maxds = 200;
+	if (NULL == (ds = calloc(maxds, sizeof(struct descr))))
+		err(EXIT_FAILURE, NULL);
+
     	st = dc_descriptor_iterator(&iter);
 	if (DC_STATUS_SUCCESS != st)
 		errx(EXIT_FAILURE, "%s", dctool_errmsg(st));
 
+	/* Gather all computers into an array. */
+
 	while (DC_STATUS_SUCCESS == 
 	       (st = dc_iterator_next(iter, &desc))) {
-		vendor = dc_descriptor_get_vendor(desc);
-		product = dc_descriptor_get_product(desc);
-		printf("%s %s\n", 
-			NULL == vendor ? "(none)" : vendor, 
-			NULL == product ? "(none)" : product);
+		if (dsz == maxds) {
+			/* Double the array size. */
+			maxds *= 2;
+			ds = reallocarray(ds, maxds, 
+				sizeof(struct descr));
+			if (NULL == ds)
+				err(EXIT_FAILURE, NULL);
+		}
+		ds[dsz].vend = strdup
+			(dc_descriptor_get_vendor(desc));
+		ds[dsz].prod = strdup
+			(dc_descriptor_get_product(desc));
+		if (NULL == ds[dsz].vend || 
+		    NULL == ds[dsz].prod)
+			err(EXIT_FAILURE, NULL);
+		ds[dsz].model = dc_descriptor_get_model(desc);
 		dc_descriptor_free(desc);
+		dsz++;
 	}
 
 	if (DC_STATUS_DONE != st)
 		errx(EXIT_FAILURE, "%s", dctool_errmsg(st));
 	if (DC_STATUS_SUCCESS != (st = dc_iterator_free(iter)))
 		errx(EXIT_FAILURE, "%s", dctool_errmsg(st));
+
+	/* 
+	 * Make sure we're sorted to see if we have duplicated vendor
+	 * and product name. 
+	 */
+
+	qsort(ds, dsz, sizeof(struct descr), descr_cmp);
+
+	/*
+	 * If the prior or next computer has the same name and vendor,
+	 * then print the model number as well.
+	 */
+
+	for (i = 0; i < dsz; i++) 
+		if ((i > 0 && 
+		     0 == strcmp(ds[i].vend, ds[i - 1].vend) &&
+		     0 == strcmp(ds[i].prod, ds[i - 1].prod)) ||
+		    (i < dsz - 1 &&
+		     0 == strcmp(ds[i].vend, ds[i + 1].vend) &&
+		     0 == strcmp(ds[i].prod, ds[i + 1].prod)))
+			printf("%s %s (model %u)\n", ds[i].vend, 
+				ds[i].prod, ds[i].model);
+		else
+			printf("%s %s\n", ds[i].vend, ds[i].prod);
+
+	for (i = 0; i < dsz; i++) {
+		free(ds[i].prod);
+		free(ds[i].vend);
+	}
+
+	free(ds);
 }
 
 int
@@ -466,13 +542,14 @@ main(int argc, char *argv[])
 	enum dcmd_type	 out = DC_OUTPUT_XML;
 	char		*ofile = NULL;
 	struct dcmd_rng	*rng = NULL;
+	unsigned int	 model = 0;
 
 #if defined(__OpenBSD__) && OpenBSD > 201510
 	if (-1 == pledge("stdio rpath", NULL))
 		err(EXIT_FAILURE, "pledge");
 #endif
 
-	while (-1 != (ch = getopt (argc, argv, "ad:f:lnr:sv"))) {
+	while (-1 != (ch = getopt (argc, argv, "ad:f:lm:nr:sv"))) {
 		switch (ch) {
 		case 'a':
 			all = 1;
@@ -485,6 +562,9 @@ main(int argc, char *argv[])
 			break;
 		case 'l':
 			out = DC_OUTPUT_LIST;
+			break;
+		case 'm':
+			model = atoi(optarg);
 			break;
 		case 'n':
 			nofp = 1;
@@ -608,7 +688,9 @@ cleanup:
 	free(rng);
 	return(exitcode ? EXIT_SUCCESS : EXIT_FAILURE);
 usage:
-	fprintf(stderr, "usage: %s [-anv] [-d device] [-f fingerprint] computer\n"
+	fprintf(stderr, "usage: %s [-anv] [-d device] "
+				  "[-f fingerprint] "
+				  "[-m model] computer\n"
 			"       %s [-v] -s\n",
 			getprogname(), getprogname());
 	return(EXIT_FAILURE);

@@ -17,7 +17,7 @@
 .\" Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston,
 .\" MA 02110-1301 USA
 .\" 
-.Dd $Mdocdate: January 7 2017 $
+.Dd $Mdocdate: January 14 2017 $
 .Dt DIVECMD 1
 .Os
 .Sh NAME
@@ -77,6 +77,9 @@ The start and end format is
 .Li YYYY-MM-DD[THH:MM:SS] .
 .It Fl s
 Shows all known device computers instead of trying to download data.
+This lists the vendor, then the product.
+If there are multiple vendor/product pairs of the same name, the model
+number is also printed in parenthesis.
 .It Fl v
 Increase verbosity.
 One more, emits informational messages.
