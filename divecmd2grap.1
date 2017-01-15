@@ -25,6 +25,7 @@
 .Nd graph dives with grap
 .Sh SYNOPSIS
 .Nm divecmd2grap
+.Op Fl av
 .Op Ar files...
 .Sh DESCRIPTION
 The
@@ -36,6 +37,12 @@ and graphs each dive's depths using
 Multiple dives are stacked atop each other.
 Its arguments are as follows:
 .Bl -tag -width Ds
+.It Fl a
+Accumulate dives instead of showing them stacked.
+This is useful for free-diving where multiple dives are done in
+sequence.
+.It Fl v
+Parse files in verbose mode.
 .It Ar files...
 XML input files with one or more dives.
 .El
@@ -47,6 +54,10 @@ exports to the format accepted by
 .Ex -std
 .Sh EXAMPLES
 .D1 divecmd2grap dives.xml | grap | groff -p -Tpdf > dives.pdf
+.Sh SEE ALSO
+.Xr divecmd 1 ,
+.Xr grap 1 ,
+.Xr groff 1
 .Sh AUTHORS
 The
 .Nm
