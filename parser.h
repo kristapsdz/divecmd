@@ -49,11 +49,18 @@ struct	dive {
 	TAILQ_ENTRY(dive) entries;
 };
 
+struct	divestat {
+	double		  maxdepth; /* maximum over all dives */
+	time_t		  timestamp_min; /* minimum timestamp */
+	time_t		  timestamp_max; /* maximum timestamp */
+};
+
 TAILQ_HEAD(diveq, dive);
 
 __BEGIN_DECLS
 
-int	 parse(const char *, XML_Parser, struct diveq *);
+int	 parse(const char *, XML_Parser, 
+		struct diveq *, struct divestat *);
 void	 parse_free(struct diveq *);
 
 extern int verbose;
