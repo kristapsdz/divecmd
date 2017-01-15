@@ -51,26 +51,30 @@ int verbose = 0;
  */
 static volatile sig_atomic_t g_cancel = 0;
 
+/*
+ * Clone of dc_descriptor_t (opaque).
+ */
 struct	descr {
-	char		*vend;
-	char		*prod;
-	unsigned int	 model;
+	char		*vend; /* vendor */
+	char		*prod; /* product */
+	unsigned int	 model; /* model number */
 };
 
 /*
  * Iterate over all descriptors in the system.
  * Return the one matching "name", which is presumed to be a product or
- * a vendor and product.
+ * a vendor/product pair.
  * The first match returns.
  */
 static dc_status_t
-search_descr(dc_descriptor_t **out, const char *name)
+search_descr(dc_descriptor_t **out, const char *name, int mod)
 {
 	dc_status_t	 rc = DC_STATUS_SUCCESS;
 	dc_iterator_t	*iterator = NULL;
 	dc_descriptor_t *descriptor = NULL, *current = NULL;
 	const char	*vendor, *product;
 	size_t		 n;
+	unsigned int	 model;
 
 	rc = dc_descriptor_iterator(&iterator);
 	if (rc != DC_STATUS_SUCCESS) {
@@ -82,14 +86,32 @@ search_descr(dc_descriptor_t **out, const char *name)
 	       DC_STATUS_SUCCESS) {
 		vendor = dc_descriptor_get_vendor(descriptor);
 		product = dc_descriptor_get_product(descriptor);
+		model = dc_descriptor_get_model(descriptor);
+
 		n = strlen(vendor);
+
+		/*
+		 * First look up by vendor/product pair (vendor followed
+		 * by a space, then the product).
+		 * If included on the command-line, we also look for the
+		 * model number.
+		 */
 
 		if (strncasecmp(name, vendor, n) == 0 && 
 		    name[n] == ' ' &&
-		    strcasecmp (name + n + 1, product) == 0) {
+		    strcasecmp(name + n + 1, product) == 0 &&
+		    (mod < 0 || (unsigned int)mod == model)) {
 			current = descriptor;
 			break;
-		} else if (strcasecmp (name, product) == 0) {
+		} 
+		
+		/*
+		 * Next, just the product name.
+		 * Again, if specified, use the model number.
+		 */
+
+		if (strcasecmp(name, product) == 0 &&
+		    (mod < 0 || (unsigned int)mod == model)) {
 			current = descriptor;
 			break;
 		}
@@ -109,6 +131,9 @@ search_descr(dc_descriptor_t **out, const char *name)
 	return DC_STATUS_SUCCESS;
 }
 
+/*
+ * Sort descriptors by vendor, then product, then model no.
+ */
 static int
 descr_cmp(const void *p1, const void *p2)
 {
@@ -542,7 +567,7 @@ main(int argc, char *argv[])
 	enum dcmd_type	 out = DC_OUTPUT_XML;
 	char		*ofile = NULL;
 	struct dcmd_rng	*rng = NULL;
-	unsigned int	 model = 0;
+	int	 	 model = 0;
 
 #if defined(__OpenBSD__) && OpenBSD > 201510
 	if (-1 == pledge("stdio rpath", NULL))
@@ -637,7 +662,7 @@ main(int argc, char *argv[])
 	dc_context_set_logfunc(context, logfunc, NULL);
 
 	if (0 == show) {
-		status = search_descr(&descriptor, device);
+		status = search_descr(&descriptor, device, model);
 		if (status != DC_STATUS_SUCCESS) {
 			warnx("%s", dctool_errmsg(status));
 			goto cleanup;
