@@ -23,9 +23,6 @@
 #include <string.h>
 #include <stdio.h>
 
-#include <libdivecomputer/common.h>
-#include <libdivecomputer/parser.h>
-
 #include "extern.h"
 
 struct	dcmd_list {
