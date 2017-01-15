@@ -4,7 +4,8 @@
 extract the contents of your dive computer in a safe, simple manner.  It
 has three programs: *divecmd*, which downloads, parses, and formats dives;
 *divecmd2term*, which graphs formatted dives in an ANSI/VT100 terminal;
-and *divecmd2grap*, which graphs using *grap(1)*.
+*divecmd2grap*, which graphs using *grap(1)*; and *divecmd2json*, which
+exports dive profiles to the JSON format.
 
 I forked [libdivecomputer](http://www.libdivecomputer.org)'s *dctool* to
 write *divecmd* --- originally to provide output like
