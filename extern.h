@@ -54,7 +54,7 @@ dc_status_t	 output_list_write(struct dcmd_out *,
 			size_t, dc_parser_t *, const char *);
 
 dc_status_t	 output_xml_free(struct dcmd_out *);
-struct dcmd_out *output_xml_new(void);
+struct dcmd_out *output_xml_new(dc_descriptor_t *);
 dc_status_t	 output_xml_write(struct dcmd_out *, 
 			size_t, dc_parser_t *, const char *);
 

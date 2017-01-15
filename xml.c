@@ -23,9 +23,6 @@
 #include <string.h>
 #include <stdio.h>
 
-#include <libdivecomputer/common.h>
-#include <libdivecomputer/parser.h>
-
 #include "extern.h"
 
 struct	dcmd_xml {
@@ -94,7 +91,7 @@ sample_cb(dc_sample_type_t type, dc_sample_value_t v, void *userdata)
 }
 
 struct dcmd_out *
-output_xml_new(void)
+output_xml_new(dc_descriptor_t *descriptor)
 {
 	struct dcmd_xml *p = NULL;
 
@@ -103,9 +100,14 @@ output_xml_new(void)
 
 	p->f = stdout;
 
-	fputs("<?xml version=\"1.0\" encoding=\"UTF-8\" ?>\n"
-	      "<divelog program=\"divecmd\" version=\"" VERSION "\">\n"
-	      "\t<dives>\n", p->f);
+	fprintf(p->f, 
+		"<?xml version=\"1.0\" encoding=\"UTF-8\" ?>\n"
+		"<divelog program=\"divecmd\" version=\"" VERSION "\" "
+		 "vendor=\"%s\" product=\"%s\" model=\"%u\">\n"
+		 "\t<dives>\n",
+		 dc_descriptor_get_vendor(descriptor),
+		 dc_descriptor_get_product(descriptor),
+		 dc_descriptor_get_model(descriptor));
 
 	return((struct dcmd_out *)p);
 }

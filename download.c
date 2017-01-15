@@ -29,14 +29,10 @@
 #include <string.h>
 #include <unistd.h>
 
-#include <libdivecomputer/context.h>
-#include <libdivecomputer/descriptor.h>
-#include <libdivecomputer/device.h>
-#include <libdivecomputer/parser.h>
-
 #include "extern.h"
 
 typedef struct dive_data_t {
+	dc_descriptor_t	 *descriptor; /* device */
 	dc_device_t	 *device; /* device */
 	dc_buffer_t	**fingerprint; /* first fingerprint */
 	dc_buffer_t	 *ofp; /* only this fingerprint */
@@ -308,6 +304,7 @@ parse(dc_context_t *context, dc_descriptor_t *descriptor,
 
 	/* Initialize the dive data. */
 
+	dd.descriptor = descriptor;
 	dd.device = device;
 	dd.fingerprint = lfprint;
 	dd.output = output;
@@ -342,7 +339,7 @@ download(dc_context_t *context, dc_descriptor_t *descriptor,
 
 	switch (type) {
 	case (DC_OUTPUT_XML):
-		output = output_xml_new();
+		output = output_xml_new(descriptor);
 		break;
 	default:
 		output = output_list_new();
