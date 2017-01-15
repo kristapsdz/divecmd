@@ -54,6 +54,9 @@ print_all(const struct diveq *dq)
 
 	puts(".G1");
 	puts("draw solid");
+	puts("frame invis ht 3 wid 4 left solid bot solid");
+	puts("label left \"Depth\" \"(metres)\" left 0.2");
+	puts("label bot \"Time (seconds)\"");
 
 	TAILQ_FOREACH(d, dq, entries) {
 		TAILQ_FOREACH(s, &d->samps, entries) {
