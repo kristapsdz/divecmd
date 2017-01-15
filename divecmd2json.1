@@ -44,6 +44,58 @@ Parse files in verbose mode.
 .It Ar files...
 XML input files with one or more dives.
 .El
+.Ss Output
+The output of
+.Nm
+has the following structure:
+.Bd -literal
+{"divecmd2json":
+  {"version": "0.0.1",
+   "divers": [
+.Ed
+.Pp
+Each instance has a root of
+.Li divecmd2json ,
+followed by the version number.
+An array of all divers comes next.
+.Bd -literal
+    {"dives": [
+      {"num": 41,
+       "datetime": 1483178882,
+       "samples": [
+.Ed
+.Pp
+For each diver, an array of all dives.
+Dives consist of a
+.Li num ,
+the dive number as exported from
+.Xr divecmd 1 ,
+and the optional date-time stamp (UNIX epoch).
+Dives are sorted in order of increasing
+.Li datetime .
+If the
+.Li datetime
+is not provided, they come last.
+What follows that are the samples.
+.Bd -literal
+        {"time": 0, "depth": 1.28, "temp": 16},
+        {"time": 20, "depth": 2.32, "temp": 16},
+        {"time": 40, "depth": 1.35, "temp": 16},
+        ]
+      }]
+    }]
+  }
+}
+.Ed
+.Pp
+Samples always consist of a
+.Li time ,
+in seconds from the start of the dive, and optionally contain a
+.Li depth
+.Pq in metres
+and
+.Li temp
+.Pq in celsius .
 .Sh EXIT STATUS
 .Ex -std
 .Sh AUTHORS
