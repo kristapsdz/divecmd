@@ -51,6 +51,42 @@ static	const char *dcmd_types[] = {
 	"gasmix", /* DC_SAMPLE_GASMIX */
 };
 
+static	const char *dcmd_deco_types[] = {
+	"ndl", /* DC_DECO_NDL */
+	"safetystop", /* DC_DECO_SAFETYSTOP */
+	"decostop", /* DC_DECO_DECOSTOP */
+	"deepstop", /* DC_DECO_DEEPSTOP */
+};
+
+static	const char *dcmd_event_types[] = {
+	"none", /* SAMPLE_EVENT_NONE */
+	"decostop", /* SAMPLE_EVENT_DECOSTOP */
+	"rbt", /* SAMPLE_EVENT_RBT */
+	"ascent", /* SAMPLE_EVENT_ASCENT */
+	"ceiling", /* SAMPLE_EVENT_CEILING */
+	"workload", /* SAMPLE_EVENT_WORKLOAD */
+	"transmitter", /* SAMPLE_EVENT_TRANSMITTER */
+	"violation", /* SAMPLE_EVENT_VIOLATION */
+	"bookmark", /* SAMPLE_EVENT_BOOKMARK */
+	"surface", /* SAMPLE_EVENT_SURFACE */
+	"safetystop", /* SAMPLE_EVENT_SAFETYSTOP */
+	"gaschange", /* SAMPLE_EVENT_GASCHANGE */
+	"safetystop_voluntary", /* SAMPLE_EVENT_SAFETYSTOP_VOLUNTARY */
+	"safetystop_mandatory", /* SAMPLE_EVENT_SAFETYSTOP_MANDATORY */
+	"deepstop", /* SAMPLE_EVENT_DEEPSTOP */
+	"ceiling_safetystop", /* SAMPLE_EVENT_CEILING_SAFETYSTOP */
+	"floor", /* SAMPLE_EVENT_FLOOR */
+	"divetime", /* SAMPLE_EVENT_DIVETIME */
+	"maxdepth", /* SAMPLE_EVENT_MAXDEPTH */
+	"olf", /* SAMPLE_EVENT_OLF */
+	"po2", /* SAMPLE_EVENT_PO2 */
+	"airtime", /* SAMPLE_EVENT_AIRTIME */
+	"rgbm", /* SAMPLE_EVENT_RGBM */
+	"heading", /* SAMPLE_EVENT_HEADING */
+	"tissuelevel", /* SAMPLE_EVENT_TISSUELEVEL */
+	"gaschange2", /* SAMPLE_EVENT_GASCHANGE2 */
+};
+
 /*
  * A DC_SAMPLE_TIME means that we're encountering a new sample.
  */
@@ -80,6 +116,17 @@ sample_cb(dc_sample_type_t type, dc_sample_value_t v, void *userdata)
 		fprintf(sd->f, "\t\t\t\t\t"
 			"<temp value=\"%.2f\" />\n", 
 			v.temperature);
+		break;
+	case DC_SAMPLE_DECO:
+		fprintf(sd->f, "\t\t\t\t\t"
+			"<deco depth=\"%.2f\" type=\"%s\" duration=\"%u\" />\n", 
+			v.deco.depth, dcmd_deco_types[v.deco.type],
+			v.deco.time);
+		break;
+	case DC_SAMPLE_EVENT:
+		fprintf(sd->f, "\t\t\t\t\t"
+			"<event type=\"%s\" />\n", 
+			dcmd_event_types[v.event.type]);
 		break;
 	default:
 		if ( ! verbose)
