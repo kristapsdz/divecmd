@@ -63,7 +63,7 @@ parse_open(void *dat, const XML_Char *s, const XML_Char **atts)
 {
 	struct parse	 *p = dat;
 	struct samp	 *samp;
-	struct dive	 *dive;
+	struct dive	 *dive, *dp;
 	const XML_Char	**attp;
 	const char	 *date, *time;
 	struct tm	  tm;
@@ -92,7 +92,6 @@ parse_open(void *dat, const XML_Char *s, const XML_Char **atts)
 		if (verbose)
 			fprintf(stderr, "%s: new dive: %zu\n",
 				p->file, dive->num);
-		TAILQ_INSERT_TAIL(p->dives, dive, entries);
 		TAILQ_INIT(&dive->samps);
 
 		date = time = NULL;
@@ -126,6 +125,7 @@ parse_open(void *dat, const XML_Char *s, const XML_Char **atts)
 				&tm.tm_year, &tm.tm_mon, &tm.tm_mday);
 			if (3 != rc) {
 				logerrx(p, "malformed date");
+				TAILQ_INSERT_TAIL(p->dives, dive, entries);
 				return;
 			}
 			tm.tm_year -= 1900;
@@ -134,12 +134,14 @@ parse_open(void *dat, const XML_Char *s, const XML_Char **atts)
 				&tm.tm_hour, &tm.tm_min, &tm.tm_sec);
 			if (3 != rc) {
 				logerrx(p, "malformed time");
+				TAILQ_INSERT_TAIL(p->dives, dive, entries);
 				return;
 			}
 			tm.tm_isdst = -1;
 			if (-1 == (dive->datetime = mktime(&tm))) {
 				logerrx(p, "malformed date-time");
 				dive->datetime = 0;
+				TAILQ_INSERT_TAIL(p->dives, dive, entries);
 				return;
 			}
 			if (0 == p->stat->timestamp_min ||
@@ -148,6 +150,18 @@ parse_open(void *dat, const XML_Char *s, const XML_Char **atts)
 			if (0 == p->stat->timestamp_max ||
 			    dive->datetime > p->stat->timestamp_max)
 				p->stat->timestamp_max = dive->datetime;
+
+			/* Insert is in reverse order. */
+
+			TAILQ_FOREACH(dp, p->dives, entries)
+				if (dp->datetime &&
+				    dp->datetime > dive->datetime)
+					break;
+
+			if (NULL == dp)
+				TAILQ_INSERT_TAIL(p->dives, dive, entries);
+			else
+				TAILQ_INSERT_BEFORE(dp, dive, entries);
 		}
 
 	} else if (0 == strcmp(s, "sample")) {
@@ -181,10 +195,8 @@ parse_open(void *dat, const XML_Char *s, const XML_Char **atts)
 			fprintf(stderr, "%s: new sample: %zu, %zu\n", 
 				p->file, dive->num, samp->time);
 	} else if (0 == strcmp(s, "depth")) {
-		if (NULL == (samp = p->cursamp)) {
-			logerrx(p, "depth outside sample");
+		if (NULL == (samp = p->cursamp))
 			return;
-		}
 		for (attp = atts; NULL != attp[0]; attp += 2)
 			if (0 == strcmp(attp[0], "value")) 
 				break;
