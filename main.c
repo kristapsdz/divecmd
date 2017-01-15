@@ -66,7 +66,7 @@ struct	descr {
  * a vendor/product pair.
  * The first match returns.
  */
-static dc_status_t
+static int
 search_descr(dc_descriptor_t **out, const char *name, int mod)
 {
 	dc_status_t	 rc = DC_STATUS_SUCCESS;
@@ -79,7 +79,7 @@ search_descr(dc_descriptor_t **out, const char *name, int mod)
 	rc = dc_descriptor_iterator(&iterator);
 	if (rc != DC_STATUS_SUCCESS) {
 		warnx("%s", dctool_errmsg(rc));
-		return(rc);
+		return(0);
 	}
 
 	while ((rc = dc_iterator_next(iterator, &descriptor)) == 
@@ -123,12 +123,12 @@ search_descr(dc_descriptor_t **out, const char *name, int mod)
 		dc_descriptor_free(current);
 		dc_iterator_free(iterator);
 		warnx("%s", dctool_errmsg(rc));
-		return(rc);
+		return(0);
 	}
 
 	dc_iterator_free(iterator);
 	*out = current;
-	return DC_STATUS_SUCCESS;
+	return(1);
 }
 
 /*
@@ -325,15 +325,14 @@ fprint_set(int fd, const char *file, dc_buffer_t *buf)
 }
 
 /*
- * Get the last-known fingerprint of "device".
+ * Get the last-known fingerprint of "desc".
  * Sets "fd" and "filep" to be the file descriptor and filename of the
  * fingerprint file, or -1 and NULL.
- * If device is NULL, nothing happens.
  * If the file was empty (e.g., just created), the return is NULL, but
  * the file is open anyway.
  */
 static dc_buffer_t *
-fprint_get(int *fd, char **filep, int all, const char *device)
+fprint_get(int *fd, char **filep, int all, dc_descriptor_t *desc)
 {
 	char		*cp, *ccp, *file;
 	char		 buf[1024];
@@ -345,9 +344,6 @@ fprint_get(int *fd, char **filep, int all, const char *device)
 
 	*fd = -1;
 	*filep = NULL;
-
-	if (NULL == device)
-		return(NULL);
 
 	/*
 	 * First, make sure our directory exists.
@@ -371,8 +367,14 @@ fprint_get(int *fd, char **filep, int all, const char *device)
 
 	/* Escape device name as file. */
 
-	if (NULL == (cp = strdup(device)))
+	rc = asprintf(&cp, "%s %s-%u", 
+		dc_descriptor_get_vendor(desc),
+		dc_descriptor_get_product(desc),
+		dc_descriptor_get_model(desc));
+
+	if (rc < 0)
 		err(EXIT_FAILURE, NULL);
+
 	for (ccp = cp; '\0' != *ccp; ccp++)
 		if (isspace((int)*ccp) || '(' == *ccp || ')' == *ccp)
 			*ccp = '_';
@@ -560,14 +562,14 @@ main(int argc, char *argv[])
 	dc_context_t	*context = NULL;
 	dc_descriptor_t *descriptor = NULL;
 	dc_loglevel_t 	 loglevel = DC_LOGLEVEL_WARNING;
-	const char 	*device = NULL, *ofp = NULL, *range = NULL;
+	const char 	*ofp = NULL, *range = NULL;
 	const char	*udev = "/dev/ttyU0";
 	int 		 show = 0, ch, ofd = -1, nofp = 0, all = 0;
 	dc_buffer_t	*fprint = NULL, *ofprint = NULL, *lprint = NULL;
 	enum dcmd_type	 out = DC_OUTPUT_XML;
 	char		*ofile = NULL;
 	struct dcmd_rng	*rng = NULL;
-	int	 	 model = 0;
+	int	 	 model = -1;
 
 #if defined(__OpenBSD__) && OpenBSD > 201510
 	if (-1 == pledge("stdio rpath", NULL))
@@ -589,6 +591,7 @@ main(int argc, char *argv[])
 			out = DC_OUTPUT_LIST;
 			break;
 		case 'm':
+			/* FIXME: use strtonum. */
 			model = atoi(optarg);
 			break;
 		case 'n':
@@ -613,19 +616,29 @@ main(int argc, char *argv[])
 	argc -= optind;
 	argv += optind;
 
-	if (0 == show && 0 == argc)
-		goto usage;
-	else if (0 == show)
-		device = argv[0];
-
 	/* 
-	 * Convert desired fingerprint into binary.
-	 * Also read in the last-seen fingerprint.
-	 * We'll [optionally] use these to constrain which dives we
-	 * report to the operator.
-	 * If we have this option, disable the range check.
-	 * (It takes precedence.)
+	 * If we're only showing our available devices, then do so now as this
+	 * uses no resources.
 	 */
+
+	if (show) {
+		show_devices();
+		exitcode = 1;
+		goto cleanup;
+	} else if (0 == argc)
+		goto usage;
+
+	/* Look up the device in our descriptor table. */
+
+	if ( ! search_descr(&descriptor, argv[0], model))
+		goto cleanup;
+
+	if (descriptor == NULL) {
+		warnx("%s: unknown dive computer", argv[0]);
+		goto cleanup;
+	}
+
+	/* If applicable, get desired fingerprint. */
 
 	if (NULL != ofp) {
 		ofprint = hex2bin(ofp);
@@ -633,20 +646,19 @@ main(int argc, char *argv[])
 		all = nofp = 1;
 	}
 
-	/*
-	 * Range check.
-	 * Like with the fingerprint, this triggers that we look over
-	 * all dives.
-	 */
+	/* If applicable, get range-check values. */
 
 	if (NULL != range && parserange(range, &rng))
 		all = nofp = 1;
 
-	fprint = fprint_get(&ofd, &ofile, all, device);
+	/* Deserialise last-seen fingerprint. */
+
+	fprint = fprint_get(&ofd, &ofile, all, descriptor);
 
 	/* Setup the cancel signal handler. */
 
-	signal(SIGINT, sighandler);
+	if (SIG_ERR == signal(SIGINT, sighandler))
+		err(EXIT_FAILURE, NULL);
 
 	/* Initialize a library context. */
 
@@ -661,38 +673,17 @@ main(int argc, char *argv[])
 	dc_context_set_loglevel(context, loglevel);
 	dc_context_set_logfunc(context, logfunc, NULL);
 
-	if (0 == show) {
-		status = search_descr(&descriptor, device, model);
-		if (status != DC_STATUS_SUCCESS) {
-			warnx("%s", dctool_errmsg(status));
-			goto cleanup;
-		} else if (descriptor == NULL) {
-			warnx("%s: not supported", device);
-			goto cleanup;
-		}
-	}
-
-	if (show) {
-		/* We're only showing devices. */
-		show_devices();
-		exitcode = 1;
-		goto cleanup;
-	} 
-
 	/*
 	 * Do the full download and parse, setting the last fingerprint
-	 * if it's found.
+	 * if it's found, given our range constraints, last-seen
+	 * fingerprint constraint, and single-fingerprint constraint.
 	 */
 
 	exitcode = download
 		(context, descriptor, udev, 
 		 out, fprint, ofprint, &lprint, rng);
 
-	/* 
-	 * If we have a last fingerprint, write it. 
-	 * We do this by default, but it can be turned off: the operator
-	 * says so (-n), the parse failed, or no fingerprint was parsed.
-	 */
+	/* Serialise last fingerprint if found & enabled. */
 
 	if (exitcode && NULL != lprint && -1 != ofd) {
 		if (nofp && verbose)
