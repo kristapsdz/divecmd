@@ -33,26 +33,44 @@ int verbose = 0;
 
 static int aggr = 0;
 
-static void
+static int
 print_all(const struct diveq *dq)
 {
 	struct dive	*d;
 	struct samp	*s;
+	time_t		 mintime = 0, t;
 
 	assert( ! TAILQ_EMPTY(dq));
+
+	if (aggr) 
+		TAILQ_FOREACH(d, dq, entries) {
+			if (0 == d->datetime) {
+				warnx("date and time required");
+				return(0);
+			}
+			if (0 == mintime || d->datetime < mintime)
+				mintime = d->datetime;
+		}
 
 	puts(".G1");
 	puts("draw solid");
 
 	TAILQ_FOREACH(d, dq, entries) {
-		TAILQ_FOREACH(s, &d->samps, entries)
+		TAILQ_FOREACH(s, &d->samps, entries) {
+			t = s->time;
+			if (aggr) {
+				t += d->datetime;
+				t -= mintime;
+			}
 			if (SAMP_DEPTH & s->flags)
-				printf("%zu -%g\n", s->time, s->depth);
+				printf("%lld -%g\n", t, s->depth);
+		}
 		if (TAILQ_NEXT(d, entries)) 
 			puts("new");
 	}
 
 	puts(".G2");
+	return(1);
 }
 
 int
@@ -123,7 +141,7 @@ main(int argc, char *argv[])
 		err(EXIT_FAILURE, "pledge");
 #endif
 
-	print_all(&dq);
+	rc = print_all(&dq);
 out:
 	parse_free(&dq);
 	return(rc ? EXIT_SUCCESS : EXIT_FAILURE);
