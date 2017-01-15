@@ -1,6 +1,6 @@
 .\"	$Id$
 .\"
-.\" Copyright (c) 2016 Kristaps Dzonsons <kristaps@bsd.lv>
+.\" Copyright (c) 2016--2017 Kristaps Dzonsons <kristaps@bsd.lv>
 .\"
 .\" This library is free software; you can redistribute it and/or
 .\" modify it under the terms of the GNU Lesser General Public
@@ -31,6 +31,7 @@
 .Op Fl alnv
 .Op Fl d Ar device
 .Op Fl f Ar fingerprint
+.Op Fl m Ar model
 .Op Fl r Ar range
 .Ar computer
 .Sh DESCRIPTION
@@ -58,6 +59,12 @@ and
 .It Fl l
 Lists the dives in short format, one per line: time, type, and
 fingerprint.
+.It Fl m Ar model
+When looking up the
+.Ar computer ,
+use this as the model number.
+Sometimes different dive computers share the same product name and need
+to be differentiated by model, e.g., the Oceanic OC1.
 .It Fl n
 Do not set the last-seen dive fingerprint.
 .It Fl r Ar range
@@ -94,6 +101,9 @@ You can also just specify the product, e.g.,
 .Dq d6i ,
 but if there are multiple vendors with the same product, they may
 conflict.
+You may need to specify a model with
+.Fl m
+if there are multiple vendor/product pairs with the same name.
 .El
 .Pp
 In the default behaviour (i.e.,
