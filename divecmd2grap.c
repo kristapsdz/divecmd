@@ -1,6 +1,6 @@
 /*	$Id$ */
 /*
- * Copyright (c) 2016 Kristaps Dzonsons <kristaps@bsd.lv>
+ * Copyright (c) 2017 Kristaps Dzonsons <kristaps@bsd.lv>
  *
  * Permission to use, copy, modify, and distribute this software for any
  * purpose with or without fee is hereby granted, provided that the above
@@ -23,6 +23,7 @@
 #include <err.h>
 #include <stdlib.h>
 #include <stdio.h>
+#include <string.h>
 #include <unistd.h>
 
 #include <expat.h>
@@ -54,7 +55,7 @@ print_all(const struct diveq *dq)
 
 	puts(".G1");
 	puts("draw solid");
-	puts("frame invis ht 3 wid 4 left solid bot solid");
+	puts("frame invis ht 2 wid 3 left solid bot solid");
 	puts("label left \"Depth\" \"(metres)\" left 0.2");
 	puts("label bot \"Time (seconds)\"");
 
@@ -83,6 +84,7 @@ main(int argc, char *argv[])
 	size_t		 i;
 	XML_Parser	 p;
 	struct diveq	 dq;
+	struct divestat	 st;
 
 	/* Pledge us early: only reading files. */
 
@@ -90,6 +92,8 @@ main(int argc, char *argv[])
 	if (-1 == pledge("stdio rpath", NULL))
 		err(EXIT_FAILURE, "pledge");
 #endif
+	
+	memset(&st, 0, sizeof(struct divestat));
 
 	while (-1 != (c = getopt(argc, argv, "av")))
 		switch (c) {
@@ -117,10 +121,10 @@ main(int argc, char *argv[])
 	 */
 
 	if (0 == argc)
-		rc = parse("-", p, &dq);
+		rc = parse("-", p, &dq, &st);
 
 	for (i = 0; i < (size_t)argc; i++)
-		if ( ! (rc = parse(argv[i], p, &dq)))
+		if ( ! (rc = parse(argv[i], p, &dq, &st)))
 			break;
 
 	XML_ParserFree(p);

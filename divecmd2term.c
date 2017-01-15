@@ -530,6 +530,7 @@ main(int argc, char *argv[])
 	size_t		 i;
 	XML_Parser	 p;
 	struct diveq	 dq;
+	struct divestat	 st;
 	struct winsize	 ws;
 
 	setlocale(LC_ALL, "");
@@ -540,6 +541,8 @@ main(int argc, char *argv[])
 	if (-1 == pledge("stdio rpath", NULL))
 		err(EXIT_FAILURE, "pledge");
 #endif
+
+	memset(&st, 0, sizeof(struct divestat));
 
 	while (-1 != (c = getopt(argc, argv, "auv")))
 		switch (c) {
@@ -570,9 +573,9 @@ main(int argc, char *argv[])
 	 */
 
 	if (0 == argc)
-		rc = parse("-", p, &dq);
+		rc = parse("-", p, &dq, &st);
 	for (i = 0; i < (size_t)argc; i++)
-		if ( ! (rc = parse(argv[i], p, &dq)))
+		if ( ! (rc = parse(argv[i], p, &dq, &st)))
 			break;
 
 	XML_ParserFree(p);
