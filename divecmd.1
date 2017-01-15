@@ -230,6 +230,8 @@ And now, the samples...
          [<depth value="xxx" />]
          [<temp value="xxx" />]
          [<pressure value="xxx" tank="nnn" />]
+         [<deco depth="xxx" type="zzz" duration="nnn" />]
+         [<event type="event" />]
         </sample>
       </samples>
 .Ed
@@ -242,11 +244,55 @@ The remaining optional sub-elements are as follows:
 Depth (metres) at sampling time.
 .It Li temp
 Temperature (celsiu) at sampling time.
-.It Li pressure , tank
+.It Li pressure
 Tank pressure (in bar).
 References a tank number in the
 .Li <tanks>
 section.
+.It Li deco
+A decompression notice.
+The
+.Li type
+attribute may be one of
+.Dq ndl ,
+.Dq safetystop ,
+.Dq decostop ,
+or
+.Dq deepstop .
+Duration is in seconds.
+.It Li event
+A generic event.
+This may have the
+.Li type
+set to one of
+.Dq none ,
+.Dq decostop ,
+.Dq rbt ,
+.Dq ascent ,
+.Dq ceiling ,
+.Dq workload ,
+.Dq transmitter ,
+.Dq violation ,
+.Dq bookmark ,
+.Dq surface ,
+.Dq safetystop ,
+.Dq gaschange ,
+.Dq safetystop_voluntary ,
+.Dq safetystop_mandatory ,
+.Dq deepstop ,
+.Dq ceiling_safetystop ,
+.Dq floor ,
+.Dq divetime ,
+.Dq maxdepth ,
+.Dq olf ,
+.Dq po2 ,
+.Dq airtime ,
+.Dq rgbm ,
+.Dq heading ,
+.Dq tissuelevel ,
+or
+.Dq gaschange2 .
+No additional information is provided at this time.
 .El
 .Pp
 In theory, it's possible for a sample to have no inner elements at all,
