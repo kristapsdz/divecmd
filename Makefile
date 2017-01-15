@@ -10,15 +10,18 @@ OBJS		 = common.o \
 		   list.o \
 		   xml.o
 BINOBJS		 = divecmd2grap.o \
+		   divecmd2json.o \
 		   divecmd2term.o \
 		   parser.o
 BINDIR 		 = $(PREFIX)/bin
 MANDIR 		 = $(PREFIX)/man
 BINS		 = divecmd \
 		   divecmd2grap \
+		   divecmd2json \
 		   divecmd2term
 MAN1S		 = divecmd.1 \
 		   divecmd2grap.1 \
+		   divecmd2json.1 \
 		   divecmd2term.1
 
 all: $(BINS)
@@ -31,6 +34,9 @@ divecmd2term: divecmd2term.o parser.o
 
 divecmd2grap: divecmd2grap.o parser.o
 	$(CC) -o $@ divecmd2grap.o parser.o -lexpat
+
+divecmd2json: divecmd2json.o parser.o
+	$(CC) -o $@ divecmd2json.o parser.o -lexpat
 
 install: all
 	mkdir -p $(DESTDIR)$(BINDIR)
