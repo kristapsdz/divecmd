@@ -34,6 +34,7 @@ struct	parse {
 	struct dive	*curdive; /* current dive */
 	struct samp	*cursamp; /* current sample */
 	struct diveq	*dives; /* all dives */
+	struct divestat	*stat; /* statistics */
 };
 
 static void
@@ -141,6 +142,12 @@ parse_open(void *dat, const XML_Char *s, const XML_Char **atts)
 				dive->datetime = 0;
 				return;
 			}
+			if (0 == p->stat->timestamp_min ||
+			    dive->datetime < p->stat->timestamp_min)
+				p->stat->timestamp_min = dive->datetime;
+			if (0 == p->stat->timestamp_max ||
+			    dive->datetime > p->stat->timestamp_max)
+				p->stat->timestamp_max = dive->datetime;
 		}
 
 	} else if (0 == strcmp(s, "sample")) {
@@ -164,6 +171,12 @@ parse_open(void *dat, const XML_Char *s, const XML_Char **atts)
 		dive->nsamps++;
 		if (samp->time > dive->maxtime)
 			dive->maxtime = samp->time;
+		if (dive->datetime &&
+		    dive->datetime + (time_t)samp->time > 
+		    p->stat->timestamp_max)
+			p->stat->timestamp_max =
+				dive->datetime +
+				(time_t)samp->time;
 		if (verbose)
 			fprintf(stderr, "%s: new sample: %zu, %zu\n", 
 				p->file, dive->num, samp->time);
@@ -210,13 +223,14 @@ parse_close(void *dat, const XML_Char *s)
 }
 
 int
-parse(const char *fname, XML_Parser p, struct diveq *dq)
+parse(const char *fname, XML_Parser p, 
+	struct diveq *dq, struct divestat *st)
 {
 	int	 	 fd;
 	struct parse	 pp;
 	ssize_t		 ssz;
 	char		 buf[BUFSIZ];
-	enum XML_Status	 st;
+	enum XML_Status	 rc;
 
 	fd = strcmp("-", fname) ? 
 		open(fname, O_RDONLY, 0) : STDIN_FILENO;
@@ -230,14 +244,15 @@ parse(const char *fname, XML_Parser p, struct diveq *dq)
 	pp.file = STDIN_FILENO == fd ? "<stdin>" : fname;
 	pp.p = p;
 	pp.dives = dq;
+	pp.stat = st;
 
 	XML_ParserReset(p, NULL);
 	XML_SetElementHandler(p, parse_open, parse_close);
 	XML_SetUserData(p, &pp);
 
 	while ((ssz = read(fd, buf, sizeof(buf))) > 0) {
-	       st = XML_Parse(p, buf, (int)ssz, 0 == ssz ? 1 : 0);
-	       if (XML_STATUS_OK != st) {
+	       rc = XML_Parse(p, buf, (int)ssz, 0 == ssz ? 1 : 0);
+	       if (XML_STATUS_OK != rc) {
 		       logerr(&pp);
 		       break;
 	       } else if (0 == ssz)
