@@ -329,7 +329,8 @@ int
 download(dc_context_t *context, dc_descriptor_t *descriptor, 
 	const char *udev, enum dcmd_type type,
 	dc_buffer_t *fprint, dc_buffer_t *ofprint, 
-	dc_buffer_t **lfprint, const struct dcmd_rng *rng)
+	dc_buffer_t **lfprint, const struct dcmd_rng *rng,
+	const char *ident)
 {
 	int		 exitcode = 0;
 	dc_status_t	 status = DC_STATUS_SUCCESS;
@@ -339,7 +340,7 @@ download(dc_context_t *context, dc_descriptor_t *descriptor,
 
 	switch (type) {
 	case (DC_OUTPUT_XML):
-		output = output_xml_new(descriptor);
+		output = output_xml_new(descriptor, ident);
 		break;
 	default:
 		output = output_list_new();

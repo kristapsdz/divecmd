@@ -125,8 +125,8 @@ sample_cb(dc_sample_type_t type, dc_sample_value_t v, void *userdata)
 		break;
 	case DC_SAMPLE_EVENT:
 		fprintf(sd->f, "\t\t\t\t\t"
-			"<event type=\"%s\" />\n", 
-			dcmd_event_types[v.event.type]);
+			"<event type=\"%s\" duration=\"%u\" />\n", 
+			dcmd_event_types[v.event.type], v.event.time);
 		break;
 	default:
 		if ( ! verbose)
@@ -138,7 +138,7 @@ sample_cb(dc_sample_type_t type, dc_sample_value_t v, void *userdata)
 }
 
 struct dcmd_out *
-output_xml_new(dc_descriptor_t *descriptor)
+output_xml_new(dc_descriptor_t *descriptor, const char *ident)
 {
 	struct dcmd_xml *p = NULL;
 
@@ -150,11 +150,13 @@ output_xml_new(dc_descriptor_t *descriptor)
 	fprintf(p->f, 
 		"<?xml version=\"1.0\" encoding=\"UTF-8\" ?>\n"
 		"<divelog program=\"divecmd\" version=\"" VERSION "\" "
-		 "vendor=\"%s\" product=\"%s\" model=\"%u\">\n"
-		 "\t<dives>\n",
+		 "vendor=\"%s\" product=\"%s\" model=\"%u\"",
 		 dc_descriptor_get_vendor(descriptor),
 		 dc_descriptor_get_product(descriptor),
 		 dc_descriptor_get_model(descriptor));
+	if (NULL != ident && '\0' != *ident) 
+		fprintf(p->f, " diver=\"%s\"", ident);
+	fprintf(p->f, ">\n\t<dives\n");
 
 	return((struct dcmd_out *)p);
 }

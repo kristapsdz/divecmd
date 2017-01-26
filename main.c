@@ -516,7 +516,7 @@ parserange(const char *range, struct dcmd_rng **pp)
 			return(0);
 		} 
 		if ((p->start = dc_datetime_mktime(&tstart)) < 0)
-			err(EXIT_FAILURE, NULL);
+			errx(EXIT_FAILURE, "%s: bad date", start);
 	}
 
 	/*
@@ -547,7 +547,7 @@ parserange(const char *range, struct dcmd_rng **pp)
 	} 
 
 	if ((p->end = dc_datetime_mktime(&tend)) < 0)
-		err(EXIT_FAILURE, NULL);
+		errx(EXIT_FAILURE, "%s: bad date", end);
 
 	*pp = p;
 	free(cp);
@@ -562,7 +562,7 @@ main(int argc, char *argv[])
 	dc_context_t	*context = NULL;
 	dc_descriptor_t *descriptor = NULL;
 	dc_loglevel_t 	 loglevel = DC_LOGLEVEL_WARNING;
-	const char 	*ofp = NULL, *range = NULL;
+	const char 	*ofp = NULL, *range = NULL, *ident = NULL;
 	const char	*udev = "/dev/ttyU0";
 	int 		 show = 0, ch, ofd = -1, nofp = 0, all = 0;
 	dc_buffer_t	*fprint = NULL, *ofprint = NULL, *lprint = NULL;
@@ -576,7 +576,7 @@ main(int argc, char *argv[])
 		err(EXIT_FAILURE, "pledge");
 #endif
 
-	while (-1 != (ch = getopt (argc, argv, "ad:f:lm:nr:sv"))) {
+	while (-1 != (ch = getopt (argc, argv, "ad:f:i:lm:nr:sv"))) {
 		switch (ch) {
 		case 'a':
 			all = 1;
@@ -586,6 +586,9 @@ main(int argc, char *argv[])
 			break;
 		case 'f':
 			ofp = optarg;
+			break;
+		case 'i':
+			ident = optarg;
 			break;
 		case 'l':
 			out = DC_OUTPUT_LIST;
@@ -681,7 +684,7 @@ main(int argc, char *argv[])
 
 	exitcode = download
 		(context, descriptor, udev, 
-		 out, fprint, ofprint, &lprint, rng);
+		 out, fprint, ofprint, &lprint, rng, ident);
 
 	/* Serialise last fingerprint if found & enabled. */
 
@@ -706,6 +709,7 @@ cleanup:
 usage:
 	fprintf(stderr, "usage: %s [-anv] [-d device] "
 				  "[-f fingerprint] "
+				  "[-i identity] "
 				  "[-m model] computer\n"
 			"       %s [-v] -s\n",
 			getprogname(), getprogname());

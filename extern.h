@@ -46,7 +46,7 @@ const char	*dctool_errmsg(dc_status_t);
 int		 download(dc_context_t *, dc_descriptor_t *, 
 			const char *, enum dcmd_type, dc_buffer_t *, 
 			dc_buffer_t *, dc_buffer_t **,
-			const struct dcmd_rng *);
+			const struct dcmd_rng *, const char *);
 
 dc_status_t	 output_list_free(struct dcmd_out *);
 struct dcmd_out *output_list_new(void);
@@ -54,7 +54,7 @@ dc_status_t	 output_list_write(struct dcmd_out *,
 			size_t, dc_parser_t *, const char *);
 
 dc_status_t	 output_xml_free(struct dcmd_out *);
-struct dcmd_out *output_xml_new(dc_descriptor_t *);
+struct dcmd_out *output_xml_new(dc_descriptor_t *, const char *);
 dc_status_t	 output_xml_write(struct dcmd_out *, 
 			size_t, dc_parser_t *, const char *);
 
