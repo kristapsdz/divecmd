@@ -32,14 +32,29 @@
 
 int verbose = 0;
 
+/*
+ * Aggregate mode: print dives one after the other, starting from the
+ * minimum time, with all dive lines joined.
+ */
 static int aggr = 0;
+
+/*
+ * Make sure to start and end each dive on the surface.
+ */
+static int topside = 0;
+
+/*
+ * Standalone.
+ * Print a grap(1) document around the data.
+ */
+static int standalone = 0;
 
 static int
 print_all(const struct diveq *dq)
 {
 	struct dive	*d;
 	struct samp	*s;
-	time_t		 mintime = 0, t;
+	time_t		 mintime = 0, t, lastt = 0;
 
 	assert( ! TAILQ_EMPTY(dq));
 
@@ -53,13 +68,17 @@ print_all(const struct diveq *dq)
 				mintime = d->datetime;
 		}
 
-	puts(".G1");
-	puts("draw solid");
-	puts("frame invis ht 2 wid 3 left solid bot solid");
-	puts("label left \"Depth\" \"(metres)\" left 0.2");
-	puts("label bot \"Time (seconds)\"");
+	if (standalone) 
+		puts(".G1\n"
+		     "draw solid\n"
+		     "frame invis ht 3.5 wid 5 left solid bot solid\n"
+		     "label left \"Depth\" \"(metres)\" left 0.2\n"
+		     "label bot \"Time (seconds)\"");
 
 	TAILQ_FOREACH(d, dq, entries) {
+		if (topside)
+			printf("%lld 0\n", aggr ?
+				d->datetime - mintime : 0);
 		TAILQ_FOREACH(s, &d->samps, entries) {
 			t = s->time;
 			if (aggr) {
@@ -68,12 +87,17 @@ print_all(const struct diveq *dq)
 			}
 			if (SAMP_DEPTH & s->flags)
 				printf("%lld -%g\n", t, s->depth);
+			lastt = t;
 		}
-		if (TAILQ_NEXT(d, entries)) 
+		if (topside)
+			printf("%lld 0\n", lastt);
+		if ( ! aggr && TAILQ_NEXT(d, entries)) 
 			puts("new");
 	}
 
-	puts(".G2");
+	if (standalone)
+		puts(".G2");
+
 	return(1);
 }
 
@@ -95,10 +119,16 @@ main(int argc, char *argv[])
 	
 	memset(&st, 0, sizeof(struct divestat));
 
-	while (-1 != (c = getopt(argc, argv, "av")))
+	while (-1 != (c = getopt(argc, argv, "astv")))
 		switch (c) {
 		case ('a'):
 			aggr = 1;
+			break;
+		case ('s'):
+			standalone = 1;
+			break;
+		case ('t'):
+			topside = 1;
 			break;
 		case ('v'):
 			verbose = 1;
@@ -153,6 +183,6 @@ out:
 	parse_free(&dq);
 	return(rc ? EXIT_SUCCESS : EXIT_FAILURE);
 usage:
-	fprintf(stderr, "usage: %s [-av] [file]\n", getprogname());
+	fprintf(stderr, "usage: %s [-astv] [file]\n", getprogname());
 	return(EXIT_FAILURE);
 }
