@@ -51,6 +51,8 @@ static int topside = 0;
  */
 static int standalone = 0;
 
+static int derivs = 1;
+
 static int
 print_all(const struct diveq *dq)
 {
@@ -59,8 +61,8 @@ print_all(const struct diveq *dq)
 	size_t		 i = 0;
 	time_t		 mintime = 0, t, lastt = 0;
 	size_t		 maxtime = 0, points = 0;
-	double		 maxdepth = 0.0;
-	double		 height = 3.0, width = 5.0;
+	double		 maxdepth = 0.0, lastdepth;
+	double		 height = 3.8, width = 5.4;
 
 	assert( ! TAILQ_EMPTY(dq));
 
@@ -96,8 +98,8 @@ print_all(const struct diveq *dq)
 				"1.0 \"%zu:%.02zu\"\n"
 		       "ticks bot off\n"
 		       "line from 0,0.0 to %zu,0.0\n"
-		       "label right \"Time\" \"(mm:ss)\" up %g left 0.5\n"
-		       "label left \"Depth\" \"(metres)\" down %g left 0.5\n"
+		       "label right \"Time (mm:ss)\" up %g left 0.5\n"
+		       "label left \"Depth (metres)\" down %g left 0.3\n"
 		       "copy thru {\n"
 		       " \"\\(bu\" size +3 at $1,$3\n"
 		       " line dotted from $1,0 to $1,$3\n"
@@ -110,8 +112,12 @@ print_all(const struct diveq *dq)
 		       maxtime / 60, 
 		       maxtime % 60, points,
 		       0.25 * height, 0.25 * height);
+	else if (standalone && ! derivs)
+		puts("label left \"Depth (metres)\"\n"
+		     "label bot \"Time (seconds)\"");
 	else if (standalone)
-		puts("label left \"Depth\" \"(metres)\" left 0.2\n"
+		puts("label left \"Velocity "
+				"(vertical metres/second)\"\n"
 		     "label bot \"Time (seconds)\"");
 
 	TAILQ_FOREACH(d, dq, entries) {
@@ -122,22 +128,32 @@ print_all(const struct diveq *dq)
 			continue;
 		}
 
+		lastdepth = 0.0;
+
 		if (topside)
 			printf("%lld 0\n", 
 				MODE_AGGREGATE == mode ?
 				d->datetime - mintime : 0);
+
 		TAILQ_FOREACH(s, &d->samps, entries) {
 			t = s->time;
 			if (MODE_AGGREGATE == mode) {
 				t += d->datetime;
 				t -= mintime;
 			}
-			if (SAMP_DEPTH & s->flags)
+
+			if (SAMP_DEPTH & s->flags && derivs) {
+				printf("%lld %g\n", t, lastdepth - s->depth);
+				lastdepth = s->depth;
+			} else if (SAMP_DEPTH & s->flags)
 				printf("%lld -%g\n", t, s->depth);
+
 			lastt = t;
 		}
+
 		if (topside)
 			printf("%lld 0\n", lastt);
+
 		if (MODE_AGGREGATE != mode && 
 		    TAILQ_NEXT(d, entries)) 
 			puts("new");
@@ -238,7 +254,7 @@ out:
 	parse_free(&dq);
 	return(rc ? EXIT_SUCCESS : EXIT_FAILURE);
 usage:
-	fprintf(stderr, "usage: %s [-stv] "
+	fprintf(stderr, "usage: %s [-dstv] "
 		"[-m mode] [file...]\n", getprogname());
 	return(EXIT_FAILURE);
 }
