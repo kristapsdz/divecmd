@@ -51,7 +51,10 @@ static int topside = 0;
  */
 static int standalone = 0;
 
-static int derivs = 1;
+/*
+ * Print derivatives, aka velocity.
+ */
+static int derivs = 0;
 
 static int
 print_all(const struct diveq *dq)
@@ -65,6 +68,11 @@ print_all(const struct diveq *dq)
 	double		 height = 3.8, width = 5.4;
 
 	assert( ! TAILQ_EMPTY(dq));
+
+	/*
+	 * For aggregate mode, we need to put dives end-to-end, so we
+	 * need the datetime for each dive.
+	 */
 
 	if (MODE_AGGREGATE == mode) 
 		TAILQ_FOREACH(d, dq, entries) {
@@ -84,6 +92,11 @@ print_all(const struct diveq *dq)
 				maxdepth = d->maxdepth;
 			points++;
 		}
+
+	/*
+	 * Standalone mode headers.
+	 * Print our labels, axes, and so on.
+	 */
 
 	if (standalone)
 		printf(".G1\n"
@@ -120,7 +133,16 @@ print_all(const struct diveq *dq)
 				"(vertical metres/second)\"\n"
 		     "label bot \"Time (seconds)\"");
 
+	/* Now for the data... */
+
 	TAILQ_FOREACH(d, dq, entries) {
+		lastdepth = 0.0;
+
+		/* 
+		 * Summary mode is just the maxima of the dive, so print
+		 * that and continue.
+		 */
+
 		if (MODE_SUMMARY == mode) {
 			printf("%zu %g -%g\n", i++, 
 				(double)d->maxtime / maxtime, 
@@ -128,7 +150,10 @@ print_all(const struct diveq *dq)
 			continue;
 		}
 
-		lastdepth = 0.0;
+		/* 
+		 * Topside: the dive computer isn't going to record an
+		 * initial (zero) state, so print it now.
+		 */
 
 		if (topside)
 			printf("%lld 0\n", 
@@ -142,8 +167,11 @@ print_all(const struct diveq *dq)
 				t -= mintime;
 			}
 
+			/* Print depths or velocity. */
+
 			if (SAMP_DEPTH & s->flags && derivs) {
-				printf("%lld %g\n", t, lastdepth - s->depth);
+				printf("%lld %g\n", t, 
+					lastdepth - s->depth);
 				lastdepth = s->depth;
 			} else if (SAMP_DEPTH & s->flags)
 				printf("%lld -%g\n", t, s->depth);
