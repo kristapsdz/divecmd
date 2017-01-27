@@ -25,7 +25,7 @@
 .Nd graph dives with grap
 .Sh SYNOPSIS
 .Nm divecmd2grap
-.Op Fl dstv
+.Op Fl dtv
 .Op Fl m Ar mode
 .Op Ar files...
 .Sh DESCRIPTION
@@ -46,13 +46,17 @@ Derivatives.
 Show change in velocity instead of depth.
 Does not apply to
 .Ar summary
-mode 
+or
+.Ar scatter
+modes.
 .It Fl m Ar mode
 Graphing mode.
 May be one of the following:
 .Ar aggr ,
 where multiple dives are shown in real-time as connected line
 .Pq useful for free diving sequences ;
+.Ar scatter ,
+with points at the intersection of dives' maximum depth and time;
 .Ar summary ,
 where each dive is shown with the maximum depth and time above and below
 the x-axis
@@ -60,21 +64,17 @@ the x-axis
 and
 .Ar stack ,
 the default.
-.It Fl s
-Standalone mode.
-Prints out the
-.Xr grap 1
-document around the data.
-.Pq You probably want this.
 .It Fl t
 Print
 .Dq topside :
 start and end each dive at a depth of zero.
 Usually dive computers will start under the surface: this helps to join
 dives prettily.
-This is not used in
+Does not apply to
 .Ar summary
-mode.
+or
+.Ar scatter
+modes.
 .It Fl v
 Parse files in verbose mode.
 .It Ar files...
@@ -84,9 +84,7 @@ XML input files with one or more dives.
 .Nm
 exports to the data format accepted by
 .Xr grap 1 .
-If
-.Fl s
-is specified, a simple
+A simple
 .Xr grap 1
 documented is also emitted with width 5 inches, height 3 inches.
 .Sh EXIT STATUS
