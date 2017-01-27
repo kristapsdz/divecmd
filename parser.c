@@ -16,6 +16,7 @@
  */
 #include <sys/queue.h>
 
+#include <assert.h>
 #include <err.h>
 #include <fcntl.h>
 #include <stdarg.h>
@@ -197,6 +198,7 @@ parse_open(void *dat, const XML_Char *s, const XML_Char **atts)
 	} else if (0 == strcmp(s, "depth")) {
 		if (NULL == (samp = p->cursamp))
 			return;
+		assert(NULL != p->curdive);
 		for (attp = atts; NULL != attp[0]; attp += 2)
 			if (0 == strcmp(attp[0], "value")) 
 				break;
@@ -206,6 +208,8 @@ parse_open(void *dat, const XML_Char *s, const XML_Char **atts)
 		}
 		samp->depth = atof(attp[1]);
 		samp->flags |= SAMP_DEPTH;
+		if (samp->depth > p->curdive->maxdepth)
+			p->curdive->maxdepth = samp->depth;
 	} else if (0 == strcmp(s, "temp")) {
 		if (NULL == (samp = p->cursamp)) {
 			logerrx(p, "temperature outside sample");

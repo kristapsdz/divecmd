@@ -30,13 +30,15 @@
 
 #include "parser.h"
 
+enum	pmode {
+	MODE_SUMMARY,
+	MODE_AGGREGATE,
+	MODE_STACK
+};
+
 int verbose = 0;
 
-/*
- * Aggregate mode: print dives one after the other, starting from the
- * minimum time, with all dive lines joined.
- */
-static int aggr = 0;
+static	enum pmode mode = MODE_STACK;
 
 /*
  * Make sure to start and end each dive on the surface.
@@ -54,11 +56,15 @@ print_all(const struct diveq *dq)
 {
 	struct dive	*d;
 	struct samp	*s;
+	size_t		 i = 0;
 	time_t		 mintime = 0, t, lastt = 0;
+	size_t		 maxtime = 0, points = 0;
+	double		 maxdepth = 0.0;
+	double		 height = 3.0, width = 5.0;
 
 	assert( ! TAILQ_EMPTY(dq));
 
-	if (aggr) 
+	if (MODE_AGGREGATE == mode) 
 		TAILQ_FOREACH(d, dq, entries) {
 			if (0 == d->datetime) {
 				warnx("date and time required");
@@ -68,20 +74,61 @@ print_all(const struct diveq *dq)
 				mintime = d->datetime;
 		}
 
-	if (standalone) 
-		puts(".G1\n"
-		     "draw solid\n"
-		     "frame invis ht 3.5 wid 5 left solid bot solid\n"
-		     "label left \"Depth\" \"(metres)\" left 0.2\n"
+	if (MODE_SUMMARY == mode) 
+		TAILQ_FOREACH(d, dq, entries) {
+			if (d->maxtime > maxtime)
+				maxtime = d->maxtime;
+			if (d->maxdepth > maxdepth)
+				maxdepth = d->maxdepth;
+			points++;
+		}
+
+	if (standalone)
+		printf(".G1\n"
+		       "draw solid\n"
+		       "frame invis ht %g wid %g left solid bot solid\n",
+		       height, width);
+	if (standalone && MODE_SUMMARY == mode)
+		printf("ticks left out at "
+				"-1.0 \"-%.2f\", "
+				"-0.5 \"-%.2f\", 0.0, "
+				"0.5 \"%zu:%.02zu\", "
+				"1.0 \"%zu:%.02zu\"\n"
+		       "ticks bot off\n"
+		       "line from 0,0.0 to %zu,0.0\n"
+		       "label right \"Time\" \"(mm:ss)\" up %g left 0.5\n"
+		       "label left \"Depth\" \"(metres)\" down %g left 0.5\n"
+		       "copy thru {\n"
+		       " \"\\(bu\" size +3 at $1,$3\n"
+		       " line dotted from $1,0 to $1,$3\n"
+		       " line from $1,0 to $1,$2\n"
+		       " circle at $1,$2\n"
+		       "}\n",
+		       maxdepth, 0.5 * maxdepth,
+		       (maxtime / 2) / 60, 
+		       (maxtime / 2) % 60, 
+		       maxtime / 60, 
+		       maxtime % 60, points,
+		       0.25 * height, 0.25 * height);
+	else if (standalone)
+		puts("label left \"Depth\" \"(metres)\" left 0.2\n"
 		     "label bot \"Time (seconds)\"");
 
 	TAILQ_FOREACH(d, dq, entries) {
+		if (MODE_SUMMARY == mode) {
+			printf("%zu %g -%g\n", i++, 
+				(double)d->maxtime / maxtime, 
+				d->maxdepth / maxdepth);
+			continue;
+		}
+
 		if (topside)
-			printf("%lld 0\n", aggr ?
+			printf("%lld 0\n", 
+				MODE_AGGREGATE == mode ?
 				d->datetime - mintime : 0);
 		TAILQ_FOREACH(s, &d->samps, entries) {
 			t = s->time;
-			if (aggr) {
+			if (MODE_AGGREGATE == mode) {
 				t += d->datetime;
 				t -= mintime;
 			}
@@ -91,7 +138,8 @@ print_all(const struct diveq *dq)
 		}
 		if (topside)
 			printf("%lld 0\n", lastt);
-		if ( ! aggr && TAILQ_NEXT(d, entries)) 
+		if (MODE_AGGREGATE != mode && 
+		    TAILQ_NEXT(d, entries)) 
 			puts("new");
 	}
 
@@ -119,10 +167,17 @@ main(int argc, char *argv[])
 	
 	memset(&st, 0, sizeof(struct divestat));
 
-	while (-1 != (c = getopt(argc, argv, "astv")))
+	while (-1 != (c = getopt(argc, argv, "m:stv")))
 		switch (c) {
-		case ('a'):
-			aggr = 1;
+		case ('m'):
+			if (0 == strcasecmp(optarg, "stack"))
+				mode = MODE_STACK;
+			else if (0 == strcasecmp(optarg, "aggr"))
+				mode = MODE_AGGREGATE;
+			else if (0 == strcasecmp(optarg, "summary"))
+				mode = MODE_SUMMARY;
+			else
+				goto usage;
 			break;
 		case ('s'):
 			standalone = 1;
@@ -183,6 +238,7 @@ out:
 	parse_free(&dq);
 	return(rc ? EXIT_SUCCESS : EXIT_FAILURE);
 usage:
-	fprintf(stderr, "usage: %s [-astv] [file]\n", getprogname());
+	fprintf(stderr, "usage: %s [-stv] "
+		"[-m mode] [file...]\n", getprogname());
 	return(EXIT_FAILURE);
 }
