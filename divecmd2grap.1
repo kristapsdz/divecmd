@@ -25,7 +25,7 @@
 .Nd graph dives with grap
 .Sh SYNOPSIS
 .Nm divecmd2grap
-.Op Fl stv
+.Op Fl dstv
 .Op Fl m Ar mode
 .Op Ar files...
 .Sh DESCRIPTION
@@ -41,6 +41,12 @@ Multiple dives are superimposed
 .Pq Dq stacked .
 Its arguments are as follows:
 .Bl -tag -width Ds
+.It Fl d
+Derivatives.
+Show change in velocity instead of depth.
+Does not apply to
+.Ar summary
+mode 
 .It Fl m Ar mode
 Graphing mode.
 May be one of the following:
@@ -64,8 +70,8 @@ document around the data.
 Print
 .Dq topside :
 start and end each dive at a depth of zero.
-Usually dive computers will start under the surface.
-This helps to join dives prettily.
+Usually dive computers will start under the surface: this helps to join
+dives prettily.
 This is not used in
 .Ar summary
 mode.
@@ -86,7 +92,20 @@ documented is also emitted with width 5 inches, height 3 inches.
 .Sh EXIT STATUS
 .Ex -std
 .Sh EXAMPLES
-.D1 divecmd2grap -s dives.xml | grap | groff -p -Tpdf > dives.pdf
+This uses
+.Xr groff 1
+and sets the paper size to A5.
+.Em Note :
+the
+.Xr grap 1 ,
+.Xr pic 1 ,
+and
+.Xr groff 1
+tools don't play nicely with landscape display.
+.Bd -literal -offset indent
+divecmd2grap -st -msummary dives.xml | \e
+  groff -Gp -Tpdf -P-p5.8i,8.3i > foo.pdf
+.Ed
 .Sh SEE ALSO
 .Xr divecmd 1 ,
 .Xr grap 1 ,
@@ -97,3 +116,7 @@ The
 utility was written by
 .An Kristaps Dzonsons ,
 .Mt kristaps@bsd.lv .
+.Sh CAVEATS
+Initial tests show that
+.Nm
+doesn't play nicely with non-GNU troff.
