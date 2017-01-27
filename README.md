@@ -17,6 +17,10 @@ front-ends.
 **It is still in the earliest phases of development.** Though I welcome being
 sent on dives to give the system more support...
 
+See "[Dive computer
+analysis](https://divelog.blue/blog.html?entryid=68)" for an example of
+how *divecmd2grap* operates.
+
 ## License
 
 The sources use the LGPL as printed in the [LICENSE.md](LICENSE.md)
