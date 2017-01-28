@@ -105,14 +105,16 @@ print_all(const struct diveq *dq)
 	}
 
 	/*
-	 * Standalone mode headers.
 	 * Print our labels, axes, and so on.
+	 * This depends primarily upon our mode.
 	 */
 
 	printf(".G1\n"
 	       "draw solid\n"
 	       "frame invis ht %g wid %g left solid bot solid\n",
 	       height, width);
+
+	/* Free-diving mode: print minimum optimal surface time. */
 
 	if (MODE_RESTING_SCATTER == mode && free)
 		printf("line dotted from 0,0 to %zu,%zu\n",
@@ -158,7 +160,7 @@ print_all(const struct diveq *dq)
 		       "copy thru {\n"
 		       " \"\\(bu\" size +3 at $1,$3\n"
 		       " line dotted from $1,0 to $1,$3\n"
-		       " \"\\(en\" at $1,$4\n"
+		       "%s"
 		       " circle at $1,$2\n"
 		       " line from $1,0 to $1,$2\n"
 		       "}\n",
@@ -172,7 +174,8 @@ print_all(const struct diveq *dq)
 		       (3 * maxrtime / 4) / 60, 
 		       (3 * maxrtime / 4) % 60, 
 		       maxrtime / 60, maxrtime % 60, 
-		       points, 0.25 * height, 0.25 * height);
+		       points, 0.25 * height, 0.25 * height,
+		       free ? " \"\\(en\" at $1,$4\n" : "");
 	else if (MODE_RESTING_SCATTER == mode) 
 		printf("label left \"Dive time (seconds)\" left 0.15\n"
 		       "label bot \"Rest time (seconds)\"\n"
