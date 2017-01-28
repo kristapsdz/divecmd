@@ -63,6 +63,7 @@ print_all(const struct diveq *dq)
 	size_t		 maxtime = 0, maxrtime = 0, points = 0, rest;
 	double		 maxdepth = 0.0, lastdepth;
 	double		 height = 3.8, width = 5.4;
+	int		 free = 0;
 
 	assert( ! TAILQ_EMPTY(dq));
 
@@ -88,6 +89,7 @@ print_all(const struct diveq *dq)
 	    MODE_RESTING == mode ||
 	    MODE_RESTING_SCATTER == mode) {
 		TAILQ_FOREACH(d, dq, entries) {
+			free += MODE_FREEDIVE == d->mode;
 			dp = TAILQ_NEXT(d, entries);
 			if (d->maxtime > maxtime)
 				maxtime = d->maxtime;
@@ -111,6 +113,11 @@ print_all(const struct diveq *dq)
 	       "draw solid\n"
 	       "frame invis ht %g wid %g left solid bot solid\n",
 	       height, width);
+
+	if (MODE_RESTING_SCATTER == mode && free)
+		printf("line dotted from 0,0 to %zu,%zu\n",
+		       maxtime * 2, maxtime);
+
 	if (MODE_SUMMARY == mode)
 		printf("ticks left out at "
 				"-1.0 \"-%.2f\", "
@@ -171,10 +178,8 @@ print_all(const struct diveq *dq)
 		       "label bot \"Rest time (seconds)\"\n"
 		       "coord y 0,%zu\n"
 		       "coord x 0,%zu\n"
-		       "line dotted from 0,0 to %zu,%zu\n"
 		       "copy thru { circle at $2,$3 }\n",
-		       maxtime, maxrtime,
-		       maxtime * 2, maxtime);
+		       maxtime, maxrtime);
 	else if (MODE_SCATTER == mode) 
 		puts("label left \"Depth (metres)\" left 0.15\n"
 		     "label bot \"Time (seconds)\"\n"
