@@ -35,6 +35,7 @@ enum	pmode {
 	MODE_SUMMARY,
 	MODE_AGGREGATE,
 	MODE_RESTING,
+	MODE_RESTING_SCATTER,
 	MODE_STACK
 };
 
@@ -59,7 +60,7 @@ print_all(const struct diveq *dq)
 	struct samp	*s;
 	size_t		 i = 0;
 	time_t		 mintime = 0, t, lastt = 0;
-	size_t		 maxtime = 0, maxrtime = 0, points = 0, lastd;
+	size_t		 maxtime = 0, maxrtime = 0, points = 0, rest;
 	double		 maxdepth = 0.0, lastdepth;
 	double		 height = 3.8, width = 5.4;
 
@@ -71,7 +72,8 @@ print_all(const struct diveq *dq)
 	 */
 
 	if (MODE_AGGREGATE == mode ||
-	    MODE_RESTING == mode) 
+	    MODE_RESTING == mode ||
+	    MODE_RESTING_SCATTER == mode) 
 		TAILQ_FOREACH(d, dq, entries) {
 			if (0 == d->datetime) {
 				warnx("date and time required");
@@ -83,19 +85,19 @@ print_all(const struct diveq *dq)
 
 	if (MODE_SUMMARY == mode ||
 	    MODE_SCATTER == mode ||
-	    MODE_RESTING == mode) {
-		lastd = 0;
+	    MODE_RESTING == mode ||
+	    MODE_RESTING_SCATTER == mode) {
 		TAILQ_FOREACH(d, dq, entries) {
-			assert(d->datetime > (time_t)lastd);
+			dp = TAILQ_NEXT(d, entries);
 			if (d->maxtime > maxtime)
 				maxtime = d->maxtime;
 			if (d->maxdepth > maxdepth)
 				maxdepth = d->maxdepth;
-			if (0 == lastd)
-				lastd = d->datetime;
-			if (d->datetime - lastd > maxrtime)
-				maxrtime = d->datetime - lastd;
-			lastd = d->datetime + d->maxtime;
+			rest = NULL == dp ? 0 :
+				dp->datetime - 
+				(d->datetime + d->maxtime);
+			if (rest > maxrtime)
+				maxrtime = rest;
 			points++;
 		}
 	}
@@ -149,18 +151,30 @@ print_all(const struct diveq *dq)
 		       "copy thru {\n"
 		       " \"\\(bu\" size +3 at $1,$3\n"
 		       " line dotted from $1,0 to $1,$3\n"
+		       " \"\\(en\" at $1,$4\n"
 		       " circle at $1,$2\n"
 		       " line from $1,0 to $1,$2\n"
 		       "}\n",
 		       maxtime / 60, maxtime % 60, 
-		       (3 * maxtime / 4) / 60, (3 * maxtime / 4) % 60, 
+		       (3 * maxtime / 4) / 60, 
+		       (3 * maxtime / 4) % 60, 
 		       (maxtime / 2) / 60, (maxtime / 2) % 60, 
 		       (maxtime / 4) / 60, (maxtime / 4) % 60, 
 		       (maxrtime / 4) / 60, (maxrtime / 4) % 60, 
 		       (maxrtime / 2) / 60, (maxrtime / 2) % 60, 
-		       (3 * maxrtime / 4) / 60, (3 * maxrtime / 4) % 60, 
+		       (3 * maxrtime / 4) / 60, 
+		       (3 * maxrtime / 4) % 60, 
 		       maxrtime / 60, maxrtime % 60, 
 		       points, 0.25 * height, 0.25 * height);
+	else if (MODE_RESTING_SCATTER == mode) 
+		printf("label left \"Dive time (seconds)\" left 0.15\n"
+		       "label bot \"Rest time (seconds)\"\n"
+		       "coord y 0,%zu\n"
+		       "coord x 0,%zu\n"
+		       "line dotted from 0,0 to %zu,%zu\n"
+		       "copy thru { circle at $2,$3 }\n",
+		       maxtime, maxrtime,
+		       maxtime * 2, maxtime);
 	else if (MODE_SCATTER == mode) 
 		puts("label left \"Depth (metres)\" left 0.15\n"
 		     "label bot \"Time (seconds)\"\n"
@@ -175,9 +189,9 @@ print_all(const struct diveq *dq)
 
 	/* Now for the data... */
 
-	dp = NULL;
 	TAILQ_FOREACH(d, dq, entries) {
 		lastdepth = 0.0;
+		dp = TAILQ_NEXT(d, entries);
 
 		/* 
 		 * Summary mode is just the maxima of the dive, so print
@@ -190,11 +204,20 @@ print_all(const struct diveq *dq)
 				d->maxdepth / maxdepth);
 			continue;
 		} else if (MODE_RESTING == mode) {
-			printf("%zu %g -%g\n", i++, 
+			printf("%zu %g -%g %g\n", i++, 
 				NULL == dp ? 0 : 
-				(d->datetime - 
-				(dp->datetime + dp->maxtime)) / (double)maxrtime,
-				d->maxtime / (double)maxtime);
+				(dp->datetime - 
+				(d->datetime + d->maxtime)) / (double)maxrtime,
+				d->maxtime / (double)maxtime,
+				(d->maxtime * 2) / (double)maxrtime);
+			dp = d;
+			continue;
+		} else if (MODE_RESTING_SCATTER == mode) {
+			printf("%zu %lld %zu\n", i++, 
+				NULL == dp ? 0 : 
+				dp->datetime - 
+				(d->datetime + d->maxtime),
+				d->maxtime);
 			dp = d;
 			continue;
 		} else if (MODE_SCATTER == mode) {
@@ -241,8 +264,6 @@ print_all(const struct diveq *dq)
 		if (MODE_AGGREGATE != mode && 
 		    TAILQ_NEXT(d, entries)) 
 			puts("new");
-
-		dp = d;
 	}
 
 	puts(".G2");
@@ -281,6 +302,8 @@ main(int argc, char *argv[])
 				mode = MODE_SUMMARY;
 			else if (0 == strcasecmp(optarg, "rest"))
 				mode = MODE_RESTING;
+			else if (0 == strcasecmp(optarg, "restscatter"))
+				mode = MODE_RESTING_SCATTER;
 			else if (0 == strcasecmp(optarg, "scatter"))
 				mode = MODE_SCATTER;
 			else
