@@ -52,18 +52,31 @@ modes.
 .It Fl m Ar mode
 Graphing mode.
 May be one of the following:
-.Ar aggr ,
-where multiple dives are shown in real-time as connected line
-.Pq useful for free diving sequences ;
-.Ar scatter ,
-with points at the intersection of dives' maximum depth and time;
-.Ar summary ,
-where each dive is shown with the maximum depth and time above and below
-the x-axis
-.Pq again, useful for free diving ;
-and
-.Ar stack ,
-the default.
+.Pp
+.Bl -tag -width Ds -compact
+.It Ar aggr
+Line graph connecting
+.Pq Dq aggregating
+subsequent dives with real time (relative to the beginning of the first
+dive) on the x-axis and depth on the y-xais.
+.It Ar rest
+Impulse graph with each dive's rest time (surface interval) on the
+positive y-axis and dive time on the negative y-axis.
+The x-axis is independent.
+.It Ar restscatter
+Scatter graph with points corresponding to dive time and rest time.
+A line with minimum suggested free diving interval is shown (twice the
+dive time) if any of the dives are free dives.
+.It Ar scatter
+Scatter graph with points at the intersection of dives' maximum depth
+and time.
+.It Ar stack
+Default line graph with dives layered over one other, dive time on the
+x-axis, depth on the y-axis.
+.It Ar summary
+Each independent dive is shown on the x-axis with the maximum depth and
+time above and below, respectively, on the y-axis.
+.El
 .It Fl t
 Print
 .Dq topside :
