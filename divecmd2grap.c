@@ -34,6 +34,7 @@ enum	pmode {
 	MODE_SCATTER,
 	MODE_SUMMARY,
 	MODE_AGGREGATE,
+	MODE_RESTING,
 	MODE_STACK
 };
 
@@ -54,11 +55,11 @@ static int derivs = 0;
 static int
 print_all(const struct diveq *dq)
 {
-	struct dive	*d;
+	struct dive	*d, *dp;
 	struct samp	*s;
 	size_t		 i = 0;
 	time_t		 mintime = 0, t, lastt = 0;
-	size_t		 maxtime = 0, points = 0;
+	size_t		 maxtime = 0, maxrtime = 0, points = 0, lastd;
 	double		 maxdepth = 0.0, lastdepth;
 	double		 height = 3.8, width = 5.4;
 
@@ -69,7 +70,8 @@ print_all(const struct diveq *dq)
 	 * need the datetime for each dive.
 	 */
 
-	if (MODE_AGGREGATE == mode) 
+	if (MODE_AGGREGATE == mode ||
+	    MODE_RESTING == mode) 
 		TAILQ_FOREACH(d, dq, entries) {
 			if (0 == d->datetime) {
 				warnx("date and time required");
@@ -80,14 +82,23 @@ print_all(const struct diveq *dq)
 		}
 
 	if (MODE_SUMMARY == mode ||
-	    MODE_SCATTER == mode) 
+	    MODE_SCATTER == mode ||
+	    MODE_RESTING == mode) {
+		lastd = 0;
 		TAILQ_FOREACH(d, dq, entries) {
+			assert(d->datetime > (time_t)lastd);
 			if (d->maxtime > maxtime)
 				maxtime = d->maxtime;
 			if (d->maxdepth > maxdepth)
 				maxdepth = d->maxdepth;
+			if (0 == lastd)
+				lastd = d->datetime;
+			if (d->datetime - lastd > maxrtime)
+				maxrtime = d->datetime - lastd;
+			lastd = d->datetime + d->maxtime;
 			points++;
 		}
+	}
 
 	/*
 	 * Standalone mode headers.
@@ -111,8 +122,8 @@ print_all(const struct diveq *dq)
 		       "copy thru {\n"
 		       " \"\\(bu\" size +3 at $1,$3\n"
 		       " line dotted from $1,0 to $1,$3\n"
-		       " line from $1,0 to $1,$2\n"
 		       " circle at $1,$2\n"
+		       " line from $1,0 to $1,$2\n"
 		       "}\n",
 		       maxdepth, 0.5 * maxdepth,
 		       (maxtime / 2) / 60, 
@@ -120,6 +131,36 @@ print_all(const struct diveq *dq)
 		       maxtime / 60, 
 		       maxtime % 60, points,
 		       0.25 * height, 0.25 * height);
+	else if (MODE_RESTING == mode)
+		printf("ticks left out at "
+				"-1.0 \"%zu:%.02zu\", "
+				"-0.75 \"%zu:%.02zu\", "
+				"-0.5 \"%zu:%.02zu\", "
+				"-0.25 \"%zu:%.02zu\", "
+				"0.0, "
+				"0.25 \"%zu:%.02zu\", "
+				"0.5 \"%zu:%.02zu\", "
+				"0.75 \"%zu:%.02zu\", "
+				"1.0 \"%zu:%.02zu\"\n"
+		       "ticks bot off\n"
+		       "line from 0,0.0 to %zu,0.0\n"
+		       "label right \"Rest time (mm:ss)\" up %g left 0.5\n"
+		       "label left \"Dive time (mm:ss)\" down %g left 0.3\n"
+		       "copy thru {\n"
+		       " \"\\(bu\" size +3 at $1,$3\n"
+		       " line dotted from $1,0 to $1,$3\n"
+		       " circle at $1,$2\n"
+		       " line from $1,0 to $1,$2\n"
+		       "}\n",
+		       maxtime / 60, maxtime % 60, 
+		       (3 * maxtime / 4) / 60, (3 * maxtime / 4) % 60, 
+		       (maxtime / 2) / 60, (maxtime / 2) % 60, 
+		       (maxtime / 4) / 60, (maxtime / 4) % 60, 
+		       (maxrtime / 4) / 60, (maxrtime / 4) % 60, 
+		       (maxrtime / 2) / 60, (maxrtime / 2) % 60, 
+		       (3 * maxrtime / 4) / 60, (3 * maxrtime / 4) % 60, 
+		       maxrtime / 60, maxrtime % 60, 
+		       points, 0.25 * height, 0.25 * height);
 	else if (MODE_SCATTER == mode) 
 		puts("label left \"Depth (metres)\" left 0.15\n"
 		     "label bot \"Time (seconds)\"\n"
@@ -129,11 +170,12 @@ print_all(const struct diveq *dq)
 		     "label bot \"Time (seconds)\"");
 	else 
 		puts("label left \"Velocity "
-				"(vertical metres/second)\"\n"
+			"(vertical metres/second)\"\n"
 		     "label bot \"Time (seconds)\"");
 
 	/* Now for the data... */
 
+	dp = NULL;
 	TAILQ_FOREACH(d, dq, entries) {
 		lastdepth = 0.0;
 
@@ -146,6 +188,14 @@ print_all(const struct diveq *dq)
 			printf("%zu %g -%g\n", i++, 
 				(double)d->maxtime / maxtime, 
 				d->maxdepth / maxdepth);
+			continue;
+		} else if (MODE_RESTING == mode) {
+			printf("%zu %g -%g\n", i++, 
+				NULL == dp ? 0 : 
+				(d->datetime - 
+				(dp->datetime + dp->maxtime)) / (double)maxrtime,
+				d->maxtime / (double)maxtime);
+			dp = d;
 			continue;
 		} else if (MODE_SCATTER == mode) {
 			printf("%zu %zu -%g\n", i++, 
@@ -191,6 +241,8 @@ print_all(const struct diveq *dq)
 		if (MODE_AGGREGATE != mode && 
 		    TAILQ_NEXT(d, entries)) 
 			puts("new");
+
+		dp = d;
 	}
 
 	puts(".G2");
@@ -227,6 +279,8 @@ main(int argc, char *argv[])
 				mode = MODE_AGGREGATE;
 			else if (0 == strcasecmp(optarg, "summary"))
 				mode = MODE_SUMMARY;
+			else if (0 == strcasecmp(optarg, "rest"))
+				mode = MODE_RESTING;
 			else if (0 == strcasecmp(optarg, "scatter"))
 				mode = MODE_SCATTER;
 			else
