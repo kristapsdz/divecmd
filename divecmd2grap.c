@@ -117,7 +117,7 @@ print_all(const struct diveq *dq)
 	/* Free-diving mode: print minimum optimal surface time. */
 
 	if (MODE_RESTING_SCATTER == mode && free)
-		printf("line dotted from 0,0 to %zu,%zu\n",
+		printf("line dashed 0.05 from 0,0 to %zu,%zu\n",
 		       maxtime * 2, maxtime);
 
 	if (MODE_SUMMARY == mode)
@@ -193,14 +193,21 @@ print_all(const struct diveq *dq)
 	else if (MODE_RESTING_SCATTER == mode) 
 		printf("label left \"Dive time (seconds)\" left 0.15\n"
 		       "label bot \"Rest time (seconds)\"\n"
+		       "grid right ticks off\n"
+		       "grid top ticks off\n"
 		       "coord y 0,%zu\n"
 		       "coord x 0,%zu\n"
 		       "copy thru { circle at $2,$3 }\n",
 		       maxtime, maxrtime);
 	else if (MODE_SCATTER == mode) 
-		puts("label left \"Depth (metres)\" left 0.15\n"
-		     "label bot \"Time (seconds)\"\n"
-		     "copy thru { circle at $2,$3 }");
+		printf("label left \"Depth (metres)\" left 0.15\n"
+		       "label bot \"Time (seconds)\"\n"
+		       "grid right ticks off\n"
+		       "grid top ticks off\n"
+		       "coord y 0,-%g\n"
+		       "coord x 0,%zu\n"
+		       "copy thru { circle at $2,$3 }\n",
+		       maxdepth, maxtime);
 	else if ( ! derivs)
 		puts("label left \"Depth (metres)\"\n"
 		     "label bot \"Time (seconds)\"");
