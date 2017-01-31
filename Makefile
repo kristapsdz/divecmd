@@ -28,6 +28,7 @@ HTMLS		 = divecmd.1.html \
 		   divecmd2grap.1.html \
 		   divecmd2json.1.html \
 		   divecmd2term.1.html
+CSSS		 = mandoc.css
 WWWDIR		 = /var/www/vhosts/kristaps.bsd.lv/htdocs/divecmd
 
 all: $(BINS)
@@ -36,7 +37,7 @@ www: $(HTMLS)
 
 installwww: www
 	mkdir -p $(WWWDIR)
-	install -m 0444 $(HTMLS) $(WWWDIR)
+	install -m 0444 $(CSSS) $(HTMLS) $(WWWDIR)
 
 divecmd: $(OBJS)
 	$(CC) -o $@ $(OBJS) $(LDFLAGS) 
