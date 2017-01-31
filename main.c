@@ -313,6 +313,8 @@ fprint_set(int fd, const char *file, dc_buffer_t *buf)
 {
 	ssize_t	 ssz;
 
+	if (-1 == lseek(fd, 0, SEEK_SET))
+		err(EXIT_FAILURE, "%s", file);
 	if (-1 == ftruncate(fd, 0))
 		err(EXIT_FAILURE, "%s", file);
 	ssz = write(fd, 
