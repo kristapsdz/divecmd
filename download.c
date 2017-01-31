@@ -260,6 +260,11 @@ parse(dc_context_t *context, dc_descriptor_t *descriptor,
 
 	/* Open the device. */
 
+	if (verbose)
+		fprintf(stderr, "%s: opening: %s, %s\n", devname,
+			dc_descriptor_get_vendor(descriptor),
+			dc_descriptor_get_product(descriptor));
+
 	rc = dc_device_open(&device, context, descriptor, devname);
 	if (rc != DC_STATUS_SUCCESS) {
 		warnx("%s: %s", devname, dctool_errmsg(rc));
@@ -272,12 +277,18 @@ parse(dc_context_t *context, dc_descriptor_t *descriptor,
 #endif
 
 	if (NULL != fprint && NULL == ofprint) {
+		if (verbose)
+			fprintf(stderr, "%s: setting "
+				"fingerprint: %zu bytes\n", 
+				devname,
+				dc_buffer_get_size(fprint));
 		rc = dc_device_set_fingerprint(device,
 			dc_buffer_get_data(fprint),
 			dc_buffer_get_size(fprint));
 		if (DC_STATUS_SUCCESS != rc &&
 	 	    DC_STATUS_UNSUPPORTED != rc)
-			err(EXIT_FAILURE, "%s", dctool_errmsg(rc));
+			errx(EXIT_FAILURE, "%s: %s", 
+				devname, dctool_errmsg(rc));
 	}
 
 	/* Register the event handler. */
@@ -286,6 +297,8 @@ parse(dc_context_t *context, dc_descriptor_t *descriptor,
 		 DC_EVENT_DEVINFO | DC_EVENT_CLOCK | 
 		 DC_EVENT_VENDOR;
 
+	if (verbose)
+		fprintf(stderr, "%s: setting events\n", devname);
 	rc = dc_device_set_events
 		(device, events, event_cb, NULL);
 	if (rc != DC_STATUS_SUCCESS) {
