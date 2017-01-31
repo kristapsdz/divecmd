@@ -123,24 +123,37 @@ print_all(const struct diveq *dq)
 	if (MODE_SUMMARY == mode)
 		printf("ticks left out at "
 				"-1.0 \"-%.2f\", "
-				"-0.5 \"-%.2f\", 0.0, "
+				"-0.75 \"-%.2f\", "
+				"-0.5 \"-%.2f\", "
+				"-0.25 \"-%.2f\", "
+				"0.0, "
+				"0.25 \"%zu:%.02zu\", "
 				"0.5 \"%zu:%.02zu\", "
+				"0.75 \"%zu:%.02zu\", "
 				"1.0 \"%zu:%.02zu\"\n"
+		       "grid left from -1 to 1 by 0.25 \"\"\n"
 		       "ticks bot off\n"
 		       "line from 0,0.0 to %zu,0.0\n"
-		       "label right \"Time (mm:ss)\" up %g left 0.5\n"
+		       "label right \"Time (mm:ss)\" up %g left 0.2\n"
 		       "label left \"Depth (metres)\" down %g left 0.3\n"
 		       "copy thru {\n"
 		       " \"\\(bu\" size +3 at $1,$3\n"
-		       " line dotted from $1,0 to $1,$3\n"
+		       " line dashed 0.05 from $1,0 to $1,$3\n"
 		       " circle at $1,$2\n"
 		       " line from $1,0 to $1,$2\n"
 		       "}\n",
-		       maxdepth, 0.5 * maxdepth,
+		       maxdepth, 
+		       0.75 * maxdepth,
+		       0.5 * maxdepth,
+		       0.25 * maxdepth,
+		       (maxtime / 4) / 60, 
+		       (maxtime / 4) % 60, 
 		       (maxtime / 2) / 60, 
 		       (maxtime / 2) % 60, 
+		       (3 * maxtime / 4) / 60, 
+		       (3 * maxtime / 4) % 60, 
 		       maxtime / 60, 
-		       maxtime % 60, points,
+		       maxtime % 60, points - 1,
 		       0.25 * height, 0.25 * height);
 	else if (MODE_RESTING == mode)
 		printf("ticks left out at "
@@ -153,9 +166,10 @@ print_all(const struct diveq *dq)
 				"0.5 \"%zu:%.02zu\", "
 				"0.75 \"%zu:%.02zu\", "
 				"1.0 \"%zu:%.02zu\"\n"
+		       "grid left from -1 to 1 by 0.25 \"\"\n"
 		       "ticks bot off\n"
 		       "line from 0,0.0 to %zu,0.0\n"
-		       "label right \"Rest time (mm:ss)\" up %g left 0.5\n"
+		       "label right \"Rest time (mm:ss)\" up %g left 0.2\n"
 		       "label left \"Dive time (mm:ss)\" down %g left 0.3\n"
 		       "copy thru {\n"
 		       " \"\\(bu\" size +3 at $1,$3\n"
@@ -174,7 +188,7 @@ print_all(const struct diveq *dq)
 		       (3 * maxrtime / 4) / 60, 
 		       (3 * maxrtime / 4) % 60, 
 		       maxrtime / 60, maxrtime % 60, 
-		       points, 0.25 * height, 0.25 * height,
+		       points - 1, 0.25 * height, 0.25 * height,
 		       free ? " \"\\(en\" at $1,$4\n" : "");
 	else if (MODE_RESTING_SCATTER == mode) 
 		printf("label left \"Dive time (seconds)\" left 0.15\n"
