@@ -1,3 +1,4 @@
+.SUFFIXES: .1.html .1
 .PHONY: clean
 
 PREFIX 		 = /usr/local
@@ -23,8 +24,19 @@ MAN1S		 = divecmd.1 \
 		   divecmd2grap.1 \
 		   divecmd2json.1 \
 		   divecmd2term.1
+HTMLS		 = divecmd.1.html \
+		   divecmd2grap.1.html \
+		   divecmd2json.1.html \
+		   divecmd2term.1.html
+WWWDIR		 = /var/www/vhosts/kristaps.bsd.lv/htdocs/divecmd
+
+www: $(HTMLS)
 
 all: $(BINS)
+
+installwww: www
+	mkdir -p $(WWWDIR)
+	install -m 0444 $(HTMLS) $(WWWDIR)
 
 divecmd: $(OBJS)
 	$(CC) -o $@ $(OBJS) $(LDFLAGS) 
@@ -49,4 +61,7 @@ $(OBJS): extern.h
 $(BINOBJS): parser.h
 
 clean:
-	rm -f $(OBJS) $(BINS) $(BINOBJS)
+	rm -f $(OBJS) $(BINS) $(BINOBJS) $(HTMLS)
+
+.1.1.html:
+	mandoc -Thtml -Ostyle=mandoc.css $< >$@
