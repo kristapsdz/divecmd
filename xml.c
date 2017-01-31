@@ -156,7 +156,7 @@ output_xml_new(dc_descriptor_t *descriptor, const char *ident)
 		 dc_descriptor_get_model(descriptor));
 	if (NULL != ident && '\0' != *ident) 
 		fprintf(p->f, " diver=\"%s\"", ident);
-	fprintf(p->f, ">\n\t<dives\n");
+	fprintf(p->f, ">\n\t<dives>\n");
 
 	return((struct dcmd_out *)p);
 }
