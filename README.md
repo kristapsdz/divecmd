@@ -2,24 +2,33 @@
 
 *divecmd* drives [libdivecomputer](http://www.libdivecomputer.org) to
 extract the contents of your dive computer in a safe, simple manner.  It
-has three programs: *divecmd*, which downloads, parses, and formats dives;
-*divecmd2term*, which graphs formatted dives in an ANSI/VT100 terminal;
-*divecmd2grap*, which graphs using *grap(1)*; and *divecmd2json*, which
-exports dive profiles to the JSON format.
+has three programs: 
+[divecmd(1)](https://kristaps.bsd.lv/divecmd/divecmd.1.html), which
+downloads, parses, and formats dives;
+[divecmd2term(1)](https://kristaps.bsd.lv/divecmd/divecmd2term.1.html),
+which graphs formatted dives in an ANSI/VT100 terminal;
+[divecmd2grap](https://kristaps.bsd.lv/divecmd/divecmd2grap.1.html),
+which graphs using *grap(1)*; and 
+[divecmd2json](https://kristaps.bsd.lv/divecmd/divecmd2json.1.html),
+which exports dive profiles to the JSON format.
 
 I forked [libdivecomputer](http://www.libdivecomputer.org)'s *dctool* to
-write *divecmd* --- originally to provide output like
+write [divecmd(1)](https://kristaps.bsd.lv/divecmd/divecmd.1.html) ---
+originally to provide output like
 [Subsurface](https://subsurface-divelog.org/)'s XML format, but later to
 significantly simplify the code, to add sandboxing via
 [pledge(2)](http://man.openbsd.org/pledge.2), and to provide multiple
 front-ends.
 
-**It is still in the earliest phases of development.** Though I welcome being
-sent on dives to give the system more support...
+**It is still in the earliest phases of development.** Though I welcome
+being sent on dives to give the system more support...
 
 See "[Dive computer
-analysis](https://divelog.blue/blog.html?entryid=68)" for an example of
-how *divecmd2grap* operates.
+analysis](https://divelog.blue/blog.html?entryid=68)" and "[Visualising
+recovery time when free
+diving](https://divelog.blue/blog.html?entryid=69)" for examples of how
+[divecmd2grap](https://kristaps.bsd.lv/divecmd/divecmd2grap.1.html),
+operates.
 
 ## License
 
