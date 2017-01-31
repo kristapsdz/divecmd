@@ -30,9 +30,9 @@ HTMLS		 = divecmd.1.html \
 		   divecmd2term.1.html
 WWWDIR		 = /var/www/vhosts/kristaps.bsd.lv/htdocs/divecmd
 
-www: $(HTMLS)
-
 all: $(BINS)
+
+www: $(HTMLS)
 
 installwww: www
 	mkdir -p $(WWWDIR)
