@@ -25,7 +25,7 @@
 .Nd graph dives with grap
 .Sh SYNOPSIS
 .Nm divecmd2grap
-.Op Fl dtv
+.Op Fl dv
 .Op Fl m Ar mode
 .Op Ar files...
 .Sh DESCRIPTION
@@ -77,17 +77,6 @@ x-axis, depth on the y-axis.
 Each independent dive is shown on the x-axis with the maximum depth and
 time above and below, respectively, on the y-axis.
 .El
-.It Fl t
-Print
-.Dq topside :
-start and end each dive at a depth of zero.
-Usually dive computers will start under the surface: this helps to join
-dives prettily.
-Does not apply to
-.Ar summary
-or
-.Ar scatter
-modes.
 .It Fl v
 Parse files in verbose mode.
 .It Ar files...
@@ -114,7 +103,7 @@ and
 .Xr groff 1
 tools don't play nicely with landscape display.
 .Bd -literal -offset indent
-divecmd2grap -t -msummary dives.xml | \e
+divecmd2grap -msummary dives.xml | \e
   groff -Gp -Tpdf -P-p5.8i,8.3i > foo.pdf
 .Ed
 .Sh SEE ALSO
