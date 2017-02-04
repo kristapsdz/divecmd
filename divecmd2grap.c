@@ -117,11 +117,15 @@ print_all(const struct diveq *dq)
 	       "frame invis ht %g wid %g left solid bot solid\n",
 	       height, width);
 
-	/* Free-diving mode: print minimum optimal surface time. */
+	/* 
+	 * Free-diving mode: print minimum optimal surface time.
+	 * To do so, "square" the matrix and draw for twice the rest to
+	 * surface time.
+	 */
 
 	if (MODE_RESTING_SCATTER == mode && free)
-		printf("line dashed 0.05 from 0,0 to %zu,%zu\n",
-		       maxtime * 2, maxtime);
+		printf("line dashed 0.05 from 0,0 to %g,1\n",
+			2.0 * (maxtime / (double)maxrtime));
 
 	if (MODE_SUMMARY == mode)
 		printf("ticks left out at "
@@ -138,7 +142,7 @@ print_all(const struct diveq *dq)
 		       "ticks bot off\n"
 		       "line from 0,0.0 to %zu,0.0\n"
 		       "label right \"Time (mm:ss)\" up %g left 0.2\n"
-		       "label left \"Depth (metres)\" down %g left 0.3\n"
+		       "label left \"Depth (m)\" down %g left 0.3\n"
 		       "copy thru {\n"
 		       " \"\\(bu\" size +3 at $1,$3\n"
 		       " line dashed 0.05 from $1,0 to $1,$3\n"
@@ -194,23 +198,55 @@ print_all(const struct diveq *dq)
 		       points - 1, 0.25 * height, 0.25 * height,
 		       free ? " \"\\(en\" at $1,$4\n" : "");
 	else if (MODE_RESTING_SCATTER == mode) 
-		printf("label left \"Dive time (seconds)\" left 0.15\n"
-		       "label bot \"Rest time (seconds)\"\n"
+		printf("ticks left out at "
+				"0.0 \"00:00\", "
+				"0.25 \"%zu:%.02zu\", "
+				"0.5 \"%zu:%.02zu\", "
+				"0.75 \"%zu:%.02zu\", "
+				"1.0 \"%zu:%.02zu\"\n"
+		       "ticks bot out at "
+				"0.0 \"00:00\", "
+				"0.25 \"%zu:%.02zu\", "
+				"0.5 \"%zu:%.02zu\", "
+				"0.75 \"%zu:%.02zu\", "
+				"1.0 \"%zu:%.02zu\"\n"
+		       "label left \"Dive time (mm:ss)\" left 0.15\n"
+		       "label bot \"Rest time (mm:ss)\"\n"
 		       "grid right ticks off\n"
 		       "grid top ticks off\n"
-		       "coord y 0,%zu\n"
-		       "coord x 0,%zu\n"
+		       "coord y 0,1\n"
+		       "coord x 0,1\n"
 		       "copy thru { circle at $2,$3 }\n",
-		       maxtime, maxrtime);
+		       (maxtime / 4) / 60, (maxtime / 4) % 60, 
+		       (maxtime / 2) / 60, (maxtime / 2) % 60, 
+		       (3 * maxtime / 4) / 60, 
+		       (3 * maxtime / 4) % 60, 
+		       maxtime / 60, maxtime % 60,
+		       (maxrtime / 4) / 60, (maxrtime / 4) % 60, 
+		       (maxrtime / 2) / 60, (maxrtime / 2) % 60, 
+		       (3 * maxrtime / 4) / 60, 
+		       (3 * maxrtime / 4) % 60, 
+		       maxrtime / 60, maxrtime % 60);
 	else if (MODE_SCATTER == mode) 
-		printf("label left \"Depth (metres)\" left 0.15\n"
-		       "label bot \"Time (seconds)\"\n"
+		printf("ticks bot out at "
+				"0.0 \"00:00\", "
+				"0.25 \"%zu:%.02zu\", "
+				"0.5 \"%zu:%.02zu\", "
+				"0.75 \"%zu:%.02zu\", "
+				"1.0 \"%zu:%.02zu\"\n"
+		       "label left \"Depth (m)\" left 0.15\n"
+		       "label bot \"Time (mm:ss)\"\n"
 		       "grid right ticks off\n"
 		       "grid top ticks off\n"
 		       "coord y 0,-%g\n"
-		       "coord x 0,%zu\n"
+		       "coord x 0,1\n"
 		       "copy thru { circle at $2,$3 }\n",
-		       maxdepth, maxtime);
+		       (maxtime / 4) / 60, (maxtime / 4) % 60, 
+		       (maxtime / 2) / 60, (maxtime / 2) % 60, 
+		       (3 * maxtime / 4) / 60, 
+		       (3 * maxtime / 4) % 60, 
+		       maxtime / 60, maxtime % 60,
+		       maxdepth);
 	else 
 		printf("ticks bot out at "
 				"0.0 \"00:00\", "
@@ -247,25 +283,28 @@ print_all(const struct diveq *dq)
 				d->maxdepth / maxdepth);
 			continue;
 		} else if (MODE_RESTING == mode) {
+			t = NULL == dp ? 0 :
+				dp->datetime - 
+				(d->datetime + d->maxtime);
 			printf("%zu %g -%g %g\n", i++, 
-				NULL == dp ? 0 : 
-				(dp->datetime - 
-				(d->datetime + d->maxtime)) / (double)maxrtime,
+				t / (double)maxrtime,
 				d->maxtime / (double)maxtime,
 				(d->maxtime * 2) / (double)maxrtime);
 			dp = d;
 			continue;
 		} else if (MODE_RESTING_SCATTER == mode) {
-			printf("%zu %lld %zu\n", i++, 
-				NULL == dp ? 0 : 
+			t = NULL == dp ? 0 :
 				dp->datetime - 
 				(d->datetime + d->maxtime),
-				d->maxtime);
+			printf("%zu %g %g\n", i++, 
+				t / (double)maxrtime,
+				d->maxtime / (double)maxtime);
 			dp = d;
 			continue;
 		} else if (MODE_SCATTER == mode) {
-			printf("%zu %zu -%g\n", i++, 
-				d->maxtime, d->maxdepth);
+			printf("%zu %g -%g\n", i++, 
+				d->maxtime / (double)maxtime, 
+				d->maxdepth);
 			continue;
 		}
 
