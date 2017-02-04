@@ -44,11 +44,6 @@ int verbose = 0;
 static	enum pmode mode = MODE_STACK;
 
 /*
- * Make sure to start and end each dive on the surface.
- */
-static int topside = 0;
-
-/*
  * Print derivatives, aka velocity.
  */
 static int derivs = 0;
@@ -84,10 +79,19 @@ print_all(const struct diveq *dq)
 				mintime = d->datetime;
 		}
 
+	if (MODE_AGGREGATE == mode)
+		TAILQ_FOREACH(d, dq, entries) {
+			t = (d->datetime + d->maxtime) - mintime;
+			assert(t >= 0);
+			if ((size_t)t > maxtime)
+				maxtime = t;
+		}
+
 	if (MODE_SUMMARY == mode ||
 	    MODE_SCATTER == mode ||
 	    MODE_RESTING == mode ||
-	    MODE_RESTING_SCATTER == mode) {
+	    MODE_STACK == mode ||
+	    MODE_RESTING_SCATTER == mode)
 		TAILQ_FOREACH(d, dq, entries) {
 			free += MODE_FREEDIVE == d->mode;
 			dp = TAILQ_NEXT(d, entries);
@@ -102,7 +106,6 @@ print_all(const struct diveq *dq)
 				maxrtime = rest;
 			points++;
 		}
-	}
 
 	/*
 	 * Print our labels, axes, and so on.
@@ -208,13 +211,24 @@ print_all(const struct diveq *dq)
 		       "coord x 0,%zu\n"
 		       "copy thru { circle at $2,$3 }\n",
 		       maxdepth, maxtime);
-	else if ( ! derivs)
-		puts("label left \"Depth (metres)\"\n"
-		     "label bot \"Time (seconds)\"");
 	else 
-		puts("label left \"Velocity "
-			"(vertical metres/second)\"\n"
-		     "label bot \"Time (seconds)\"");
+		printf("ticks bot out at "
+				"0.0 \"00:00\", "
+				"0.25 \"%zu:%.02zu\", "
+				"0.5 \"%zu:%.02zu\", "
+				"0.75 \"%zu:%.02zu\", "
+				"1.0 \"%zu:%.02zu\"\n"
+		       "grid right ticks off\n"
+		       "grid top ticks off\n"
+		       "label left \"%s\" left 0.1\n"
+		       "label bot \"Time (mm:ss)\"\n",
+		       (maxtime / 4) / 60, (maxtime / 4) % 60, 
+		       (maxtime / 2) / 60, (maxtime / 2) % 60, 
+		       (3 * maxtime / 4) / 60, 
+		       (3 * maxtime / 4) % 60, 
+		       maxtime / 60, maxtime % 60,
+		       ! derivs ?  "Depth (m)" :
+		       "Velocity (vertical m/s)");
 
 	/* Now for the data... */
 
@@ -260,10 +274,9 @@ print_all(const struct diveq *dq)
 		 * initial (zero) state, so print it now.
 		 */
 
-		if (topside)
-			printf("%lld 0\n", 
-				MODE_AGGREGATE == mode ?
-				d->datetime - mintime : 0);
+		printf("%g 0\n", 
+			MODE_AGGREGATE == mode ?
+			(d->datetime - mintime) / (double)maxtime : 0);
 
 		TAILQ_FOREACH(s, &d->samps, entries) {
 			t = s->time;
@@ -275,20 +288,22 @@ print_all(const struct diveq *dq)
 			/* Print depths or velocity. */
 
 			if (SAMP_DEPTH & s->flags && derivs) {
-				printf("%lld %g\n", t, 
+				printf("%g %g\n", 
+					t / (double)maxtime, 
 					lastt == t ? 0.0 :
 					(lastdepth - s->depth) /
 					(t - lastt));
 				lastdepth = s->depth;
 				lastt = t;
 			} else if (SAMP_DEPTH & s->flags) {
-				printf("%lld -%g\n", t, s->depth);
+				printf("%g -%g\n", 
+					t / (double)maxtime, 
+					s->depth);
 				lastt = t;
 			}
 		}
 
-		if (topside)
-			printf("%lld 0\n", lastt);
+		printf("%g 0\n", lastt / (double)maxtime);
 
 		if (MODE_AGGREGATE != mode && 
 		    TAILQ_NEXT(d, entries)) 
@@ -317,7 +332,7 @@ main(int argc, char *argv[])
 	
 	memset(&st, 0, sizeof(struct divestat));
 
-	while (-1 != (c = getopt(argc, argv, "dm:tv")))
+	while (-1 != (c = getopt(argc, argv, "dm:v")))
 		switch (c) {
 		case ('d'):
 			derivs = 1;
@@ -338,9 +353,6 @@ main(int argc, char *argv[])
 			else
 				goto usage;
 			break;
-		case ('t'):
-			topside = 1;
-			break;
 		case ('v'):
 			verbose = 1;
 			break;
@@ -354,9 +366,6 @@ main(int argc, char *argv[])
 	if (derivs && 
 	    (MODE_SCATTER == mode || MODE_SUMMARY == mode))
 		warnx("-d: ignoring flag");
-	if (topside && 
-	    (MODE_SCATTER == mode || MODE_SUMMARY == mode))
-		warnx("-t: ignoring flag");
 
 	if (NULL == (p = XML_ParserCreate(NULL)))
 		err(EXIT_FAILURE, NULL);
@@ -401,7 +410,7 @@ out:
 	parse_free(&dq);
 	return(rc ? EXIT_SUCCESS : EXIT_FAILURE);
 usage:
-	fprintf(stderr, "usage: %s [-dtv] "
+	fprintf(stderr, "usage: %s [-dv] "
 		"[-m mode] [file...]\n", getprogname());
 	return(EXIT_FAILURE);
 }
