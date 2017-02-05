@@ -41,7 +41,8 @@ HTMLS		 = divecmd.1.html \
 		   divecmd2json.1.html \
 		   divecmd2term.1.html \
 		   index.html
-CSSS		 = mandoc.css
+CSSS		 = index.css \
+		   mandoc.css
 WWWDIR		 = /var/www/vhosts/kristaps.bsd.lv/htdocs/divecmd
 
 all: $(BINS)
