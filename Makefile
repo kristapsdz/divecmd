@@ -50,7 +50,12 @@ www: $(HTMLS) $(PDFS) $(PNGS)
 
 installwww: www
 	mkdir -p $(WWWDIR)
-	install -m 0444 $(CSSS) $(HTMLS) $(WWWDIR)
+	mkdir -p $(WWWDIR)/snapshots
+	install -m 0444 $(CSSS) $(HTMLS) $(PDFS) $(PNGS) daily.xml $(WWWDIR)
+	install -m 0444 divecmd.tar.gz $(WWWDIR)/snapshots/divecmd-$(VERSION).tar.gz
+	install -m 0444 divecmd.tar.gz.sha512 $(WWWDIR)/snapshots/divecmd-$(VERSION).tar.gz.sha512
+	install -m 0444 divecmd.tar.gz $(WWWDIR)/snapshots
+	install -m 0444 divecmd.tar.gz.sha512 $(WWWDIR)/snapshots
 
 divecmd: $(OBJS)
 	$(CC) -o $@ $(OBJS) $(LDFLAGS) 
@@ -77,6 +82,15 @@ $(PDFS): divecmd2grap
 $(OBJS): extern.h
 
 $(BINOBJS): parser.h
+
+divecmd.tar.gz:
+	mkdir -p .dist/divecmd-$(VERSION)/
+	install -m 0644 *.c *.h Makefile *.1 .dist/divecmd-$(VERSION)
+	( cd .dist/ && tar zcf ../$@ ./ )
+	rm -rf .dist/
+
+divecmd.tar.gz.sha512: divecmd.tar.gz
+	sha512 divecmd.tar.gz >$@
 
 index.html: index.xml
 	sed "s!@VERSION@!$(VERSION)!g" index.xml >$@
