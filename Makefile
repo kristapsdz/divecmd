@@ -52,7 +52,7 @@ www: $(HTMLS) $(PDFS) $(PNGS) divecmd.tar.gz divecmd.tar.gz.sha512
 installwww: www
 	mkdir -p $(WWWDIR)
 	mkdir -p $(WWWDIR)/snapshots
-	install -m 0444 $(CSSS) $(HTMLS) $(PDFS) $(PNGS) daily.xml $(WWWDIR)
+	install -m 0444 $(CSSS) $(HTMLS) $(PDFS) $(PNGS) daily.xml screenshot.png $(WWWDIR)
 	install -m 0444 divecmd.tar.gz $(WWWDIR)/snapshots/divecmd-$(VERSION).tar.gz
 	install -m 0444 divecmd.tar.gz.sha512 $(WWWDIR)/snapshots/divecmd-$(VERSION).tar.gz.sha512
 	install -m 0444 divecmd.tar.gz $(WWWDIR)/snapshots
