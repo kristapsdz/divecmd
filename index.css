@@ -1,0 +1,66 @@
+body, html				{ margin: 0; 
+					  background-color: #002c5b;
+					  font-family: "Alegreya sans", sans-serif;
+					  font-size: 13pt;
+					  font-weight: 300;
+					  line-height: 18pt;
+					  height: 100%; }
+body > header				{ position: relative; 
+					  height: 700px;
+					  margin: 1em 0.5em;
+					  font-weight: 400;
+					  border-radius: 1em;
+					  background-image: 
+						linear-gradient(rgba(0, 0, 0, 0.0), rgba(0, 0, 0, 0.4)), 
+						url('https://res.cloudinary.com/kristapsdz/image/upload/q_auto,f_auto/divelog/article033/DSCN1201.jpg'); 
+					  background-size: cover;
+					  background-attachment: fixed;
+					  background-position: 50% 80%;
+					  background-repeat: no-repeat; }
+h1					{ font-weight: 500; }
+b, strong, h2, h3, h4			{ font-weight: 500; }
+.nm					{ font-style: italic; }
+a					{ color: blue; 
+					  text-decoration: none;
+					  border-bottom: thin solid blue; }
+a.img					{ border-bottom: none; }
+body > header > div			{ position: absolute;
+				  	  left: 50%;
+					  top: 85%;
+					  width: 80%;
+					  text-align: center;
+					  color: #fff;
+					  transform: translate(-50%, -50%);
+					  -webkit-transform: translate(-50%, -50%); }
+body > header > div > *			{ display: inline-block; 
+					  text-shadow: 0 0 1px #000;
+					  font-size: 20pt; }
+body > nav				{ text-align: center;
+					  color: #fff;
+					  font-size: 18pt;
+					  padding-top: 12pt;
+					  font-variant: small-caps; }
+body > nav a				{ color: inherit; 
+					  margin: 0 12pt;
+					  display: inline-block;
+					  border-bottom: thin solid #fff; }
+blockquote > code			{ display: block; }
+body > article				{ padding: 1em;
+					  margin: 2em 20%;
+					  background-color: #fff;
+					  border-radius: 0.5em; }
+body > footer				{ text-align: center;
+					  font-size: smaller;
+					  margin: 1em 0;
+					  color: #3ea9f5; }
+body > footer a				{ color: inherit; }
+section.figures				{ display: table;
+					  border-spacing: 2em 1em; }
+section.figures > *			{ display: table-row; }
+section.figures > * > *			{ display: table-cell; 
+					  vertical-align: top;
+					  width: 50%; }
+section.figures img			{ width: 100%; }
+section.figures figure			{ margin: 0; }
+figcaption h4				{ margin-top: 0; }
+code					{ font-size: smaller; }

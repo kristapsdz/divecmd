@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<meta name="viewport" content="initial-scale=1.0, user-scalable=no" />
+		<meta charset='utf-8' /> 
+		<title>divecmd &#8212; download and process dive computer data</title>
+		<link href="https://maxcdn.bootstrapcdn.com/font-awesome/4.2.0/css/font-awesome.min.css" rel="stylesheet" />
+		<link href="index.css" rel="stylesheet" />
+		<link href="https://fonts.googleapis.com/css?family=Alegreya+Sans:300,300italic,400,500" rel="stylesheet" />
+	</head>
+	<body>
+		<nav>
+			<a href="https://github.com/kristapsdz/divecmd">github</a>
+			<a href="#">source</a>
+			<a href="#">archive</a>
+		</nav>
+		<header>
+			<div>
+				<h1>divecmd</h1>
+				&#8212;
+				<div id="description">download and process dive computer data</div>:
+				<div id="version">@VERSION@</div>
+			</div>
+		</header>
+		<article>
+			<p>
+				<span class="nm">divecmd</span> is a suite of command-line UNIX tools to extract dives from dive computers.
+				It wraps thinly around the excellent <a href="http://www.libdivecomputer.org/">libdivecomputer</a>, which does
+				the heavy lifting to interface with your device.
+				Why use <span class="nm">divecmd</span> instead of, say, <a href="https://subsurface-divelog.org/">subsurface</a>?
+				Because it's built to work in a command-line workflow with other command-line tools for processing, such as 
+				<a href="http://www.lunabase.org/~faber/Vault/software/grap/">grap(1)</a> (or any other <span
+					class="nm">grap</span> implementation) piped into 
+				<a href="https://www.gnu.org/software/groff/">groff(1)</a> (or other <span class="nm">troff</span>) or <a
+					href="https://www.latex-project.org/">LaTeX</a> (or other <span class="nm">TeX</span>).
+			</p>
+			<p>
+				My workflow usually begins with <a href="divecmd.1.html">divecmd(1)</a> on the day of my dive.  
+				First, I extract the dives from my Suunto D6i into an XML file for the day.  
+				<a href="divecmd.1.html">divecmd(1)</a> keeps track of my last extracted dive, so it will only extract new dives
+				(presumably from the current day):
+			</p>
+			<blockquote>
+				<code>
+					divecmd d6i > <a href="daily.xml">daily.xml</a>
+				</code>
+			</blockquote>
+			<p>
+				Following that, I'll analyse my dives by plotting them with <a href="divecmd2grap.1.html">divecmd2grap(1)</a>.
+				In the case of free diving, for example, I might do this:
+			</p>
+			<blockquote>
+				<code>
+					divecmd2grap -m summary <a href="daily.xml">daily.xml</a> | groff -Gp -Tpdf -P-p5.8i,8.3i > <a
+						href="daily.summary.pdf">daily.summary.pdf</a>
+				</code>
+				<code>
+					divecmd2grap -m restscatter <a href="daily.xml">daily.xml</a> | groff -Gp -Tpdf -P-p5.8i,8.3i > <a
+						href="daily.restscatter.pdf">daily.restscatter.pdf</a>
+				</code>
+			</blockquote>
+			<p>
+				These graphs let me see my dive depths and times, and also see whether I'm following the surface-time rule of
+				thumb, where rest is twice the prior dive.
+			</p>
+			<p>
+				<strong>Aside</strong>: why <a href="http://www.lunabase.org/~faber/Vault/software/grap/">grap(1)</a>?  Because
+				it fits into the standard piped UNIX workflow.
+				I can send the output directly into  <a href="https://www.gnu.org/software/groff/">groff(1)</a> without needing
+				to manage the intermediary files of <a href="http://www.gnuplot.info/">gnuplot</a> or <a
+					href="https://www.latex-project.org/">LaTeX</a>.
+				I use these other tools all of the time, but prefer to avoid them for that reason.
+			</p>
+			<p>
+				The following graphing modes are available to <a href="divecmd2grap.1.html">divecmd2grap(1)</a>.
+				In all of them, I use <a href="daily.xml">daily.xml</a> as input.
+				The graph names (e.g., <q>aggr</q>) are used in the <b>-m</b> argument.
+			</p>
+			<section class="figures">
+				<figure>
+					<a class="img" href="daily.aggr.png"><img src="daily.aggr.png" alt="" /></a>
+					<figcaption>
+						<h4>aggr</h4>
+						<p>
+							Line graph connecting (<q>aggregating</q>) subsequent dives with real time (relative to
+							the beginning of the first dive) on the x-axis and depth on the y-xais.
+						</p>
+						<p>
+							<strong>Note</strong>: this also has a <q>derivative</q> mode for viewing descent and
+							ascent velocities.
+						</p>
+					</figcaption>
+				</figure>
+				<figure>
+					<a class="img" href="daily.rest.png"><img src="daily.rest.png" alt="" /></a>
+					<figcaption>
+						<h4>rest</h4>
+						<p>
+							Impulse graph with each dive's rest time (surface interval) on the
+							positive y-axis and dive time on the negative y-axis.
+						</p>
+					</figcaption>
+				</figure>
+				<figure>
+					<a class="img" href="daily.restscatter.png"><img src="daily.restscatter.png" alt="" /></a>
+					<figcaption>
+						<h4>restscatter</h4>
+						<p>
+							Scatter graph with points corresponding to dive time and rest time.
+							A line with minimum suggested free diving interval is shown (twice the
+							dive time) if any of the dives are free dives.
+						</p>
+					</figcaption>
+				</figure>
+				<figure>
+					<a class="img" href="daily.scatter.png"><img src="daily.scatter.png" alt="" /></a>
+					<figcaption>
+						<h4>scatter</h4>
+						<p>
+							Scatter graph with points at the intersection of dives' maximum depth
+							and time.
+						</p>
+					</figcaption>
+				</figure>
+				<figure>
+					<a class="img" href="daily.stack.png"><img src="daily.stack.png" alt="" /></a>
+					<figcaption>
+						<h4>stack</h4>
+						<p>
+							Default line graph with dives layered over one other, dive time on the
+							x-axis, depth on the y-axis.
+						</p>
+						<p>
+							<strong>Note</strong>: this also has a <q>derivative</q> mode for viewing descent and
+							ascent velocities.
+						</p>
+					</figcaption>
+				</figure>
+				<figure>
+					<a class="img" href="daily.summary.png"><img src="daily.summary.png" alt="" /></a>
+					<figcaption>
+						<h4>summary</h4>
+						<p>
+							Each independent dive is shown on the x-axis with the maximum depth and
+							time above and below, respectively, on the y-axis.
+						</p>
+					</figcaption>
+				</figure>
+			</section>
+			<p>
+				The <span class="nm">divecmd</span> suite also has
+				<a href="divecmd2term.1.html">divecmd2term(1)</a>, which formats graphs on a UNIX terminal; and
+				<a href="divecmd2json.1.html">divecmd2json(1)</a>, which converts graphs to JSON.
+				I use the latter in 
+				<a href="https://divelog.blue">divelog.blue</a>, specifically to show the
+				<a href="https://divelog.blue/article040.html">dive profiles</a>.
+				As to the former:
+			</p>
+			<section class="figures">
+				<figure>
+					<a class="img" href="screenshot.png"><img src="screenshot.png" alt="" /></a>
+					<figcaption>
+						<p>
+							Screenshot of the terminal mode.
+							The temperature of a longer dive is shown on the top frame; depth, in the lower frame.
+						</p>
+					</figcaption>
+				</figure>
+			</section>
+		</article>
+		<footer>
+			Copyright &#169; 2017, <a rel="author" href="https://kristaps.bsd.lv">Kristaps Dzonsons</a>
+		</footer>
+	</body>
+</html>
