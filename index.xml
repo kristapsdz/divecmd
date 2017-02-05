@@ -77,13 +77,15 @@
 				The graph names (e.g., <q>aggr</q>) are used in the <b>-m</b> argument.
 			</p>
 			<section class="figures">
-				<figure>
+				<figure id="mode-aggr">
 					<a class="img" href="daily.aggr.png"><img src="daily.aggr.png" alt="" /></a>
 					<figcaption>
 						<h4>aggr</h4>
 						<p>
 							Line graph connecting (<q>aggregating</q>) subsequent dives with real time (relative to
 							the beginning of the first dive) on the x-axis and depth on the y-xais.
+							See <b><a href="#mode-stack">stack</a></b> for how this looks when dive profiles are
+							super-imposed instead of laid side-by-side.
 						</p>
 						<p>
 							<strong>Note</strong>: this also has a <q>derivative</q> mode for viewing descent and
@@ -91,17 +93,21 @@
 						</p>
 					</figcaption>
 				</figure>
-				<figure>
+				<figure id="mode-rest">
 					<a class="img" href="daily.rest.png"><img src="daily.rest.png" alt="" /></a>
 					<figcaption>
 						<h4>rest</h4>
 						<p>
 							Impulse graph with each dive's rest time (surface interval) on the
 							positive y-axis and dive time on the negative y-axis.
+							The recommended rest time (twice the prior dive) is also shown when at least one dive
+							profile is in free dive mode.
+							See <b><a href="#mode-restscatter">restscatter</a></b> for how this looks in a scatter
+							graph.
 						</p>
 					</figcaption>
 				</figure>
-				<figure>
+				<figure id="mode-restscatter">
 					<a class="img" href="daily.restscatter.png"><img src="daily.restscatter.png" alt="" /></a>
 					<figcaption>
 						<h4>restscatter</h4>
@@ -109,26 +115,30 @@
 							Scatter graph with points corresponding to dive time and rest time.
 							A line with minimum suggested free diving interval is shown (twice the
 							dive time) if any of the dives are free dives.
+							See <b><a href="#mode-rest">rest</a></b> for how this looks in an impulse graph.
 						</p>
 					</figcaption>
 				</figure>
-				<figure>
+				<figure id="mode-scatter">
 					<a class="img" href="daily.scatter.png"><img src="daily.scatter.png" alt="" /></a>
 					<figcaption>
 						<h4>scatter</h4>
 						<p>
 							Scatter graph with points at the intersection of dives' maximum depth
 							and time.
+							See <b><a href="#mode-summary">summary</a></b> for how this looks in an impulse graph.
 						</p>
 					</figcaption>
 				</figure>
-				<figure>
+				<figure id="mode-stack">
 					<a class="img" href="daily.stack.png"><img src="daily.stack.png" alt="" /></a>
 					<figcaption>
 						<h4>stack</h4>
 						<p>
 							Default line graph with dives layered over one other, dive time on the
 							x-axis, depth on the y-axis.
+							See <b><a href="#mode-aggr">aggr</a></b> for how this looks when dive profiles are
+							laid side-by-side instead of stacked.
 						</p>
 						<p>
 							<strong>Note</strong>: this also has a <q>derivative</q> mode for viewing descent and
@@ -136,13 +146,14 @@
 						</p>
 					</figcaption>
 				</figure>
-				<figure>
+				<figure id="mode-summary">
 					<a class="img" href="daily.summary.png"><img src="daily.summary.png" alt="" /></a>
 					<figcaption>
 						<h4>summary</h4>
 						<p>
 							Each independent dive is shown on the x-axis with the maximum depth and
 							time above and below, respectively, on the y-axis.
+							See <b><a href="#mode-scatter">scatter</a></b> for how this looks in a scatter graph.
 						</p>
 					</figcaption>
 				</figure>
