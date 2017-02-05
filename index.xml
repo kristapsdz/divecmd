@@ -11,8 +11,8 @@
 	<body>
 		<nav>
 			<a href="https://github.com/kristapsdz/divecmd">github</a>
-			<a href="#">source</a>
-			<a href="#">archive</a>
+			<a href="divecmd.tar.gz">source</a>
+			<a href="snapshots/">archive</a>
 		</nav>
 		<header>
 			<div>

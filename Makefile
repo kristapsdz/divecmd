@@ -46,7 +46,7 @@ WWWDIR		 = /var/www/vhosts/kristaps.bsd.lv/htdocs/divecmd
 
 all: $(BINS)
 
-www: $(HTMLS) $(PDFS) $(PNGS)
+www: $(HTMLS) $(PDFS) $(PNGS) divecmd.tar.gz divecmd.tar.gz.sha512
 
 installwww: www
 	mkdir -p $(WWWDIR)
