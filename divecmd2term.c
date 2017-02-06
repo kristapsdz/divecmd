@@ -541,9 +541,6 @@ main(int argc, char *argv[])
 	if (-1 == pledge("stdio rpath", NULL))
 		err(EXIT_FAILURE, "pledge");
 #endif
-
-	memset(&st, 0, sizeof(struct divestat));
-
 	while (-1 != (c = getopt(argc, argv, "auv")))
 		switch (c) {
 		case ('a'):
@@ -562,10 +559,7 @@ main(int argc, char *argv[])
 	argc -= optind;
 	argv += optind;
 
-	if (NULL == (p = XML_ParserCreate(NULL)))
-		err(EXIT_FAILURE, NULL);
-
-	TAILQ_INIT(&dq);
+	parse_init(&p, &dq, &st, GROUP_NONE);
 
 	/* 
 	 * Handle all files or stdin.
@@ -574,27 +568,24 @@ main(int argc, char *argv[])
 
 	if (0 == argc)
 		rc = parse("-", p, &dq, &st);
+
 	for (i = 0; i < (size_t)argc; i++)
 		if ( ! (rc = parse(argv[i], p, &dq, &st)))
 			break;
-
-	XML_ParserFree(p);
-
-	if (TAILQ_EMPTY(&dq)) {
-		warnx("no dives to display");
-		return(EXIT_FAILURE);
-	}
-
-	/* 
-	 * Parsing is finished.
-	 * Narrow the pledge to just stdio.
-	 * From now on, we process and paint.
-	 */
 
 #if defined(__OpenBSD__) && OpenBSD > 201510
 	if (-1 == pledge("stdio", NULL))
 		err(EXIT_FAILURE, "pledge");
 #endif
+
+	XML_ParserFree(p);
+
+	if ( ! rc)
+		goto out;
+	if (TAILQ_EMPTY(&dq)) {
+		warnx("no dives to display");
+		goto out;
+	}
 
 	/*
 	 * Initialise screen real estate.
@@ -618,8 +609,8 @@ main(int argc, char *argv[])
 		rc = print_all(&dq, &ws);
 
 	/* Free all memory from the dives. */
-
-	parse_free(&dq);
+out:
+	parse_free(&dq, &st);
 	return(rc ? EXIT_SUCCESS : EXIT_FAILURE);
 usage:
 	fprintf(stderr, "usage: %s [-auv] [file]\n", getprogname());

@@ -43,45 +43,51 @@ int verbose = 0;
 
 static	enum pmode mode = MODE_STACK;
 
+static	const char *cols[2] = {
+	"red",
+	"blue",
+};
+
 /*
  * Print derivatives, aka velocity.
  */
 static int derivs = 0;
 
 static int
-print_all(const struct diveq *dq)
+print_all(const struct diveq *dq, const struct divestat *st)
 {
 	struct dive	*d, *dp;
 	struct samp	*s;
 	size_t		 i = 0;
-	time_t		 mintime = 0, t, lastt = 0;
+	time_t		 t, lastt = 0;
 	size_t		 maxtime = 0, maxrtime = 0, points = 0, rest;
-	double		 maxdepth = 0.0, lastdepth;
+	double		 maxdepth = 0.0, lastdepth, x, y;
 	double		 height = 3.8, width = 5.4;
 	int		 free = 0;
+	struct dgroup 	*dg;
 
 	assert( ! TAILQ_EMPTY(dq));
 
 	/*
-	 * For aggregate mode, we need to put dives end-to-end, so we
-	 * need the datetime for each dive.
+	 * For aggregate and the resting modes, we need our date-time to
+	 * compute relative positions of dives with respect to each
+	 * other.
+	 * Thus, make sure that a date-time exists for all dives.
 	 */
 
 	if (MODE_AGGREGATE == mode ||
 	    MODE_RESTING == mode ||
 	    MODE_RESTING_SCATTER == mode) 
-		TAILQ_FOREACH(d, dq, entries) {
+		TAILQ_FOREACH(d, dq, entries)
 			if (0 == d->datetime) {
 				warnx("date and time required");
 				return(0);
 			}
-			if (0 == mintime || d->datetime < mintime)
-				mintime = d->datetime;
-		}
 
 	if (MODE_AGGREGATE == mode)
 		TAILQ_FOREACH(d, dq, entries) {
-			t = (d->datetime + d->maxtime) - mintime;
+			t = (d->datetime + d->maxtime) - 
+				d->group->mintime;
 			assert(t >= 0);
 			if ((size_t)t > maxtime)
 				maxtime = t;
@@ -257,24 +263,68 @@ print_all(const struct diveq *dq)
 		       "grid right ticks off\n"
 		       "grid top ticks off\n"
 		       "label left \"%s\" left 0.1\n"
-		       "label bot \"Time (mm:ss)\"\n",
+		       "label bot \"Time (mm:ss)\"\n"
+		       "new color \"%s\"\n",
 		       (maxtime / 4) / 60, (maxtime / 4) % 60, 
 		       (maxtime / 2) / 60, (maxtime / 2) % 60, 
 		       (3 * maxtime / 4) / 60, 
 		       (3 * maxtime / 4) % 60, 
 		       maxtime / 60, maxtime % 60,
 		       ! derivs ?  "Depth (m)" :
-		       "Velocity (vertical m/s)");
+		       "Velocity (vertical m/s)",
+		       cols[0]);
 
-	/* Now for the data... */
+	/* Now for the data. */
+
+	if (MODE_AGGREGATE == mode) {
+		/*
+		 * In aggregate mode, we iterate through each of the
+		 * groups, then through all of the dives in those
+		 * groups, because we connect between group lines.
+		 * This is different from the other processing methods,
+		 * were dives are independent.
+		 */
+		for (i = 0; i < st->groupsz; i++) {
+			dg = st->groups[i];
+			lastt = 0;
+			TAILQ_FOREACH(d, &dg->dives, gentries) {
+				lastdepth = 0.0;
+				x = (d->datetime - dg->mintime) /
+					(double)maxtime;
+				printf("%g 0\n", x);
+				TAILQ_FOREACH(s, &d->samps, entries) {
+					t = s->time;
+					t += d->datetime;
+					t -= dg->mintime;
+					x = t / (double)maxtime;
+					y = (0 == derivs) ? -s->depth :
+						(lastt == t) ? 0.0 :
+						(lastdepth - s->depth) /
+						(t - lastt);
+					printf("%g %g\n", x, y);
+					lastdepth = s->depth;
+					lastt = t;
+				}
+				x = lastt / (double)maxtime;
+				printf("%g 0\n", x);
+			}
+			if (i == st->groupsz - 1)
+				continue;
+			printf("new color \"%s\"\n", 
+				cols[st->groups[i + 1]->id % 2]);
+		}
+		goto out;
+	}
 
 	TAILQ_FOREACH(d, dq, entries) {
 		lastdepth = 0.0;
 		dp = TAILQ_NEXT(d, entries);
 
 		/* 
-		 * Summary mode is just the maxima of the dive, so print
-		 * that and continue.
+		 * We have a bunch of modes that just print "summary"
+		 * information and don't iterate over the dives
+		 * themselves.
+		 * Print those first.
 		 */
 
 		if (MODE_SUMMARY == mode) {
@@ -308,47 +358,26 @@ print_all(const struct diveq *dq)
 			continue;
 		}
 
-		/* 
-		 * Topside: the dive computer isn't going to record an
-		 * initial (zero) state, so print it now.
-		 */
-
-		printf("%g 0\n", 
-			MODE_AGGREGATE == mode ?
-			(d->datetime - mintime) / (double)maxtime : 0);
-
+		puts("0 0");
 		TAILQ_FOREACH(s, &d->samps, entries) {
 			t = s->time;
-			if (MODE_AGGREGATE == mode) {
-				t += d->datetime;
-				t -= mintime;
-			}
-
-			/* Print depths or velocity. */
-
-			if (SAMP_DEPTH & s->flags && derivs) {
-				printf("%g %g\n", 
-					t / (double)maxtime, 
-					lastt == t ? 0.0 :
-					(lastdepth - s->depth) /
-					(t - lastt));
-				lastdepth = s->depth;
-				lastt = t;
-			} else if (SAMP_DEPTH & s->flags) {
-				printf("%g -%g\n", 
-					t / (double)maxtime, 
-					s->depth);
-				lastt = t;
-			}
+			x = t / (double)maxtime;
+			y = 0 == derivs ? -s->depth :
+				lastt == t ? 0.0 :
+				(lastdepth - s->depth) /
+				(t - lastt);
+			printf("%g %g\n", x, y);
+			lastdepth = s->depth;
+			lastt = t;
 		}
 
-		printf("%g 0\n", lastt / (double)maxtime);
-
-		if (MODE_AGGREGATE != mode && 
-		    TAILQ_NEXT(d, entries)) 
-			puts("new");
+		x = lastt / (double)maxtime;
+		printf("%g 0\n", x);
+		if (NULL != dp)
+			printf("new color \"%s\"\n",
+				cols[dp->group->id % 2]);
 	}
-
+out:
 	puts(".G2");
 	return(1);
 }
@@ -357,6 +386,7 @@ int
 main(int argc, char *argv[])
 {
 	int		 c, rc = 1;
+	enum group	 group = GROUP_NONE;
 	size_t		 i;
 	XML_Parser	 p;
 	struct diveq	 dq;
@@ -368,10 +398,7 @@ main(int argc, char *argv[])
 	if (-1 == pledge("stdio rpath", NULL))
 		err(EXIT_FAILURE, "pledge");
 #endif
-	
-	memset(&st, 0, sizeof(struct divestat));
-
-	while (-1 != (c = getopt(argc, argv, "dm:v")))
+	while (-1 != (c = getopt(argc, argv, "dm:s:v")))
 		switch (c) {
 		case ('d'):
 			derivs = 1;
@@ -392,6 +419,14 @@ main(int argc, char *argv[])
 			else
 				goto usage;
 			break;
+		case ('s'):
+			if (0 == strcasecmp(optarg, "date"))
+				group = GROUP_DATE;
+			else if (0 == strcasecmp(optarg, "none"))
+				group = GROUP_NONE;
+			else
+				goto usage;
+			break;
 		case ('v'):
 			verbose = 1;
 			break;
@@ -403,13 +438,10 @@ main(int argc, char *argv[])
 	argv += optind;
 
 	if (derivs && 
-	    (MODE_SCATTER == mode || MODE_SUMMARY == mode))
+	    (MODE_AGGREGATE != mode && MODE_STACK != mode))
 		warnx("-d: ignoring flag");
 
-	if (NULL == (p = XML_ParserCreate(NULL)))
-		err(EXIT_FAILURE, NULL);
-
-	TAILQ_INIT(&dq);
+	parse_init(&p, &dq, &st, group);
 
 	/* 
 	 * Handle all files or stdin.
@@ -423,33 +455,28 @@ main(int argc, char *argv[])
 		if ( ! (rc = parse(argv[i], p, &dq, &st)))
 			break;
 
-	XML_ParserFree(p);
-
-	if ( ! rc)
-		goto out;
-
-	if (TAILQ_EMPTY(&dq)) {
-		warnx("no dives to display");
-		goto out;
-	}
-
-	/* 
-	 * Parsing is finished.
-	 * Narrow the pledge to just stdio.
-	 * From now on, we process and paint.
-	 */
-
 #if defined(__OpenBSD__) && OpenBSD > 201510
 	if (-1 == pledge("stdio", NULL))
 		err(EXIT_FAILURE, "pledge");
 #endif
 
-	rc = print_all(&dq);
+	XML_ParserFree(p);
+
+	if ( ! rc)
+		goto out;
+	if (TAILQ_EMPTY(&dq)) {
+		warnx("no dives to display");
+		goto out;
+	}
+
+	rc = print_all(&dq, &st);
 out:
-	parse_free(&dq);
+	parse_free(&dq, &st);
 	return(rc ? EXIT_SUCCESS : EXIT_FAILURE);
 usage:
 	fprintf(stderr, "usage: %s [-dv] "
-		"[-m mode] [file...]\n", getprogname());
+		"[-m mode] "
+		"[-s splitgroup] "
+		"[file...]\n", getprogname());
 	return(EXIT_FAILURE);
 }
