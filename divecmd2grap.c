@@ -43,9 +43,14 @@ int verbose = 0;
 
 static	enum pmode mode = MODE_STACK;
 
-static	const char *cols[2] = {
-	"red",
-	"blue",
+#define	COL_MAX 5
+
+static	const char *cols[COL_MAX] = {
+	"dodgerblue2",
+	"darkorange",
+	"mediumorchid",
+	"magenta4",
+	"limegreen",
 };
 
 /*
@@ -58,7 +63,7 @@ print_all(const struct diveq *dq, const struct divestat *st)
 {
 	struct dive	*d, *dp;
 	struct samp	*s;
-	size_t		 i = 0;
+	size_t		 i = 0, j;
 	time_t		 t, lastt = 0;
 	size_t		 maxtime = 0, maxrtime = 0, points = 0, rest;
 	double		 maxdepth = 0.0, lastdepth, x, y;
@@ -105,12 +110,21 @@ print_all(const struct diveq *dq, const struct divestat *st)
 				maxtime = d->maxtime;
 			if (d->maxdepth > maxdepth)
 				maxdepth = d->maxdepth;
-			rest = NULL == dp ? 0 :
-				dp->datetime - 
-				(d->datetime + d->maxtime);
-			if (rest > maxrtime)
-				maxrtime = rest;
 			points++;
+		}
+
+	if (MODE_RESTING == mode ||
+	    MODE_RESTING_SCATTER == mode)
+		for (i = 0; i < st->groupsz; i++) {
+			dg = st->groups[i];
+			TAILQ_FOREACH(d, &dg->dives, gentries) {
+				dp = TAILQ_NEXT(d, gentries);
+				rest = NULL == dp ? 0 :
+					dp->datetime - 
+					(d->datetime + d->maxtime);
+				if (rest > maxrtime)
+					maxrtime = rest;
+			}
 		}
 
 	/*
@@ -150,10 +164,10 @@ print_all(const struct diveq *dq, const struct divestat *st)
 		       "label right \"Time (mm:ss)\" up %g left 0.2\n"
 		       "label left \"Depth (m)\" down %g left 0.3\n"
 		       "copy thru {\n"
-		       " \"\\(bu\" size +3 at $1,$3\n"
-		       " line dashed 0.05 from $1,0 to $1,$3\n"
-		       " circle at $1,$2\n"
-		       " line from $1,0 to $1,$2\n"
+		       " \"\\(bu\" size +3 color $4 at $1,$3\n"
+		       " line dashed 0.05 from $1,0 to $1,$3 color $4\n"
+		       " circle at $1,$2 color $4\n"
+		       " line from $1,0 to $1,$2 color $4\n"
 		       "}\n",
 		       maxdepth, 
 		       0.75 * maxdepth,
@@ -185,11 +199,11 @@ print_all(const struct diveq *dq, const struct divestat *st)
 		       "label right \"Rest time (mm:ss)\" up %g left 0.2\n"
 		       "label left \"Dive time (mm:ss)\" down %g left 0.3\n"
 		       "copy thru {\n"
-		       " \"\\(bu\" size +3 at $1,$3\n"
-		       " line dotted from $1,0 to $1,$3\n"
+		       " \"\\(bu\" size +3 color $5 at $1,$3\n"
+		       " line dotted from $1,0 to $1,$3 color $5\n"
 		       "%s"
-		       " circle at $1,$2\n"
-		       " line from $1,0 to $1,$2\n"
+		       " circle at $1,$2 color $5\n"
+		       " line from $1,0 to $1,$2 color $5\n"
 		       "}\n",
 		       maxtime / 60, maxtime % 60, 
 		       (3 * maxtime / 4) / 60, 
@@ -222,7 +236,9 @@ print_all(const struct diveq *dq, const struct divestat *st)
 		       "grid top ticks off\n"
 		       "coord y 0,1\n"
 		       "coord x 0,1\n"
-		       "copy thru { circle at $2,$3 }\n",
+		       "copy thru {\n"
+		       " \"\\(bu\" size+3 color $5 at $2,-$3\n"
+		       "}\n",
 		       (maxtime / 4) / 60, (maxtime / 4) % 60, 
 		       (maxtime / 2) / 60, (maxtime / 2) % 60, 
 		       (3 * maxtime / 4) / 60, 
@@ -246,7 +262,9 @@ print_all(const struct diveq *dq, const struct divestat *st)
 		       "grid top ticks off\n"
 		       "coord y 0,-%g\n"
 		       "coord x 0,1\n"
-		       "copy thru { circle at $2,$3 }\n",
+		       "copy thru {\n"
+		       " \"\\(bu\" size +3 color $4 at $2,$3\n"
+		       "}\n",
 		       (maxtime / 4) / 60, (maxtime / 4) % 60, 
 		       (maxtime / 2) / 60, (maxtime / 2) % 60, 
 		       (3 * maxtime / 4) / 60, 
@@ -311,54 +329,57 @@ print_all(const struct diveq *dq, const struct divestat *st)
 			if (i == st->groupsz - 1)
 				continue;
 			printf("new color \"%s\"\n", 
-				cols[st->groups[i + 1]->id % 2]);
+				cols[st->groups[i + 1]->id % COL_MAX]);
 		}
 		goto out;
-	}
+	} 
+	
+	if (MODE_RESTING == mode || MODE_RESTING_SCATTER == mode) {
+		/*
+		 * In the resting modes, we need to be within our group
+		 * because we look to the next dive, which must also be
+		 * in our group.
+		 */
+		for (i = j = 0; i < st->groupsz; i++) {
+			dg = st->groups[i];
+			TAILQ_FOREACH(d, &dg->dives, gentries) {
+				dp = TAILQ_NEXT(d, gentries);
+				t = NULL == dp ? 0 :
+					dp->datetime - 
+					(d->datetime + d->maxtime);
+				printf("%zu %g -%g %g \"%s\"\n", j++, 
+					t / (double)maxrtime,
+					d->maxtime / (double)maxtime,
+					(d->maxtime * 2) / (double)maxrtime,
+					cols[d->group->id % COL_MAX]);
+			}
+		}
+		goto out;
+	 }
 
 	TAILQ_FOREACH(d, dq, entries) {
-		lastdepth = 0.0;
-		dp = TAILQ_NEXT(d, entries);
-
 		/* 
 		 * We have a bunch of modes that just print "summary"
 		 * information and don't iterate over the dives
 		 * themselves.
 		 * Print those first.
 		 */
-
 		if (MODE_SUMMARY == mode) {
-			printf("%zu %g -%g\n", i++, 
+			printf("%zu %g -%g \"%s\"\n", i++, 
 				(double)d->maxtime / maxtime, 
-				d->maxdepth / maxdepth);
-			continue;
-		} else if (MODE_RESTING == mode) {
-			t = NULL == dp ? 0 :
-				dp->datetime - 
-				(d->datetime + d->maxtime);
-			printf("%zu %g -%g %g\n", i++, 
-				t / (double)maxrtime,
-				d->maxtime / (double)maxtime,
-				(d->maxtime * 2) / (double)maxrtime);
-			dp = d;
-			continue;
-		} else if (MODE_RESTING_SCATTER == mode) {
-			t = NULL == dp ? 0 :
-				dp->datetime - 
-				(d->datetime + d->maxtime),
-			printf("%zu %g %g\n", i++, 
-				t / (double)maxrtime,
-				d->maxtime / (double)maxtime);
-			dp = d;
+				d->maxdepth / maxdepth,
+				cols[d->group->id % COL_MAX]);
 			continue;
 		} else if (MODE_SCATTER == mode) {
-			printf("%zu %g -%g\n", i++, 
+			printf("%zu %g -%g \"%s\"\n", i++, 
 				d->maxtime / (double)maxtime, 
-				d->maxdepth);
+				d->maxdepth,
+				cols[d->group->id % COL_MAX]);
 			continue;
 		}
 
 		puts("0 0");
+		lastdepth = 0.0;
 		TAILQ_FOREACH(s, &d->samps, entries) {
 			t = s->time;
 			x = t / (double)maxtime;
@@ -373,9 +394,9 @@ print_all(const struct diveq *dq, const struct divestat *st)
 
 		x = lastt / (double)maxtime;
 		printf("%g 0\n", x);
-		if (NULL != dp)
+		if (NULL != (dp = TAILQ_NEXT(d, entries)))
 			printf("new color \"%s\"\n",
-				cols[dp->group->id % 2]);
+				cols[dp->group->id % COL_MAX]);
 	}
 out:
 	puts(".G2");

@@ -207,34 +207,6 @@ parse_open(void *dat, const XML_Char *s, const XML_Char **atts)
 		 */
 
 		if (NULL != date && NULL != time) {
-			/*
-			 * Begin by getting (or allocating) or group.
-			 * This depends upon how our group configuration
-			 * has been arranged.
-			 */
-			grp = NULL;
-			if (GROUP_DATE == p->stat->group) {
-				for (i = 0; i < p->stat->groupsz; i++)
-					if (0 == strcmp
-				  	    (date, p->stat->groups[i]->name))
-						break;
-				if (i == p->stat->groupsz && verbose)
-					fprintf(stderr, "%s: new "
-						"date group: %s\n", 
-						p->file, date);
-				grp = (i == p->stat->groupsz) ?
-					group_alloc(p, dive, date) :
-					group_add(p, i, dive);
-			} else {
-				if (0 == p->stat->groupsz && verbose)
-					fprintf(stderr, "%s: new "
-						"default group\n", 
-						p->file);
-				grp = (0 == p->stat->groupsz) ?
-					group_alloc(p, dive, NULL) :
-					group_add(p, 0, dive);
-			}
-
 			/* We now perform our date conversion. */
 
 			memset(&tm, 0, sizeof(struct tm));
@@ -265,6 +237,35 @@ parse_open(void *dat, const XML_Char *s, const XML_Char **atts)
 				dive->datetime = 0;
 				TAILQ_INSERT_TAIL(p->dives, dive, entries);
 				return;
+			}
+
+			/*
+			 * Now get (or allocate) our group.
+			 * This depends upon how our group configuration
+			 * has been arranged.
+			 */
+			grp = NULL;
+
+			if (GROUP_DATE == p->stat->group) {
+				for (i = 0; i < p->stat->groupsz; i++)
+					if (0 == strcmp
+				  	    (date, p->stat->groups[i]->name))
+						break;
+				if (i == p->stat->groupsz && verbose)
+					fprintf(stderr, "%s: new "
+						"date group: %s\n", 
+						p->file, date);
+				grp = (i == p->stat->groupsz) ?
+					group_alloc(p, dive, date) :
+					group_add(p, i, dive);
+			} else {
+				if (0 == p->stat->groupsz && verbose)
+					fprintf(stderr, "%s: new "
+						"default group\n", 
+						p->file);
+				grp = (0 == p->stat->groupsz) ?
+					group_alloc(p, dive, NULL) :
+					group_add(p, 0, dive);
 			}
 
 			/* Check against our global extrema. */
