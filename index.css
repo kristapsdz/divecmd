@@ -18,7 +18,13 @@ body > header				{ position: relative;
 					  background-position: 50% 80%;
 					  background-repeat: no-repeat; }
 h1					{ font-weight: 500; }
-b, strong, h2, h3, h4			{ font-weight: 500; }
+b, strong, h3, h4			{ font-weight: 500; }
+h2					{ text-align: center; 
+					  color: #444;
+					  margin-top: 2em;
+					  font-weight: 400; }
+h2 span					{ font-weight: 500; 
+					  color: #000; }
 .nm					{ font-style: italic; }
 a					{ color: blue; 
 					  text-decoration: none;
@@ -37,7 +43,7 @@ body > header > div > *			{ display: inline-block;
 					  font-size: 20pt; }
 body > nav				{ text-align: center;
 					  color: #fff;
-					  font-size: 18pt;
+					  font-size: 16pt;
 					  padding-top: 12pt;
 					  font-variant: small-caps; }
 body > nav a				{ color: inherit; 
@@ -45,22 +51,47 @@ body > nav a				{ color: inherit;
 					  display: inline-block;
 					  border-bottom: thin solid #fff; }
 blockquote > code			{ display: block; }
-body > article				{ padding: 1em;
-					  margin: 2em 20%;
+body > article				{ padding: 1em 20%;
+					  margin: 2em 0.5em;
 					  background-color: #fff;
 					  border-radius: 0.5em; }
 body > footer				{ text-align: center;
 					  font-size: smaller;
 					  margin: 1em 0;
 					  color: #3ea9f5; }
-body > footer a				{ color: inherit; }
-section.figures				{ display: table;
-					  border-spacing: 2em 1em; }
-section.figures > *			{ display: table-row; }
-section.figures > * > *			{ display: table-cell; 
+body > footer a				{ color: inherit; 
+					  border-bottom: thin solid #3ea9f5; }
+section.figures figure > *		{ display: inline-block;
 					  vertical-align: top;
+					  font-size: 13pt;
+					  padding: 0;
+					  margin: 0;
 					  width: 50%; }
-section.figures img			{ width: 100%; }
-section.figures figure			{ margin: 0; }
+section.figures img			{ width: 95%; }
+section.figures figure			{ padding: 8pt; 
+					  margin: 0; }
 figcaption h4				{ margin-top: 0; }
 code					{ font-size: smaller; }
+nav.figures				{ text-align: center;
+					  width: 100%;
+					  margin: 1em 0;
+					  font-variant: small-caps; }
+div.figures				{ width: 100%;
+					  margin: 0 auto;
+					  font-size: 0;
+					  background-color: #f0f0f0;
+					  border-top: thin solid #e0e0e0;
+					  border-bottom: thin solid #e0e0e0;
+					  position: relative;
+					  overflow: hidden; }
+div.figures > section.figures		{ position: relative;
+					  top: 0;
+					  right: 0;
+					  transition: all 0.6s ease;
+					  padding: 0;
+					  margin: 0; }
+section.figures > div 			{ float: left; }
+#divecmd2grap-figures >section >div	{ width: 11.11%; }
+#divecmd2grap-figures >section 		{ width: 900%; }
+#divecmd2term-figures >section >div	{ width: 50%; }
+#divecmd2term-figures >section 		{ width: 200%; }

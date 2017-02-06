@@ -1,0 +1,3082 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<divelog program="divecmd" version="0.0.1" vendor="Suunto" product="D6i" model="26">
+	<dives>
+		<dive number="17" date="2017-01-23" time="14:18:33" duration="66" mode="freedive">
+			<fingerprint>E10701170E1221</fingerprint>
+			<depth max="10.80" />
+			<samples>
+				<sample time="0">
+					<depth value="1.43" />
+					<temp value="15.00" />
+					<event type="surface" duration="0" />
+					<deco depth="0.00" type="ndl" duration="0" />
+				</sample>
+				<sample time="2">
+					<depth value="2.23" />
+					<temp value="15.00" />
+					<deco depth="0.00" type="ndl" duration="0" />
+				</sample>
+				<sample time="4">
+					<depth value="3.19" />
+					<temp value="15.00" />
+					<deco depth="0.00" type="ndl" duration="0" />
+				</sample>
+				<sample time="6">
+					<depth value="4.31" />
+					<temp value="15.00" />
+					<deco depth="0.00" type="ndl" duration="0" />
+				</sample>
+				<sample time="8">
+					<depth value="4.81" />
+					<temp value="15.00" />
+					<deco depth="0.00" type="ndl" duration="0" />
+				</sample>
+				<sample time="10">
+					<depth value="5.45" />
+					<temp value="15.00" />
+					<deco depth="0.00" type="ndl" duration="0" />
+				</sample>
+				<sample time="12">
+					<depth value="6.16" />
+					<temp value="15.00" />
+					<deco depth="0.00" type="ndl" duration="0" />
+				</sample>
+				<sample time="14">
+					<depth value="6.63" />
+					<temp value="15.00" />
+					<deco depth="0.00" type="ndl" duration="0" />
+				</sample>
+				<sample time="16">
+					<depth value="7.03" />
+					<temp value="15.00" />
+					<deco depth="0.00" type="ndl" duration="0" />
+				</sample>
+				<sample time="18">
+					<depth value="7.64" />
+					<temp value="15.00" />
+					<deco depth="0.00" type="ndl" duration="0" />
+				</sample>
+				<sample time="20">
+					<depth value="8.19" />
+					<temp value="15.00" />
+					<deco depth="0.00" type="ndl" duration="0" />
+				</sample>
+				<sample time="22">
+					<depth value="8.77" />
+					<temp value="15.00" />
+					<deco depth="0.00" type="ndl" duration="0" />
+				</sample>
+				<sample time="24">
+					<depth value="9.00" />
+					<temp value="15.00" />
+					<deco depth="0.00" type="ndl" duration="0" />
+				</sample>
+				<sample time="26">
+					<depth value="9.22" />
+					<temp value="15.00" />
+					<deco depth="0.00" type="ndl" duration="0" />
+				</sample>
+				<sample time="28">
+					<depth value="9.24" />
+					<temp value="15.00" />
+					<deco depth="0.00" type="ndl" duration="0" />
+				</sample>
+				<sample time="30">
+					<depth value="9.23" />
+					<temp value="15.00" />
+					<deco depth="0.00" type="ndl" duration="0" />
+				</sample>
+				<sample time="32">
+					<depth value="9.00" />
+					<temp value="15.00" />
+					<deco depth="0.00" type="ndl" duration="0" />
+				</sample>
+				<sample time="34">
+					<depth value="9.31" />
+					<temp value="15.00" />
+					<deco depth="0.00" type="ndl" duration="0" />
+				</sample>
+				<sample time="36">
+					<depth value="9.55" />
+					<temp value="15.00" />
+					<deco depth="0.00" type="ndl" duration="0" />
+				</sample>
+				<sample time="38">
+					<depth value="9.90" />
+					<temp value="15.00" />
+					<deco depth="0.00" type="ndl" duration="0" />
+				</sample>
+				<sample time="40">
+					<depth value="10.32" />
+					<temp value="15.00" />
+					<deco depth="0.00" type="ndl" duration="0" />
+				</sample>
+				<sample time="42">
+					<depth value="10.61" />
+					<temp value="15.00" />
+					<deco depth="0.00" type="ndl" duration="0" />
+				</sample>
+				<sample time="44">
+					<depth value="10.40" />
+					<temp value="15.00" />
+					<deco depth="0.00" type="ndl" duration="0" />
+				</sample>
+				<sample time="46">
+					<depth value="10.31" />
+					<temp value="15.00" />
+					<deco depth="0.00" type="ndl" duration="0" />
+				</sample>
+				<sample time="48">
+					<depth value="10.37" />
+					<temp value="15.00" />
+					<deco depth="0.00" type="ndl" duration="0" />
+				</sample>
+				<sample time="50">
+					<depth value="10.80" />
+					<temp value="15.00" />
+					<deco depth="0.00" type="ndl" duration="0" />
+				</sample>
+				<sample time="52">
+					<depth value="10.22" />
+					<temp value="15.00" />
+					<deco depth="0.00" type="ndl" duration="0" />
+				</sample>
+				<sample time="54">
+					<depth value="9.31" />
+					<temp value="15.00" />
+					<deco depth="0.00" type="ndl" duration="0" />
+				</sample>
+				<sample time="56">
+					<depth value="8.21" />
+					<temp value="15.00" />
+					<deco depth="0.00" type="ndl" duration="0" />
+				</sample>
+				<sample time="58">
+					<depth value="6.91" />
+					<temp value="15.00" />
+					<deco depth="0.00" type="ndl" duration="0" />
+				</sample>
+				<sample time="60">
+					<depth value="4.74" />
+					<temp value="15.00" />
+					<deco depth="0.00" type="ndl" duration="0" />
+				</sample>
+				<sample time="62">
+					<depth value="3.26" />
+					<temp value="15.00" />
+					<deco depth="0.00" type="ndl" duration="0" />
+				</sample>
+				<sample time="64">
+					<depth value="1.70" />
+					<temp value="15.00" />
+					<deco depth="0.00" type="ndl" duration="0" />
+				</sample>
+				<sample time="66">
+					<depth value="0.12" />
+					<temp value="15.00" />
+					<event type="surface" duration="0" />
+					<event type="surface" duration="0" />
+					<deco depth="0.00" type="ndl" duration="0" />
+				</sample>
+			</samples>
+		</dive>
+		<dive number="18" date="2017-01-23" time="14:15:00" duration="73" mode="freedive">
+			<fingerprint>E10701170E0F00</fingerprint>
+			<depth max="10.20" />
+			<samples>
+				<sample time="0">
+					<depth value="1.48" />
+					<temp value="15.00" />
+					<event type="surface" duration="0" />
+					<deco depth="0.00" type="ndl" duration="0" />
+				</sample>
+				<sample time="2">
+					<depth value="2.64" />
+					<temp value="15.00" />
+					<deco depth="0.00" type="ndl" duration="0" />
+				</sample>
+				<sample time="4">
+					<depth value="3.63" />
+					<temp value="15.00" />
+					<deco depth="0.00" type="ndl" duration="0" />
+				</sample>
+				<sample time="6">
+					<depth value="4.44" />
+					<temp value="15.00" />
+					<deco depth="0.00" type="ndl" duration="0" />
+				</sample>
+				<sample time="8">
+					<depth value="5.33" />
+					<temp value="15.00" />
+					<deco depth="0.00" type="ndl" duration="0" />
+				</sample>
+				<sample time="10">
+					<depth value="5.93" />
+					<temp value="15.00" />
+					<deco depth="0.00" type="ndl" duration="0" />
+				</sample>
+				<sample time="12">
+					<depth value="6.54" />
+					<temp value="15.00" />
+					<deco depth="0.00" type="ndl" duration="0" />
+				</sample>
+				<sample time="14">
+					<depth value="7.07" />
+					<temp value="15.00" />
+					<deco depth="0.00" type="ndl" duration="0" />
+				</sample>
+				<sample time="16">
+					<depth value="7.57" />
+					<temp value="15.00" />
+					<deco depth="0.00" type="ndl" duration="0" />
+				</sample>
+				<sample time="18">
+					<depth value="8.07" />
+					<temp value="15.00" />
+					<deco depth="0.00" type="ndl" duration="0" />
+				</sample>
+				<sample time="20">
+					<depth value="8.59" />
+					<temp value="15.00" />
+					<deco depth="0.00" type="ndl" duration="0" />
+				</sample>
+				<sample time="22">
+					<depth value="8.98" />
+					<temp value="15.00" />
+					<deco depth="0.00" type="ndl" duration="0" />
+				</sample>
+				<sample time="24">
+					<depth value="9.68" />
+					<temp value="15.00" />
+					<deco depth="0.00" type="ndl" duration="0" />
+				</sample>
+				<sample time="26">
+					<depth value="10.05" />
+					<temp value="15.00" />
+					<deco depth="0.00" type="ndl" duration="0" />
+				</sample>
+				<sample time="28">
+					<depth value="10.18" />
+					<temp value="15.00" />
+					<deco depth="0.00" type="ndl" duration="0" />
+				</sample>
+				<sample time="30">
+					<depth value="10.18" />
+					<temp value="15.00" />
+					<deco depth="0.00" type="ndl" duration="0" />
+				</sample>
+				<sample time="32">
+					<depth value="10.19" />
+					<temp value="15.00" />
+					<deco depth="0.00" type="ndl" duration="0" />
+				</sample>
+				<sample time="34">
+					<depth value="10.18" />
+					<temp value="15.00" />
+					<deco depth="0.00" type="ndl" duration="0" />
+				</sample>
+				<sample time="36">
+					<depth value="9.88" />
+					<temp value="15.00" />
+					<deco depth="0.00" type="ndl" duration="0" />
+				</sample>
+				<sample time="38">
+					<depth value="9.66" />
+					<temp value="15.00" />
+					<deco depth="0.00" type="ndl" duration="0" />
+				</sample>
+				<sample time="40">
+					<depth value="9.58" />
+					<temp value="15.00" />
+					<deco depth="0.00" type="ndl" duration="0" />
+				</sample>
+				<sample time="42">
+					<depth value="9.79" />
+					<temp value="15.00" />
+					<deco depth="0.00" type="ndl" duration="0" />
+				</sample>
+				<sample time="44">
+					<depth value="9.88" />
+					<temp value="15.00" />
+					<deco depth="0.00" type="ndl" duration="0" />
+				</sample>
+				<sample time="46">
+					<depth value="9.39" />
+					<temp value="15.00" />
+					<deco depth="0.00" type="ndl" duration="0" />
+				</sample>
+				<sample time="48">
+					<depth value="9.01" />
+					<temp value="15.00" />
+					<deco depth="0.00" type="ndl" duration="0" />
+				</sample>
+				<sample time="50">
+					<depth value="8.93" />
+					<temp value="15.00" />
+					<deco depth="0.00" type="ndl" duration="0" />
+				</sample>
+				<sample time="52">
+					<depth value="8.91" />
+					<temp value="15.00" />
+					<deco depth="0.00" type="ndl" duration="0" />
+				</sample>
+				<sample time="54">
+					<depth value="8.96" />
+					<temp value="15.00" />
+					<deco depth="0.00" type="ndl" duration="0" />
+				</sample>
+				<sample time="56">
+					<depth value="9.04" />
+					<temp value="15.00" />
+					<deco depth="0.00" type="ndl" duration="0" />
+				</sample>
+				<sample time="58">
+					<depth value="8.80" />
+					<temp value="15.00" />
+					<deco depth="0.00" type="ndl" duration="0" />
+				</sample>
+				<sample time="60">
+					<depth value="7.70" />
+					<temp value="15.00" />
+					<deco depth="0.00" type="ndl" duration="0" />
+				</sample>
+				<sample time="62">
+					<depth value="7.51" />
+					<temp value="15.00" />
+					<deco depth="0.00" type="ndl" duration="0" />
+				</sample>
+				<sample time="64">
+					<depth value="6.50" />
+					<temp value="15.00" />
+					<deco depth="0.00" type="ndl" duration="0" />
+				</sample>
+				<sample time="66">
+					<depth value="5.27" />
+					<temp value="15.00" />
+					<deco depth="0.00" type="ndl" duration="0" />
+				</sample>
+				<sample time="68">
+					<depth value="3.80" />
+					<temp value="15.00" />
+					<deco depth="0.00" type="ndl" duration="0" />
+				</sample>
+				<sample time="70">
+					<depth value="2.36" />
+					<temp value="15.00" />
+					<deco depth="0.00" type="ndl" duration="0" />
+				</sample>
+				<sample time="72">
+					<depth value="0.67" />
+					<temp value="15.00" />
+					<event type="surface" duration="1" />
+					<event type="surface" duration="1" />
+					<deco depth="0.00" type="ndl" duration="0" />
+				</sample>
+			</samples>
+		</dive>
+		<dive number="19" date="2017-01-23" time="14:11:17" duration="75" mode="freedive">
+			<fingerprint>E10701170E0B11</fingerprint>
+			<depth max="8.97" />
+			<samples>
+				<sample time="0">
+					<depth value="2.02" />
+					<temp value="15.00" />
+					<event type="surface" duration="0" />
+					<deco depth="0.00" type="ndl" duration="0" />
+				</sample>
+				<sample time="2">
+					<depth value="3.38" />
+					<temp value="15.00" />
+					<deco depth="0.00" type="ndl" duration="0" />
+				</sample>
+				<sample time="4">
+					<depth value="4.65" />
+					<temp value="15.00" />
+					<deco depth="0.00" type="ndl" duration="0" />
+				</sample>
+				<sample time="6">
+					<depth value="5.22" />
+					<temp value="15.00" />
+					<deco depth="0.00" type="ndl" duration="0" />
+				</sample>
+				<sample time="8">
+					<depth value="5.62" />
+					<temp value="15.00" />
+					<deco depth="0.00" type="ndl" duration="0" />
+				</sample>
+				<sample time="10">
+					<depth value="6.07" />
+					<temp value="15.00" />
+					<deco depth="0.00" type="ndl" duration="0" />
+				</sample>
+				<sample time="12">
+					<depth value="6.32" />
+					<temp value="15.00" />
+					<deco depth="0.00" type="ndl" duration="0" />
+				</sample>
+				<sample time="14">
+					<depth value="6.64" />
+					<temp value="15.00" />
+					<deco depth="0.00" type="ndl" duration="0" />
+				</sample>
+				<sample time="16">
+					<depth value="6.79" />
+					<temp value="15.00" />
+					<deco depth="0.00" type="ndl" duration="0" />
+				</sample>
+				<sample time="18">
+					<depth value="7.14" />
+					<temp value="15.00" />
+					<deco depth="0.00" type="ndl" duration="0" />
+				</sample>
+				<sample time="20">
+					<depth value="7.26" />
+					<temp value="15.00" />
+					<deco depth="0.00" type="ndl" duration="0" />
+				</sample>
+				<sample time="22">
+					<depth value="7.68" />
+					<temp value="15.00" />
+					<deco depth="0.00" type="ndl" duration="0" />
+				</sample>
+				<sample time="24">
+					<depth value="7.93" />
+					<temp value="15.00" />
+					<deco depth="0.00" type="ndl" duration="0" />
+				</sample>
+				<sample time="26">
+					<depth value="8.27" />
+					<temp value="15.00" />
+					<deco depth="0.00" type="ndl" duration="0" />
+				</sample>
+				<sample time="28">
+					<depth value="8.34" />
+					<temp value="15.00" />
+					<deco depth="0.00" type="ndl" duration="0" />
+				</sample>
+				<sample time="30">
+					<depth value="8.64" />
+					<temp value="15.00" />
+					<deco depth="0.00" type="ndl" duration="0" />
+				</sample>
+				<sample time="32">
+					<depth value="8.90" />
+					<temp value="15.00" />
+					<deco depth="0.00" type="ndl" duration="0" />
+				</sample>
+				<sample time="34">
+					<depth value="8.95" />
+					<temp value="15.00" />
+					<deco depth="0.00" type="ndl" duration="0" />
+				</sample>
+				<sample time="36">
+					<depth value="8.76" />
+					<temp value="15.00" />
+					<deco depth="0.00" type="ndl" duration="0" />
+				</sample>
+				<sample time="38">
+					<depth value="8.70" />
+					<temp value="15.00" />
+					<deco depth="0.00" type="ndl" duration="0" />
+				</sample>
+				<sample time="40">
+					<depth value="8.66" />
+					<temp value="15.00" />
+					<deco depth="0.00" type="ndl" duration="0" />
+				</sample>
+				<sample time="42">
+					<depth value="8.44" />
+					<temp value="15.00" />
+					<deco depth="0.00" type="ndl" duration="0" />
+				</sample>
+				<sample time="44">
+					<depth value="8.27" />
+					<temp value="15.00" />
+					<deco depth="0.00" type="ndl" duration="0" />
+				</sample>
+				<sample time="46">
+					<depth value="7.98" />
+					<temp value="15.00" />
+					<deco depth="0.00" type="ndl" duration="0" />
+				</sample>
+				<sample time="48">
+					<depth value="7.89" />
+					<temp value="15.00" />
+					<deco depth="0.00" type="ndl" duration="0" />
+				</sample>
+				<sample time="50">
+					<depth value="7.76" />
+					<temp value="15.00" />
+					<deco depth="0.00" type="ndl" duration="0" />
+				</sample>
+				<sample time="52">
+					<depth value="7.64" />
+					<temp value="15.00" />
+					<deco depth="0.00" type="ndl" duration="0" />
+				</sample>
+				<sample time="54">
+					<depth value="7.72" />
+					<temp value="15.00" />
+					<deco depth="0.00" type="ndl" duration="0" />
+				</sample>
+				<sample time="56">
+					<depth value="7.70" />
+					<temp value="15.00" />
+					<deco depth="0.00" type="ndl" duration="0" />
+				</sample>
+				<sample time="58">
+					<depth value="7.57" />
+					<temp value="15.00" />
+					<deco depth="0.00" type="ndl" duration="0" />
+				</sample>
+				<sample time="60">
+					<depth value="7.62" />
+					<temp value="15.00" />
+					<deco depth="0.00" type="ndl" duration="0" />
+				</sample>
+				<sample time="62">
+					<depth value="7.47" />
+					<temp value="15.00" />
+					<deco depth="0.00" type="ndl" duration="0" />
+				</sample>
+				<sample time="64">
+					<depth value="7.13" />
+					<temp value="15.00" />
+					<deco depth="0.00" type="ndl" duration="0" />
+				</sample>
+				<sample time="66">
+					<depth value="6.50" />
+					<temp value="15.00" />
+					<deco depth="0.00" type="ndl" duration="0" />
+				</sample>
+				<sample time="68">
+					<depth value="5.41" />
+					<temp value="15.00" />
+					<deco depth="0.00" type="ndl" duration="0" />
+				</sample>
+				<sample time="70">
+					<depth value="4.08" />
+					<temp value="15.00" />
+					<deco depth="0.00" type="ndl" duration="0" />
+				</sample>
+				<sample time="72">
+					<depth value="2.29" />
+					<temp value="15.00" />
+					<deco depth="0.00" type="ndl" duration="0" />
+				</sample>
+				<sample time="74">
+					<depth value="0.62" />
+					<temp value="15.00" />
+					<event type="surface" duration="1" />
+					<event type="surface" duration="1" />
+					<deco depth="0.00" type="ndl" duration="0" />
+				</sample>
+			</samples>
+		</dive>
+		<dive number="20" date="2017-01-23" time="14:08:10" duration="53" mode="freedive">
+			<fingerprint>E10701170E080A</fingerprint>
+			<depth max="7.41" />
+			<samples>
+				<sample time="0">
+					<depth value="1.82" />
+					<temp value="15.00" />
+					<event type="surface" duration="0" />
+					<deco depth="0.00" type="ndl" duration="0" />
+				</sample>
+				<sample time="2">
+					<depth value="3.21" />
+					<temp value="15.00" />
+					<deco depth="0.00" type="ndl" duration="0" />
+				</sample>
+				<sample time="4">
+					<depth value="4.09" />
+					<temp value="15.00" />
+					<deco depth="0.00" type="ndl" duration="0" />
+				</sample>
+				<sample time="6">
+					<depth value="5.17" />
+					<temp value="15.00" />
+					<deco depth="0.00" type="ndl" duration="0" />
+				</sample>
+				<sample time="8">
+					<depth value="5.84" />
+					<temp value="15.00" />
+					<deco depth="0.00" type="ndl" duration="0" />
+				</sample>
+				<sample time="10">
+					<depth value="6.15" />
+					<temp value="15.00" />
+					<deco depth="0.00" type="ndl" duration="0" />
+				</sample>
+				<sample time="12">
+					<depth value="6.87" />
+					<temp value="15.00" />
+					<deco depth="0.00" type="ndl" duration="0" />
+				</sample>
+				<sample time="14">
+					<depth value="7.10" />
+					<temp value="15.00" />
+					<deco depth="0.00" type="ndl" duration="0" />
+				</sample>
+				<sample time="16">
+					<depth value="7.31" />
+					<temp value="15.00" />
+					<deco depth="0.00" type="ndl" duration="0" />
+				</sample>
+				<sample time="18">
+					<depth value="7.38" />
+					<temp value="15.00" />
+					<deco depth="0.00" type="ndl" duration="0" />
+				</sample>
+				<sample time="20">
+					<depth value="7.17" />
+					<temp value="15.00" />
+					<deco depth="0.00" type="ndl" duration="0" />
+				</sample>
+				<sample time="22">
+					<depth value="7.16" />
+					<temp value="15.00" />
+					<deco depth="0.00" type="ndl" duration="0" />
+				</sample>
+				<sample time="24">
+					<depth value="6.90" />
+					<temp value="15.00" />
+					<deco depth="0.00" type="ndl" duration="0" />
+				</sample>
+				<sample time="26">
+					<depth value="6.77" />
+					<temp value="15.00" />
+					<deco depth="0.00" type="ndl" duration="0" />
+				</sample>
+				<sample time="28">
+					<depth value="6.94" />
+					<temp value="15.00" />
+					<deco depth="0.00" type="ndl" duration="0" />
+				</sample>
+				<sample time="30">
+					<depth value="6.92" />
+					<temp value="15.00" />
+					<deco depth="0.00" type="ndl" duration="0" />
+				</sample>
+				<sample time="32">
+					<depth value="6.83" />
+					<temp value="15.00" />
+					<deco depth="0.00" type="ndl" duration="0" />
+				</sample>
+				<sample time="34">
+					<depth value="6.75" />
+					<temp value="15.00" />
+					<deco depth="0.00" type="ndl" duration="0" />
+				</sample>
+				<sample time="36">
+					<depth value="6.14" />
+					<temp value="15.00" />
+					<deco depth="0.00" type="ndl" duration="0" />
+				</sample>
+				<sample time="38">
+					<depth value="5.78" />
+					<temp value="15.00" />
+					<deco depth="0.00" type="ndl" duration="0" />
+				</sample>
+				<sample time="40">
+					<depth value="5.67" />
+					<temp value="15.00" />
+					<deco depth="0.00" type="ndl" duration="0" />
+				</sample>
+				<sample time="42">
+					<depth value="5.25" />
+					<temp value="15.00" />
+					<deco depth="0.00" type="ndl" duration="0" />
+				</sample>
+				<sample time="44">
+					<depth value="4.39" />
+					<temp value="15.00" />
+					<deco depth="0.00" type="ndl" duration="0" />
+				</sample>
+				<sample time="46">
+					<depth value="3.31" />
+					<temp value="15.00" />
+					<deco depth="0.00" type="ndl" duration="0" />
+				</sample>
+				<sample time="48">
+					<depth value="2.02" />
+					<temp value="15.00" />
+					<deco depth="0.00" type="ndl" duration="0" />
+				</sample>
+				<sample time="50">
+					<depth value="0.98" />
+					<temp value="15.00" />
+					<event type="surface" duration="1" />
+					<deco depth="0.00" type="ndl" duration="0" />
+				</sample>
+				<sample time="52">
+					<depth value="0.51" />
+					<temp value="15.00" />
+					<event type="surface" duration="1" />
+					<deco depth="0.00" type="ndl" duration="0" />
+				</sample>
+			</samples>
+		</dive>
+		<dive number="21" date="2017-01-23" time="14:04:28" duration="65" mode="freedive">
+			<fingerprint>E10701170E041C</fingerprint>
+			<depth max="7.68" />
+			<samples>
+				<sample time="0">
+					<depth value="1.54" />
+					<temp value="15.00" />
+					<event type="surface" duration="0" />
+					<deco depth="0.00" type="ndl" duration="0" />
+				</sample>
+				<sample time="2">
+					<depth value="2.15" />
+					<temp value="15.00" />
+					<deco depth="0.00" type="ndl" duration="0" />
+				</sample>
+				<sample time="4">
+					<depth value="3.67" />
+					<temp value="15.00" />
+					<deco depth="0.00" type="ndl" duration="0" />
+				</sample>
+				<sample time="6">
+					<depth value="4.40" />
+					<temp value="15.00" />
+					<deco depth="0.00" type="ndl" duration="0" />
+				</sample>
+				<sample time="8">
+					<depth value="5.34" />
+					<temp value="15.00" />
+					<deco depth="0.00" type="ndl" duration="0" />
+				</sample>
+				<sample time="10">
+					<depth value="5.60" />
+					<temp value="15.00" />
+					<deco depth="0.00" type="ndl" duration="0" />
+				</sample>
+				<sample time="12">
+					<depth value="6.36" />
+					<temp value="15.00" />
+					<deco depth="0.00" type="ndl" duration="0" />
+				</sample>
+				<sample time="14">
+					<depth value="7.00" />
+					<temp value="15.00" />
+					<deco depth="0.00" type="ndl" duration="0" />
+				</sample>
+				<sample time="16">
+					<depth value="7.21" />
+					<temp value="15.00" />
+					<deco depth="0.00" type="ndl" duration="0" />
+				</sample>
+				<sample time="18">
+					<depth value="7.34" />
+					<temp value="15.00" />
+					<deco depth="0.00" type="ndl" duration="0" />
+				</sample>
+				<sample time="20">
+					<depth value="7.35" />
+					<temp value="15.00" />
+					<deco depth="0.00" type="ndl" duration="0" />
+				</sample>
+				<sample time="22">
+					<depth value="7.27" />
+					<temp value="15.00" />
+					<deco depth="0.00" type="ndl" duration="0" />
+				</sample>
+				<sample time="24">
+					<depth value="7.35" />
+					<temp value="15.00" />
+					<deco depth="0.00" type="ndl" duration="0" />
+				</sample>
+				<sample time="26">
+					<depth value="7.37" />
+					<temp value="15.00" />
+					<deco depth="0.00" type="ndl" duration="0" />
+				</sample>
+				<sample time="28">
+					<depth value="7.37" />
+					<temp value="15.00" />
+					<deco depth="0.00" type="ndl" duration="0" />
+				</sample>
+				<sample time="30">
+					<depth value="7.23" />
+					<temp value="15.00" />
+					<deco depth="0.00" type="ndl" duration="0" />
+				</sample>
+				<sample time="32">
+					<depth value="7.26" />
+					<temp value="15.00" />
+					<deco depth="0.00" type="ndl" duration="0" />
+				</sample>
+				<sample time="34">
+					<depth value="7.37" />
+					<temp value="15.00" />
+					<deco depth="0.00" type="ndl" duration="0" />
+				</sample>
+				<sample time="36">
+					<depth value="7.49" />
+					<temp value="15.00" />
+					<deco depth="0.00" type="ndl" duration="0" />
+				</sample>
+				<sample time="38">
+					<depth value="7.58" />
+					<temp value="15.00" />
+					<deco depth="0.00" type="ndl" duration="0" />
+				</sample>
+				<sample time="40">
+					<depth value="7.62" />
+					<temp value="15.00" />
+					<deco depth="0.00" type="ndl" duration="0" />
+				</sample>
+				<sample time="42">
+					<depth value="7.68" />
+					<temp value="15.00" />
+					<deco depth="0.00" type="ndl" duration="0" />
+				</sample>
+				<sample time="44">
+					<depth value="7.57" />
+					<temp value="15.00" />
+					<deco depth="0.00" type="ndl" duration="0" />
+				</sample>
+				<sample time="46">
+					<depth value="7.46" />
+					<temp value="15.00" />
+					<deco depth="0.00" type="ndl" duration="0" />
+				</sample>
+				<sample time="48">
+					<depth value="7.36" />
+					<temp value="15.00" />
+					<deco depth="0.00" type="ndl" duration="0" />
+				</sample>
+				<sample time="50">
+					<depth value="7.16" />
+					<temp value="15.00" />
+					<deco depth="0.00" type="ndl" duration="0" />
+				</sample>
+				<sample time="52">
+					<depth value="6.86" />
+					<temp value="15.00" />
+					<deco depth="0.00" type="ndl" duration="0" />
+				</sample>
+				<sample time="54">
+					<depth value="6.62" />
+					<temp value="15.00" />
+					<deco depth="0.00" type="ndl" duration="0" />
+				</sample>
+				<sample time="56">
+					<depth value="6.44" />
+					<temp value="15.00" />
+					<deco depth="0.00" type="ndl" duration="0" />
+				</sample>
+				<sample time="58">
+					<depth value="5.39" />
+					<temp value="15.00" />
+					<deco depth="0.00" type="ndl" duration="0" />
+				</sample>
+				<sample time="60">
+					<depth value="3.94" />
+					<temp value="15.00" />
+					<deco depth="0.00" type="ndl" duration="0" />
+				</sample>
+				<sample time="62">
+					<depth value="2.26" />
+					<temp value="15.00" />
+					<deco depth="0.00" type="ndl" duration="0" />
+				</sample>
+				<sample time="64">
+					<depth value="0.60" />
+					<temp value="15.00" />
+					<event type="surface" duration="0" />
+					<event type="surface" duration="1" />
+					<deco depth="0.00" type="ndl" duration="0" />
+				</sample>
+			</samples>
+		</dive>
+		<dive number="22" date="2017-01-23" time="14:00:38" duration="73" mode="freedive">
+			<fingerprint>E10701170E0026</fingerprint>
+			<depth max="7.51" />
+			<samples>
+				<sample time="0">
+					<depth value="1.85" />
+					<temp value="15.00" />
+					<event type="surface" duration="0" />
+					<deco depth="0.00" type="ndl" duration="0" />
+				</sample>
+				<sample time="2">
+					<depth value="2.27" />
+					<temp value="15.00" />
+					<deco depth="0.00" type="ndl" duration="0" />
+				</sample>
+				<sample time="4">
+					<depth value="3.14" />
+					<temp value="15.00" />
+					<deco depth="0.00" type="ndl" duration="0" />
+				</sample>
+				<sample time="6">
+					<depth value="3.90" />
+					<temp value="15.00" />
+					<deco depth="0.00" type="ndl" duration="0" />
+				</sample>
+				<sample time="8">
+					<depth value="4.77" />
+					<temp value="15.00" />
+					<deco depth="0.00" type="ndl" duration="0" />
+				</sample>
+				<sample time="10">
+					<depth value="5.30" />
+					<temp value="15.00" />
+					<deco depth="0.00" type="ndl" duration="0" />
+				</sample>
+				<sample time="12">
+					<depth value="5.63" />
+					<temp value="15.00" />
+					<deco depth="0.00" type="ndl" duration="0" />
+				</sample>
+				<sample time="14">
+					<depth value="6.33" />
+					<temp value="15.00" />
+					<deco depth="0.00" type="ndl" duration="0" />
+				</sample>
+				<sample time="16">
+					<depth value="6.63" />
+					<temp value="15.00" />
+					<deco depth="0.00" type="ndl" duration="0" />
+				</sample>
+				<sample time="18">
+					<depth value="6.92" />
+					<temp value="15.00" />
+					<deco depth="0.00" type="ndl" duration="0" />
+				</sample>
+				<sample time="20">
+					<depth value="7.10" />
+					<temp value="15.00" />
+					<deco depth="0.00" type="ndl" duration="0" />
+				</sample>
+				<sample time="22">
+					<depth value="7.26" />
+					<temp value="15.00" />
+					<deco depth="0.00" type="ndl" duration="0" />
+				</sample>
+				<sample time="24">
+					<depth value="7.20" />
+					<temp value="15.00" />
+					<deco depth="0.00" type="ndl" duration="0" />
+				</sample>
+				<sample time="26">
+					<depth value="7.27" />
+					<temp value="15.00" />
+					<deco depth="0.00" type="ndl" duration="0" />
+				</sample>
+				<sample time="28">
+					<depth value="7.26" />
+					<temp value="15.00" />
+					<deco depth="0.00" type="ndl" duration="0" />
+				</sample>
+				<sample time="30">
+					<depth value="7.34" />
+					<temp value="15.00" />
+					<deco depth="0.00" type="ndl" duration="0" />
+				</sample>
+				<sample time="32">
+					<depth value="7.39" />
+					<temp value="15.00" />
+					<deco depth="0.00" type="ndl" duration="0" />
+				</sample>
+				<sample time="34">
+					<depth value="7.35" />
+					<temp value="15.00" />
+					<deco depth="0.00" type="ndl" duration="0" />
+				</sample>
+				<sample time="36">
+					<depth value="7.29" />
+					<temp value="15.00" />
+					<deco depth="0.00" type="ndl" duration="0" />
+				</sample>
+				<sample time="38">
+					<depth value="7.28" />
+					<temp value="15.00" />
+					<deco depth="0.00" type="ndl" duration="0" />
+				</sample>
+				<sample time="40">
+					<depth value="7.37" />
+					<temp value="15.00" />
+					<deco depth="0.00" type="ndl" duration="0" />
+				</sample>
+				<sample time="42">
+					<depth value="7.37" />
+					<temp value="15.00" />
+					<deco depth="0.00" type="ndl" duration="0" />
+				</sample>
+				<sample time="44">
+					<depth value="7.43" />
+					<temp value="15.00" />
+					<deco depth="0.00" type="ndl" duration="0" />
+				</sample>
+				<sample time="46">
+					<depth value="7.44" />
+					<temp value="15.00" />
+					<deco depth="0.00" type="ndl" duration="0" />
+				</sample>
+				<sample time="48">
+					<depth value="7.39" />
+					<temp value="15.00" />
+					<deco depth="0.00" type="ndl" duration="0" />
+				</sample>
+				<sample time="50">
+					<depth value="7.37" />
+					<temp value="15.00" />
+					<deco depth="0.00" type="ndl" duration="0" />
+				</sample>
+				<sample time="52">
+					<depth value="7.46" />
+					<temp value="15.00" />
+					<deco depth="0.00" type="ndl" duration="0" />
+				</sample>
+				<sample time="54">
+					<depth value="7.51" />
+					<temp value="15.00" />
+					<deco depth="0.00" type="ndl" duration="0" />
+				</sample>
+				<sample time="56">
+					<depth value="7.42" />
+					<temp value="15.00" />
+					<deco depth="0.00" type="ndl" duration="0" />
+				</sample>
+				<sample time="58">
+					<depth value="7.16" />
+					<temp value="15.00" />
+					<deco depth="0.00" type="ndl" duration="0" />
+				</sample>
+				<sample time="60">
+					<depth value="6.26" />
+					<temp value="15.00" />
+					<deco depth="0.00" type="ndl" duration="0" />
+				</sample>
+				<sample time="62">
+					<depth value="5.34" />
+					<temp value="15.00" />
+					<deco depth="0.00" type="ndl" duration="0" />
+				</sample>
+				<sample time="64">
+					<depth value="4.64" />
+					<temp value="15.00" />
+					<deco depth="0.00" type="ndl" duration="0" />
+				</sample>
+				<sample time="66">
+					<depth value="3.59" />
+					<temp value="15.00" />
+					<deco depth="0.00" type="ndl" duration="0" />
+				</sample>
+				<sample time="68">
+					<depth value="2.49" />
+					<temp value="15.00" />
+					<deco depth="0.00" type="ndl" duration="0" />
+				</sample>
+				<sample time="70">
+					<depth value="1.65" />
+					<temp value="15.00" />
+					<deco depth="0.00" type="ndl" duration="0" />
+				</sample>
+				<sample time="72">
+					<depth value="0.51" />
+					<temp value="15.00" />
+					<event type="surface" duration="0" />
+					<event type="surface" duration="1" />
+					<deco depth="0.00" type="ndl" duration="0" />
+				</sample>
+			</samples>
+		</dive>
+		<dive number="23" date="2017-01-23" time="13:49:52" duration="78" mode="freedive">
+			<fingerprint>E10701170D3134</fingerprint>
+			<depth max="7.83" />
+			<samples>
+				<sample time="0">
+					<depth value="1.64" />
+					<temp value="15.00" />
+					<event type="surface" duration="0" />
+					<deco depth="0.00" type="ndl" duration="0" />
+				</sample>
+				<sample time="2">
+					<depth value="2.40" />
+					<temp value="15.00" />
+					<deco depth="0.00" type="ndl" duration="0" />
+				</sample>
+				<sample time="4">
+					<depth value="3.40" />
+					<temp value="15.00" />
+					<deco depth="0.00" type="ndl" duration="0" />
+				</sample>
+				<sample time="6">
+					<depth value="4.65" />
+					<temp value="15.00" />
+					<deco depth="0.00" type="ndl" duration="0" />
+				</sample>
+				<sample time="8">
+					<depth value="5.49" />
+					<temp value="15.00" />
+					<deco depth="0.00" type="ndl" duration="0" />
+				</sample>
+				<sample time="10">
+					<depth value="6.06" />
+					<temp value="15.00" />
+					<deco depth="0.00" type="ndl" duration="0" />
+				</sample>
+				<sample time="12">
+					<depth value="6.56" />
+					<temp value="15.00" />
+					<deco depth="0.00" type="ndl" duration="0" />
+				</sample>
+				<sample time="14">
+					<depth value="6.85" />
+					<temp value="15.00" />
+					<deco depth="0.00" type="ndl" duration="0" />
+				</sample>
+				<sample time="16">
+					<depth value="7.19" />
+					<temp value="15.00" />
+					<deco depth="0.00" type="ndl" duration="0" />
+				</sample>
+				<sample time="18">
+					<depth value="7.19" />
+					<temp value="15.00" />
+					<deco depth="0.00" type="ndl" duration="0" />
+				</sample>
+				<sample time="20">
+					<depth value="7.21" />
+					<temp value="15.00" />
+					<deco depth="0.00" type="ndl" duration="0" />
+				</sample>
+				<sample time="22">
+					<depth value="7.17" />
+					<temp value="15.00" />
+					<deco depth="0.00" type="ndl" duration="0" />
+				</sample>
+				<sample time="24">
+					<depth value="7.15" />
+					<temp value="15.00" />
+					<deco depth="0.00" type="ndl" duration="0" />
+				</sample>
+				<sample time="26">
+					<depth value="7.11" />
+					<temp value="15.00" />
+					<deco depth="0.00" type="ndl" duration="0" />
+				</sample>
+				<sample time="28">
+					<depth value="7.10" />
+					<temp value="15.00" />
+					<deco depth="0.00" type="ndl" duration="0" />
+				</sample>
+				<sample time="30">
+					<depth value="7.26" />
+					<temp value="15.00" />
+					<deco depth="0.00" type="ndl" duration="0" />
+				</sample>
+				<sample time="32">
+					<depth value="7.33" />
+					<temp value="15.00" />
+					<deco depth="0.00" type="ndl" duration="0" />
+				</sample>
+				<sample time="34">
+					<depth value="7.41" />
+					<temp value="15.00" />
+					<deco depth="0.00" type="ndl" duration="0" />
+				</sample>
+				<sample time="36">
+					<depth value="7.54" />
+					<temp value="15.00" />
+					<deco depth="0.00" type="ndl" duration="0" />
+				</sample>
+				<sample time="38">
+					<depth value="7.78" />
+					<temp value="15.00" />
+					<deco depth="0.00" type="ndl" duration="0" />
+				</sample>
+				<sample time="40">
+					<depth value="7.80" />
+					<temp value="15.00" />
+					<deco depth="0.00" type="ndl" duration="0" />
+				</sample>
+				<sample time="42">
+					<depth value="7.79" />
+					<temp value="15.00" />
+					<deco depth="0.00" type="ndl" duration="0" />
+				</sample>
+				<sample time="44">
+					<depth value="7.82" />
+					<temp value="15.00" />
+					<deco depth="0.00" type="ndl" duration="0" />
+				</sample>
+				<sample time="46">
+					<depth value="7.77" />
+					<temp value="15.00" />
+					<deco depth="0.00" type="ndl" duration="0" />
+				</sample>
+				<sample time="48">
+					<depth value="7.71" />
+					<temp value="15.00" />
+					<deco depth="0.00" type="ndl" duration="0" />
+				</sample>
+				<sample time="50">
+					<depth value="7.65" />
+					<temp value="15.00" />
+					<deco depth="0.00" type="ndl" duration="0" />
+				</sample>
+				<sample time="52">
+					<depth value="7.58" />
+					<temp value="15.00" />
+					<deco depth="0.00" type="ndl" duration="0" />
+				</sample>
+				<sample time="54">
+					<depth value="7.70" />
+					<temp value="15.00" />
+					<deco depth="0.00" type="ndl" duration="0" />
+				</sample>
+				<sample time="56">
+					<depth value="7.71" />
+					<temp value="15.00" />
+					<deco depth="0.00" type="ndl" duration="0" />
+				</sample>
+				<sample time="58">
+					<depth value="7.72" />
+					<temp value="15.00" />
+					<deco depth="0.00" type="ndl" duration="0" />
+				</sample>
+				<sample time="60">
+					<depth value="7.74" />
+					<temp value="15.00" />
+					<deco depth="0.00" type="ndl" duration="0" />
+				</sample>
+				<sample time="62">
+					<depth value="7.48" />
+					<temp value="15.00" />
+					<deco depth="0.00" type="ndl" duration="0" />
+				</sample>
+				<sample time="64">
+					<depth value="7.68" />
+					<temp value="15.00" />
+					<deco depth="0.00" type="ndl" duration="0" />
+				</sample>
+				<sample time="66">
+					<depth value="7.60" />
+					<temp value="15.00" />
+					<deco depth="0.00" type="ndl" duration="0" />
+				</sample>
+				<sample time="68">
+					<depth value="7.18" />
+					<temp value="15.00" />
+					<deco depth="0.00" type="ndl" duration="0" />
+				</sample>
+				<sample time="70">
+					<depth value="6.23" />
+					<temp value="15.00" />
+					<deco depth="0.00" type="ndl" duration="0" />
+				</sample>
+				<sample time="72">
+					<depth value="4.88" />
+					<temp value="15.00" />
+					<deco depth="0.00" type="ndl" duration="0" />
+				</sample>
+				<sample time="74">
+					<depth value="3.52" />
+					<temp value="15.00" />
+					<deco depth="0.00" type="ndl" duration="0" />
+				</sample>
+				<sample time="76">
+					<depth value="2.03" />
+					<temp value="15.00" />
+					<deco depth="0.00" type="ndl" duration="0" />
+				</sample>
+				<sample time="78">
+					<depth value="0.42" />
+					<temp value="15.00" />
+					<event type="surface" duration="0" />
+					<event type="surface" duration="0" />
+					<deco depth="0.00" type="ndl" duration="0" />
+				</sample>
+			</samples>
+		</dive>
+		<dive number="24" date="2017-01-23" time="13:41:38" duration="61" mode="freedive">
+			<fingerprint>E10701170D2926</fingerprint>
+			<depth max="7.36" />
+			<samples>
+				<sample time="0">
+					<depth value="1.22" />
+					<temp value="15.00" />
+					<event type="surface" duration="0" />
+					<deco depth="0.00" type="ndl" duration="0" />
+				</sample>
+				<sample time="2">
+					<depth value="2.11" />
+					<temp value="15.00" />
+					<deco depth="0.00" type="ndl" duration="0" />
+				</sample>
+				<sample time="4">
+					<depth value="3.58" />
+					<temp value="15.00" />
+					<deco depth="0.00" type="ndl" duration="0" />
+				</sample>
+				<sample time="6">
+					<depth value="4.53" />
+					<temp value="15.00" />
+					<deco depth="0.00" type="ndl" duration="0" />
+				</sample>
+				<sample time="8">
+					<depth value="4.94" />
+					<temp value="15.00" />
+					<deco depth="0.00" type="ndl" duration="0" />
+				</sample>
+				<sample time="10">
+					<depth value="5.57" />
+					<temp value="15.00" />
+					<deco depth="0.00" type="ndl" duration="0" />
+				</sample>
+				<sample time="12">
+					<depth value="6.15" />
+					<temp value="15.00" />
+					<deco depth="0.00" type="ndl" duration="0" />
+				</sample>
+				<sample time="14">
+					<depth value="6.41" />
+					<temp value="15.00" />
+					<deco depth="0.00" type="ndl" duration="0" />
+				</sample>
+				<sample time="16">
+					<depth value="6.89" />
+					<temp value="15.00" />
+					<deco depth="0.00" type="ndl" duration="0" />
+				</sample>
+				<sample time="18">
+					<depth value="7.02" />
+					<temp value="15.00" />
+					<deco depth="0.00" type="ndl" duration="0" />
+				</sample>
+				<sample time="20">
+					<depth value="7.13" />
+					<temp value="15.00" />
+					<deco depth="0.00" type="ndl" duration="0" />
+				</sample>
+				<sample time="22">
+					<depth value="7.33" />
+					<temp value="15.00" />
+					<deco depth="0.00" type="ndl" duration="0" />
+				</sample>
+				<sample time="24">
+					<depth value="7.32" />
+					<temp value="15.00" />
+					<deco depth="0.00" type="ndl" duration="0" />
+				</sample>
+				<sample time="26">
+					<depth value="7.31" />
+					<temp value="15.00" />
+					<deco depth="0.00" type="ndl" duration="0" />
+				</sample>
+				<sample time="28">
+					<depth value="7.25" />
+					<temp value="15.00" />
+					<deco depth="0.00" type="ndl" duration="0" />
+				</sample>
+				<sample time="30">
+					<depth value="7.25" />
+					<temp value="15.00" />
+					<deco depth="0.00" type="ndl" duration="0" />
+				</sample>
+				<sample time="32">
+					<depth value="7.26" />
+					<temp value="15.00" />
+					<deco depth="0.00" type="ndl" duration="0" />
+				</sample>
+				<sample time="34">
+					<depth value="7.28" />
+					<temp value="15.00" />
+					<deco depth="0.00" type="ndl" duration="0" />
+				</sample>
+				<sample time="36">
+					<depth value="7.18" />
+					<temp value="15.00" />
+					<deco depth="0.00" type="ndl" duration="0" />
+				</sample>
+				<sample time="38">
+					<depth value="7.11" />
+					<temp value="15.00" />
+					<deco depth="0.00" type="ndl" duration="0" />
+				</sample>
+				<sample time="40">
+					<depth value="6.96" />
+					<temp value="15.00" />
+					<deco depth="0.00" type="ndl" duration="0" />
+				</sample>
+				<sample time="42">
+					<depth value="7.04" />
+					<temp value="15.00" />
+					<deco depth="0.00" type="ndl" duration="0" />
+				</sample>
+				<sample time="44">
+					<depth value="7.05" />
+					<temp value="15.00" />
+					<deco depth="0.00" type="ndl" duration="0" />
+				</sample>
+				<sample time="46">
+					<depth value="6.97" />
+					<temp value="15.00" />
+					<deco depth="0.00" type="ndl" duration="0" />
+				</sample>
+				<sample time="48">
+					<depth value="6.81" />
+					<temp value="15.00" />
+					<deco depth="0.00" type="ndl" duration="0" />
+				</sample>
+				<sample time="50">
+					<depth value="6.82" />
+					<temp value="15.00" />
+					<deco depth="0.00" type="ndl" duration="0" />
+				</sample>
+				<sample time="52">
+					<depth value="6.68" />
+					<temp value="15.00" />
+					<deco depth="0.00" type="ndl" duration="0" />
+				</sample>
+				<sample time="54">
+					<depth value="5.51" />
+					<temp value="15.00" />
+					<deco depth="0.00" type="ndl" duration="0" />
+				</sample>
+				<sample time="56">
+					<depth value="4.37" />
+					<temp value="15.00" />
+					<deco depth="0.00" type="ndl" duration="0" />
+				</sample>
+				<sample time="58">
+					<depth value="2.70" />
+					<temp value="15.00" />
+					<deco depth="0.00" type="ndl" duration="0" />
+				</sample>
+				<sample time="60">
+					<depth value="1.11" />
+					<temp value="15.00" />
+					<event type="surface" duration="1" />
+					<event type="surface" duration="1" />
+					<deco depth="0.00" type="ndl" duration="0" />
+				</sample>
+			</samples>
+		</dive>
+		<dive number="25" date="2017-01-23" time="13:39:40" duration="41" mode="freedive">
+			<fingerprint>E10701170D2728</fingerprint>
+			<depth max="7.20" />
+			<samples>
+				<sample time="0">
+					<depth value="1.63" />
+					<temp value="15.00" />
+					<event type="surface" duration="0" />
+					<deco depth="0.00" type="ndl" duration="0" />
+				</sample>
+				<sample time="2">
+					<depth value="2.45" />
+					<temp value="15.00" />
+					<deco depth="0.00" type="ndl" duration="0" />
+				</sample>
+				<sample time="4">
+					<depth value="3.55" />
+					<temp value="15.00" />
+					<deco depth="0.00" type="ndl" duration="0" />
+				</sample>
+				<sample time="6">
+					<depth value="4.63" />
+					<temp value="15.00" />
+					<deco depth="0.00" type="ndl" duration="0" />
+				</sample>
+				<sample time="8">
+					<depth value="5.56" />
+					<temp value="15.00" />
+					<deco depth="0.00" type="ndl" duration="0" />
+				</sample>
+				<sample time="10">
+					<depth value="5.84" />
+					<temp value="15.00" />
+					<deco depth="0.00" type="ndl" duration="0" />
+				</sample>
+				<sample time="12">
+					<depth value="6.61" />
+					<temp value="15.00" />
+					<deco depth="0.00" type="ndl" duration="0" />
+				</sample>
+				<sample time="14">
+					<depth value="6.96" />
+					<temp value="15.00" />
+					<deco depth="0.00" type="ndl" duration="0" />
+				</sample>
+				<sample time="16">
+					<depth value="7.20" />
+					<temp value="15.00" />
+					<deco depth="0.00" type="ndl" duration="0" />
+				</sample>
+				<sample time="18">
+					<depth value="7.10" />
+					<temp value="15.00" />
+					<deco depth="0.00" type="ndl" duration="0" />
+				</sample>
+				<sample time="20">
+					<depth value="7.06" />
+					<temp value="15.00" />
+					<deco depth="0.00" type="ndl" duration="0" />
+				</sample>
+				<sample time="22">
+					<depth value="6.92" />
+					<temp value="15.00" />
+					<deco depth="0.00" type="ndl" duration="0" />
+				</sample>
+				<sample time="24">
+					<depth value="6.83" />
+					<temp value="15.00" />
+					<deco depth="0.00" type="ndl" duration="0" />
+				</sample>
+				<sample time="26">
+					<depth value="6.87" />
+					<temp value="15.00" />
+					<deco depth="0.00" type="ndl" duration="0" />
+				</sample>
+				<sample time="28">
+					<depth value="6.68" />
+					<temp value="15.00" />
+					<deco depth="0.00" type="ndl" duration="0" />
+				</sample>
+				<sample time="30">
+					<depth value="6.18" />
+					<temp value="15.00" />
+					<deco depth="0.00" type="ndl" duration="0" />
+				</sample>
+				<sample time="32">
+					<depth value="5.60" />
+					<temp value="15.00" />
+					<deco depth="0.00" type="ndl" duration="0" />
+				</sample>
+				<sample time="34">
+					<depth value="4.73" />
+					<temp value="15.00" />
+					<deco depth="0.00" type="ndl" duration="0" />
+				</sample>
+				<sample time="36">
+					<depth value="3.79" />
+					<temp value="15.00" />
+					<deco depth="0.00" type="ndl" duration="0" />
+				</sample>
+				<sample time="38">
+					<depth value="2.78" />
+					<temp value="15.00" />
+					<deco depth="0.00" type="ndl" duration="0" />
+				</sample>
+				<sample time="40">
+					<depth value="1.02" />
+					<temp value="15.00" />
+					<event type="surface" duration="1" />
+					<event type="surface" duration="1" />
+					<deco depth="0.00" type="ndl" duration="0" />
+				</sample>
+			</samples>
+		</dive>
+		<dive number="26" date="2017-01-23" time="13:34:36" duration="82" mode="freedive">
+			<fingerprint>E10701170D2224</fingerprint>
+			<depth max="8.73" />
+			<samples>
+				<sample time="0">
+					<depth value="1.42" />
+					<temp value="15.00" />
+					<event type="surface" duration="0" />
+					<deco depth="0.00" type="ndl" duration="0" />
+				</sample>
+				<sample time="2">
+					<depth value="2.23" />
+					<temp value="15.00" />
+					<deco depth="0.00" type="ndl" duration="0" />
+				</sample>
+				<sample time="4">
+					<depth value="3.21" />
+					<temp value="15.00" />
+					<deco depth="0.00" type="ndl" duration="0" />
+				</sample>
+				<sample time="6">
+					<depth value="4.20" />
+					<temp value="15.00" />
+					<deco depth="0.00" type="ndl" duration="0" />
+				</sample>
+				<sample time="8">
+					<depth value="4.92" />
+					<temp value="15.00" />
+					<deco depth="0.00" type="ndl" duration="0" />
+				</sample>
+				<sample time="10">
+					<depth value="5.84" />
+					<temp value="15.00" />
+					<deco depth="0.00" type="ndl" duration="0" />
+				</sample>
+				<sample time="12">
+					<depth value="6.42" />
+					<temp value="15.00" />
+					<deco depth="0.00" type="ndl" duration="0" />
+				</sample>
+				<sample time="14">
+					<depth value="6.78" />
+					<temp value="15.00" />
+					<deco depth="0.00" type="ndl" duration="0" />
+				</sample>
+				<sample time="16">
+					<depth value="7.21" />
+					<temp value="15.00" />
+					<deco depth="0.00" type="ndl" duration="0" />
+				</sample>
+				<sample time="18">
+					<depth value="7.53" />
+					<temp value="15.00" />
+					<deco depth="0.00" type="ndl" duration="0" />
+				</sample>
+				<sample time="20">
+					<depth value="7.62" />
+					<temp value="15.00" />
+					<deco depth="0.00" type="ndl" duration="0" />
+				</sample>
+				<sample time="22">
+					<depth value="7.75" />
+					<temp value="15.00" />
+					<deco depth="0.00" type="ndl" duration="0" />
+				</sample>
+				<sample time="24">
+					<depth value="7.89" />
+					<temp value="15.00" />
+					<deco depth="0.00" type="ndl" duration="0" />
+				</sample>
+				<sample time="26">
+					<depth value="8.12" />
+					<temp value="15.00" />
+					<deco depth="0.00" type="ndl" duration="0" />
+				</sample>
+				<sample time="28">
+					<depth value="8.20" />
+					<temp value="15.00" />
+					<deco depth="0.00" type="ndl" duration="0" />
+				</sample>
+				<sample time="30">
+					<depth value="8.38" />
+					<temp value="15.00" />
+					<deco depth="0.00" type="ndl" duration="0" />
+				</sample>
+				<sample time="32">
+					<depth value="8.40" />
+					<temp value="15.00" />
+					<deco depth="0.00" type="ndl" duration="0" />
+				</sample>
+				<sample time="34">
+					<depth value="8.58" />
+					<temp value="15.00" />
+					<deco depth="0.00" type="ndl" duration="0" />
+				</sample>
+				<sample time="36">
+					<depth value="8.59" />
+					<temp value="15.00" />
+					<deco depth="0.00" type="ndl" duration="0" />
+				</sample>
+				<sample time="38">
+					<depth value="8.62" />
+					<temp value="15.00" />
+					<deco depth="0.00" type="ndl" duration="0" />
+				</sample>
+				<sample time="40">
+					<depth value="8.50" />
+					<temp value="15.00" />
+					<deco depth="0.00" type="ndl" duration="0" />
+				</sample>
+				<sample time="42">
+					<depth value="8.51" />
+					<temp value="15.00" />
+					<deco depth="0.00" type="ndl" duration="0" />
+				</sample>
+				<sample time="44">
+					<depth value="8.52" />
+					<temp value="15.00" />
+					<deco depth="0.00" type="ndl" duration="0" />
+				</sample>
+				<sample time="46">
+					<depth value="8.66" />
+					<temp value="15.00" />
+					<deco depth="0.00" type="ndl" duration="0" />
+				</sample>
+				<sample time="48">
+					<depth value="8.72" />
+					<temp value="15.00" />
+					<deco depth="0.00" type="ndl" duration="0" />
+				</sample>
+				<sample time="50">
+					<depth value="8.68" />
+					<temp value="15.00" />
+					<deco depth="0.00" type="ndl" duration="0" />
+				</sample>
+				<sample time="52">
+					<depth value="8.62" />
+					<temp value="15.00" />
+					<deco depth="0.00" type="ndl" duration="0" />
+				</sample>
+				<sample time="54">
+					<depth value="8.42" />
+					<temp value="15.00" />
+					<deco depth="0.00" type="ndl" duration="0" />
+				</sample>
+				<sample time="56">
+					<depth value="8.23" />
+					<temp value="15.00" />
+					<deco depth="0.00" type="ndl" duration="0" />
+				</sample>
+				<sample time="58">
+					<depth value="7.86" />
+					<temp value="15.00" />
+					<deco depth="0.00" type="ndl" duration="0" />
+				</sample>
+				<sample time="60">
+					<depth value="7.57" />
+					<temp value="15.00" />
+					<deco depth="0.00" type="ndl" duration="0" />
+				</sample>
+				<sample time="62">
+					<depth value="7.22" />
+					<temp value="15.00" />
+					<deco depth="0.00" type="ndl" duration="0" />
+				</sample>
+				<sample time="64">
+					<depth value="6.78" />
+					<temp value="15.00" />
+					<deco depth="0.00" type="ndl" duration="0" />
+				</sample>
+				<sample time="66">
+					<depth value="6.53" />
+					<temp value="15.00" />
+					<deco depth="0.00" type="ndl" duration="0" />
+				</sample>
+				<sample time="68">
+					<depth value="6.28" />
+					<temp value="15.00" />
+					<deco depth="0.00" type="ndl" duration="0" />
+				</sample>
+				<sample time="70">
+					<depth value="5.83" />
+					<temp value="15.00" />
+					<deco depth="0.00" type="ndl" duration="0" />
+				</sample>
+				<sample time="72">
+					<depth value="5.41" />
+					<temp value="15.00" />
+					<deco depth="0.00" type="ndl" duration="0" />
+				</sample>
+				<sample time="74">
+					<depth value="4.81" />
+					<temp value="15.00" />
+					<deco depth="0.00" type="ndl" duration="0" />
+				</sample>
+				<sample time="76">
+					<depth value="3.90" />
+					<temp value="15.00" />
+					<deco depth="0.00" type="ndl" duration="0" />
+				</sample>
+				<sample time="78">
+					<depth value="2.86" />
+					<temp value="15.00" />
+					<deco depth="0.00" type="ndl" duration="0" />
+				</sample>
+				<sample time="80">
+					<depth value="1.70" />
+					<temp value="15.00" />
+					<deco depth="0.00" type="ndl" duration="0" />
+				</sample>
+				<sample time="82">
+					<depth value="0.07" />
+					<temp value="15.00" />
+					<event type="surface" duration="0" />
+					<event type="surface" duration="0" />
+					<deco depth="0.00" type="ndl" duration="0" />
+				</sample>
+			</samples>
+		</dive>
+		<dive number="27" date="2017-01-23" time="13:30:57" duration="71" mode="freedive">
+			<fingerprint>E10701170D1E39</fingerprint>
+			<depth max="7.93" />
+			<samples>
+				<sample time="0">
+					<depth value="1.46" />
+					<temp value="15.00" />
+					<event type="surface" duration="0" />
+					<deco depth="0.00" type="ndl" duration="0" />
+				</sample>
+				<sample time="2">
+					<depth value="2.48" />
+					<temp value="15.00" />
+					<deco depth="0.00" type="ndl" duration="0" />
+				</sample>
+				<sample time="4">
+					<depth value="3.69" />
+					<temp value="15.00" />
+					<deco depth="0.00" type="ndl" duration="0" />
+				</sample>
+				<sample time="6">
+					<depth value="4.65" />
+					<temp value="15.00" />
+					<deco depth="0.00" type="ndl" duration="0" />
+				</sample>
+				<sample time="8">
+					<depth value="5.17" />
+					<temp value="15.00" />
+					<deco depth="0.00" type="ndl" duration="0" />
+				</sample>
+				<sample time="10">
+					<depth value="5.31" />
+					<temp value="15.00" />
+					<deco depth="0.00" type="ndl" duration="0" />
+				</sample>
+				<sample time="12">
+					<depth value="5.77" />
+					<temp value="15.00" />
+					<deco depth="0.00" type="ndl" duration="0" />
+				</sample>
+				<sample time="14">
+					<depth value="6.00" />
+					<temp value="15.00" />
+					<deco depth="0.00" type="ndl" duration="0" />
+				</sample>
+				<sample time="16">
+					<depth value="6.41" />
+					<temp value="15.00" />
+					<deco depth="0.00" type="ndl" duration="0" />
+				</sample>
+				<sample time="18">
+					<depth value="6.57" />
+					<temp value="15.00" />
+					<deco depth="0.00" type="ndl" duration="0" />
+				</sample>
+				<sample time="20">
+					<depth value="6.78" />
+					<temp value="15.00" />
+					<deco depth="0.00" type="ndl" duration="0" />
+				</sample>
+				<sample time="22">
+					<depth value="6.99" />
+					<temp value="15.00" />
+					<deco depth="0.00" type="ndl" duration="0" />
+				</sample>
+				<sample time="24">
+					<depth value="7.07" />
+					<temp value="15.00" />
+					<deco depth="0.00" type="ndl" duration="0" />
+				</sample>
+				<sample time="26">
+					<depth value="7.30" />
+					<temp value="15.00" />
+					<deco depth="0.00" type="ndl" duration="0" />
+				</sample>
+				<sample time="28">
+					<depth value="7.61" />
+					<temp value="15.00" />
+					<deco depth="0.00" type="ndl" duration="0" />
+				</sample>
+				<sample time="30">
+					<depth value="7.63" />
+					<temp value="15.00" />
+					<deco depth="0.00" type="ndl" duration="0" />
+				</sample>
+				<sample time="32">
+					<depth value="7.68" />
+					<temp value="15.00" />
+					<deco depth="0.00" type="ndl" duration="0" />
+				</sample>
+				<sample time="34">
+					<depth value="7.70" />
+					<temp value="15.00" />
+					<deco depth="0.00" type="ndl" duration="0" />
+				</sample>
+				<sample time="36">
+					<depth value="7.76" />
+					<temp value="15.00" />
+					<deco depth="0.00" type="ndl" duration="0" />
+				</sample>
+				<sample time="38">
+					<depth value="7.87" />
+					<temp value="15.00" />
+					<deco depth="0.00" type="ndl" duration="0" />
+				</sample>
+				<sample time="40">
+					<depth value="7.92" />
+					<temp value="15.00" />
+					<deco depth="0.00" type="ndl" duration="0" />
+				</sample>
+				<sample time="42">
+					<depth value="7.89" />
+					<temp value="15.00" />
+					<deco depth="0.00" type="ndl" duration="0" />
+				</sample>
+				<sample time="44">
+					<depth value="7.91" />
+					<temp value="15.00" />
+					<deco depth="0.00" type="ndl" duration="0" />
+				</sample>
+				<sample time="46">
+					<depth value="7.88" />
+					<temp value="15.00" />
+					<deco depth="0.00" type="ndl" duration="0" />
+				</sample>
+				<sample time="48">
+					<depth value="7.85" />
+					<temp value="15.00" />
+					<deco depth="0.00" type="ndl" duration="0" />
+				</sample>
+				<sample time="50">
+					<depth value="7.73" />
+					<temp value="15.00" />
+					<deco depth="0.00" type="ndl" duration="0" />
+				</sample>
+				<sample time="52">
+					<depth value="7.58" />
+					<temp value="15.00" />
+					<deco depth="0.00" type="ndl" duration="0" />
+				</sample>
+				<sample time="54">
+					<depth value="7.48" />
+					<temp value="15.00" />
+					<deco depth="0.00" type="ndl" duration="0" />
+				</sample>
+				<sample time="56">
+					<depth value="7.37" />
+					<temp value="15.00" />
+					<deco depth="0.00" type="ndl" duration="0" />
+				</sample>
+				<sample time="58">
+					<depth value="7.22" />
+					<temp value="15.00" />
+					<deco depth="0.00" type="ndl" duration="0" />
+				</sample>
+				<sample time="60">
+					<depth value="6.81" />
+					<temp value="15.00" />
+					<deco depth="0.00" type="ndl" duration="0" />
+				</sample>
+				<sample time="62">
+					<depth value="6.00" />
+					<temp value="15.00" />
+					<deco depth="0.00" type="ndl" duration="0" />
+				</sample>
+				<sample time="64">
+					<depth value="5.26" />
+					<temp value="15.00" />
+					<deco depth="0.00" type="ndl" duration="0" />
+				</sample>
+				<sample time="66">
+					<depth value="3.88" />
+					<temp value="15.00" />
+					<deco depth="0.00" type="ndl" duration="0" />
+				</sample>
+				<sample time="68">
+					<depth value="2.60" />
+					<temp value="15.00" />
+					<deco depth="0.00" type="ndl" duration="0" />
+				</sample>
+				<sample time="70">
+					<depth value="1.31" />
+					<temp value="15.00" />
+					<event type="surface" duration="1" />
+					<event type="surface" duration="1" />
+					<deco depth="0.00" type="ndl" duration="0" />
+				</sample>
+			</samples>
+		</dive>
+		<dive number="28" date="2017-01-23" time="13:26:45" duration="76" mode="freedive">
+			<fingerprint>E10701170D1A2D</fingerprint>
+			<depth max="7.77" />
+			<samples>
+				<sample time="0">
+					<depth value="1.28" />
+					<temp value="15.00" />
+					<event type="surface" duration="0" />
+					<deco depth="0.00" type="ndl" duration="0" />
+				</sample>
+				<sample time="2">
+					<depth value="2.10" />
+					<temp value="15.00" />
+					<deco depth="0.00" type="ndl" duration="0" />
+				</sample>
+				<sample time="4">
+					<depth value="2.50" />
+					<temp value="15.00" />
+					<deco depth="0.00" type="ndl" duration="0" />
+				</sample>
+				<sample time="6">
+					<depth value="3.15" />
+					<temp value="15.00" />
+					<deco depth="0.00" type="ndl" duration="0" />
+				</sample>
+				<sample time="8">
+					<depth value="3.87" />
+					<temp value="15.00" />
+					<deco depth="0.00" type="ndl" duration="0" />
+				</sample>
+				<sample time="10">
+					<depth value="4.54" />
+					<temp value="15.00" />
+					<deco depth="0.00" type="ndl" duration="0" />
+				</sample>
+				<sample time="12">
+					<depth value="5.12" />
+					<temp value="15.00" />
+					<deco depth="0.00" type="ndl" duration="0" />
+				</sample>
+				<sample time="14">
+					<depth value="5.96" />
+					<temp value="15.00" />
+					<deco depth="0.00" type="ndl" duration="0" />
+				</sample>
+				<sample time="16">
+					<depth value="6.31" />
+					<temp value="15.00" />
+					<deco depth="0.00" type="ndl" duration="0" />
+				</sample>
+				<sample time="18">
+					<depth value="6.60" />
+					<temp value="15.00" />
+					<deco depth="0.00" type="ndl" duration="0" />
+				</sample>
+				<sample time="20">
+					<depth value="6.68" />
+					<temp value="15.00" />
+					<deco depth="0.00" type="ndl" duration="0" />
+				</sample>
+				<sample time="22">
+					<depth value="6.81" />
+					<temp value="15.00" />
+					<deco depth="0.00" type="ndl" duration="0" />
+				</sample>
+				<sample time="24">
+					<depth value="6.92" />
+					<temp value="15.00" />
+					<deco depth="0.00" type="ndl" duration="0" />
+				</sample>
+				<sample time="26">
+					<depth value="7.00" />
+					<temp value="15.00" />
+					<deco depth="0.00" type="ndl" duration="0" />
+				</sample>
+				<sample time="28">
+					<depth value="7.10" />
+					<temp value="15.00" />
+					<deco depth="0.00" type="ndl" duration="0" />
+				</sample>
+				<sample time="30">
+					<depth value="7.08" />
+					<temp value="15.00" />
+					<deco depth="0.00" type="ndl" duration="0" />
+				</sample>
+				<sample time="32">
+					<depth value="7.24" />
+					<temp value="15.00" />
+					<deco depth="0.00" type="ndl" duration="0" />
+				</sample>
+				<sample time="34">
+					<depth value="7.20" />
+					<temp value="15.00" />
+					<deco depth="0.00" type="ndl" duration="0" />
+				</sample>
+				<sample time="36">
+					<depth value="7.17" />
+					<temp value="15.00" />
+					<deco depth="0.00" type="ndl" duration="0" />
+				</sample>
+				<sample time="38">
+					<depth value="7.14" />
+					<temp value="15.00" />
+					<deco depth="0.00" type="ndl" duration="0" />
+				</sample>
+				<sample time="40">
+					<depth value="7.17" />
+					<temp value="15.00" />
+					<deco depth="0.00" type="ndl" duration="0" />
+				</sample>
+				<sample time="42">
+					<depth value="7.29" />
+					<temp value="15.00" />
+					<deco depth="0.00" type="ndl" duration="0" />
+				</sample>
+				<sample time="44">
+					<depth value="7.33" />
+					<temp value="15.00" />
+					<deco depth="0.00" type="ndl" duration="0" />
+				</sample>
+				<sample time="46">
+					<depth value="7.44" />
+					<temp value="15.00" />
+					<deco depth="0.00" type="ndl" duration="0" />
+				</sample>
+				<sample time="48">
+					<depth value="7.41" />
+					<temp value="15.00" />
+					<deco depth="0.00" type="ndl" duration="0" />
+				</sample>
+				<sample time="50">
+					<depth value="7.46" />
+					<temp value="15.00" />
+					<deco depth="0.00" type="ndl" duration="0" />
+				</sample>
+				<sample time="52">
+					<depth value="7.50" />
+					<temp value="15.00" />
+					<deco depth="0.00" type="ndl" duration="0" />
+				</sample>
+				<sample time="54">
+					<depth value="7.49" />
+					<temp value="15.00" />
+					<deco depth="0.00" type="ndl" duration="0" />
+				</sample>
+				<sample time="56">
+					<depth value="7.47" />
+					<temp value="15.00" />
+					<deco depth="0.00" type="ndl" duration="0" />
+				</sample>
+				<sample time="58">
+					<depth value="7.70" />
+					<temp value="15.00" />
+					<deco depth="0.00" type="ndl" duration="0" />
+				</sample>
+				<sample time="60">
+					<depth value="7.70" />
+					<temp value="15.00" />
+					<deco depth="0.00" type="ndl" duration="0" />
+				</sample>
+				<sample time="62">
+					<depth value="7.67" />
+					<temp value="15.00" />
+					<deco depth="0.00" type="ndl" duration="0" />
+				</sample>
+				<sample time="64">
+					<depth value="7.31" />
+					<temp value="15.00" />
+					<deco depth="0.00" type="ndl" duration="0" />
+				</sample>
+				<sample time="66">
+					<depth value="6.92" />
+					<temp value="15.00" />
+					<deco depth="0.00" type="ndl" duration="0" />
+				</sample>
+				<sample time="68">
+					<depth value="6.29" />
+					<temp value="15.00" />
+					<deco depth="0.00" type="ndl" duration="0" />
+				</sample>
+				<sample time="70">
+					<depth value="4.95" />
+					<temp value="15.00" />
+					<deco depth="0.00" type="ndl" duration="0" />
+				</sample>
+				<sample time="72">
+					<depth value="3.69" />
+					<temp value="15.00" />
+					<deco depth="0.00" type="ndl" duration="0" />
+				</sample>
+				<sample time="74">
+					<depth value="2.16" />
+					<temp value="15.00" />
+					<deco depth="0.00" type="ndl" duration="0" />
+				</sample>
+				<sample time="76">
+					<depth value="0.44" />
+					<temp value="15.00" />
+					<event type="surface" duration="0" />
+					<event type="surface" duration="0" />
+					<deco depth="0.00" type="ndl" duration="0" />
+				</sample>
+			</samples>
+		</dive>
+		<dive number="29" date="2017-01-23" time="13:24:41" duration="21" mode="freedive">
+			<fingerprint>E10701170D1829</fingerprint>
+			<depth max="2.50" />
+			<samples>
+				<sample time="0">
+					<depth value="1.25" />
+					<temp value="15.00" />
+					<event type="surface" duration="0" />
+					<deco depth="0.00" type="ndl" duration="0" />
+				</sample>
+				<sample time="2">
+					<depth value="2.01" />
+					<temp value="15.00" />
+					<deco depth="0.00" type="ndl" duration="0" />
+				</sample>
+				<sample time="4">
+					<depth value="2.41" />
+					<temp value="15.00" />
+					<deco depth="0.00" type="ndl" duration="0" />
+				</sample>
+				<sample time="6">
+					<depth value="2.37" />
+					<temp value="15.00" />
+					<deco depth="0.00" type="ndl" duration="0" />
+				</sample>
+				<sample time="8">
+					<depth value="2.44" />
+					<temp value="15.00" />
+					<deco depth="0.00" type="ndl" duration="0" />
+				</sample>
+				<sample time="10">
+					<depth value="2.44" />
+					<temp value="15.00" />
+					<deco depth="0.00" type="ndl" duration="0" />
+				</sample>
+				<sample time="12">
+					<depth value="2.40" />
+					<temp value="15.00" />
+					<deco depth="0.00" type="ndl" duration="0" />
+				</sample>
+				<sample time="14">
+					<depth value="2.27" />
+					<temp value="15.00" />
+					<deco depth="0.00" type="ndl" duration="0" />
+				</sample>
+				<sample time="16">
+					<depth value="1.99" />
+					<temp value="15.00" />
+					<deco depth="0.00" type="ndl" duration="0" />
+				</sample>
+				<sample time="18">
+					<depth value="1.52" />
+					<temp value="15.00" />
+					<deco depth="0.00" type="ndl" duration="0" />
+				</sample>
+				<sample time="20">
+					<depth value="0.58" />
+					<temp value="15.00" />
+					<event type="surface" duration="0" />
+					<event type="surface" duration="1" />
+					<deco depth="0.00" type="ndl" duration="0" />
+				</sample>
+			</samples>
+		</dive>
+		<dive number="30" date="2017-01-23" time="13:21:45" duration="75" mode="freedive">
+			<fingerprint>E10701170D152D</fingerprint>
+			<depth max="8.29" />
+			<samples>
+				<sample time="0">
+					<depth value="1.46" />
+					<temp value="15.00" />
+					<event type="surface" duration="0" />
+					<deco depth="0.00" type="ndl" duration="0" />
+				</sample>
+				<sample time="2">
+					<depth value="2.23" />
+					<temp value="15.00" />
+					<deco depth="0.00" type="ndl" duration="0" />
+				</sample>
+				<sample time="4">
+					<depth value="3.29" />
+					<temp value="15.00" />
+					<deco depth="0.00" type="ndl" duration="0" />
+				</sample>
+				<sample time="6">
+					<depth value="4.32" />
+					<temp value="15.00" />
+					<deco depth="0.00" type="ndl" duration="0" />
+				</sample>
+				<sample time="8">
+					<depth value="4.97" />
+					<temp value="15.00" />
+					<deco depth="0.00" type="ndl" duration="0" />
+				</sample>
+				<sample time="10">
+					<depth value="5.21" />
+					<temp value="15.00" />
+					<deco depth="0.00" type="ndl" duration="0" />
+				</sample>
+				<sample time="12">
+					<depth value="5.94" />
+					<temp value="15.00" />
+					<deco depth="0.00" type="ndl" duration="0" />
+				</sample>
+				<sample time="14">
+					<depth value="6.34" />
+					<temp value="15.00" />
+					<deco depth="0.00" type="ndl" duration="0" />
+				</sample>
+				<sample time="16">
+					<depth value="6.56" />
+					<temp value="15.00" />
+					<deco depth="0.00" type="ndl" duration="0" />
+				</sample>
+				<sample time="18">
+					<depth value="6.83" />
+					<temp value="15.00" />
+					<deco depth="0.00" type="ndl" duration="0" />
+				</sample>
+				<sample time="20">
+					<depth value="6.72" />
+					<temp value="15.00" />
+					<deco depth="0.00" type="ndl" duration="0" />
+				</sample>
+				<sample time="22">
+					<depth value="6.71" />
+					<temp value="15.00" />
+					<deco depth="0.00" type="ndl" duration="0" />
+				</sample>
+				<sample time="24">
+					<depth value="6.98" />
+					<temp value="15.00" />
+					<deco depth="0.00" type="ndl" duration="0" />
+				</sample>
+				<sample time="26">
+					<depth value="6.97" />
+					<temp value="15.00" />
+					<deco depth="0.00" type="ndl" duration="0" />
+				</sample>
+				<sample time="28">
+					<depth value="7.10" />
+					<temp value="15.00" />
+					<deco depth="0.00" type="ndl" duration="0" />
+				</sample>
+				<sample time="30">
+					<depth value="7.06" />
+					<temp value="15.00" />
+					<deco depth="0.00" type="ndl" duration="0" />
+				</sample>
+				<sample time="32">
+					<depth value="7.15" />
+					<temp value="15.00" />
+					<deco depth="0.00" type="ndl" duration="0" />
+				</sample>
+				<sample time="34">
+					<depth value="7.20" />
+					<temp value="15.00" />
+					<deco depth="0.00" type="ndl" duration="0" />
+				</sample>
+				<sample time="36">
+					<depth value="7.25" />
+					<temp value="15.00" />
+					<deco depth="0.00" type="ndl" duration="0" />
+				</sample>
+				<sample time="38">
+					<depth value="7.52" />
+					<temp value="15.00" />
+					<deco depth="0.00" type="ndl" duration="0" />
+				</sample>
+				<sample time="40">
+					<depth value="7.67" />
+					<temp value="15.00" />
+					<deco depth="0.00" type="ndl" duration="0" />
+				</sample>
+				<sample time="42">
+					<depth value="7.76" />
+					<temp value="15.00" />
+					<deco depth="0.00" type="ndl" duration="0" />
+				</sample>
+				<sample time="44">
+					<depth value="7.94" />
+					<temp value="15.00" />
+					<deco depth="0.00" type="ndl" duration="0" />
+				</sample>
+				<sample time="46">
+					<depth value="7.96" />
+					<temp value="15.00" />
+					<deco depth="0.00" type="ndl" duration="0" />
+				</sample>
+				<sample time="48">
+					<depth value="7.96" />
+					<temp value="15.00" />
+					<deco depth="0.00" type="ndl" duration="0" />
+				</sample>
+				<sample time="50">
+					<depth value="8.02" />
+					<temp value="15.00" />
+					<deco depth="0.00" type="ndl" duration="0" />
+				</sample>
+				<sample time="52">
+					<depth value="8.14" />
+					<temp value="15.00" />
+					<deco depth="0.00" type="ndl" duration="0" />
+				</sample>
+				<sample time="54">
+					<depth value="8.29" />
+					<temp value="15.00" />
+					<deco depth="0.00" type="ndl" duration="0" />
+				</sample>
+				<sample time="56">
+					<depth value="8.06" />
+					<temp value="15.00" />
+					<deco depth="0.00" type="ndl" duration="0" />
+				</sample>
+				<sample time="58">
+					<depth value="7.94" />
+					<temp value="15.00" />
+					<deco depth="0.00" type="ndl" duration="0" />
+				</sample>
+				<sample time="60">
+					<depth value="7.85" />
+					<temp value="15.00" />
+					<deco depth="0.00" type="ndl" duration="0" />
+				</sample>
+				<sample time="62">
+					<depth value="7.65" />
+					<temp value="15.00" />
+					<deco depth="0.00" type="ndl" duration="0" />
+				</sample>
+				<sample time="64">
+					<depth value="7.03" />
+					<temp value="15.00" />
+					<deco depth="0.00" type="ndl" duration="0" />
+				</sample>
+				<sample time="66">
+					<depth value="6.35" />
+					<temp value="15.00" />
+					<deco depth="0.00" type="ndl" duration="0" />
+				</sample>
+				<sample time="68">
+					<depth value="5.00" />
+					<temp value="15.00" />
+					<deco depth="0.00" type="ndl" duration="0" />
+				</sample>
+				<sample time="70">
+					<depth value="3.93" />
+					<temp value="15.00" />
+					<deco depth="0.00" type="ndl" duration="0" />
+				</sample>
+				<sample time="72">
+					<depth value="2.42" />
+					<temp value="15.00" />
+					<deco depth="0.00" type="ndl" duration="0" />
+				</sample>
+				<sample time="74">
+					<depth value="0.60" />
+					<temp value="15.00" />
+					<event type="surface" duration="0" />
+					<event type="surface" duration="1" />
+					<deco depth="0.00" type="ndl" duration="0" />
+				</sample>
+			</samples>
+		</dive>
+		<dive number="31" date="2017-01-23" time="13:17:36" duration="71" mode="freedive">
+			<fingerprint>E10701170D1124</fingerprint>
+			<depth max="7.33" />
+			<samples>
+				<sample time="0">
+					<depth value="1.49" />
+					<temp value="15.00" />
+					<event type="surface" duration="0" />
+					<deco depth="0.00" type="ndl" duration="0" />
+				</sample>
+				<sample time="2">
+					<depth value="2.36" />
+					<temp value="15.00" />
+					<deco depth="0.00" type="ndl" duration="0" />
+				</sample>
+				<sample time="4">
+					<depth value="3.37" />
+					<temp value="15.00" />
+					<deco depth="0.00" type="ndl" duration="0" />
+				</sample>
+				<sample time="6">
+					<depth value="4.20" />
+					<temp value="15.00" />
+					<deco depth="0.00" type="ndl" duration="0" />
+				</sample>
+				<sample time="8">
+					<depth value="4.52" />
+					<temp value="15.00" />
+					<deco depth="0.00" type="ndl" duration="0" />
+				</sample>
+				<sample time="10">
+					<depth value="5.04" />
+					<temp value="15.00" />
+					<deco depth="0.00" type="ndl" duration="0" />
+				</sample>
+				<sample time="12">
+					<depth value="5.63" />
+					<temp value="15.00" />
+					<deco depth="0.00" type="ndl" duration="0" />
+				</sample>
+				<sample time="14">
+					<depth value="5.96" />
+					<temp value="15.00" />
+					<deco depth="0.00" type="ndl" duration="0" />
+				</sample>
+				<sample time="16">
+					<depth value="6.35" />
+					<temp value="15.00" />
+					<deco depth="0.00" type="ndl" duration="0" />
+				</sample>
+				<sample time="18">
+					<depth value="6.63" />
+					<temp value="15.00" />
+					<deco depth="0.00" type="ndl" duration="0" />
+				</sample>
+				<sample time="20">
+					<depth value="6.91" />
+					<temp value="15.00" />
+					<deco depth="0.00" type="ndl" duration="0" />
+				</sample>
+				<sample time="22">
+					<depth value="7.06" />
+					<temp value="15.00" />
+					<deco depth="0.00" type="ndl" duration="0" />
+				</sample>
+				<sample time="24">
+					<depth value="7.16" />
+					<temp value="15.00" />
+					<deco depth="0.00" type="ndl" duration="0" />
+				</sample>
+				<sample time="26">
+					<depth value="7.12" />
+					<temp value="15.00" />
+					<deco depth="0.00" type="ndl" duration="0" />
+				</sample>
+				<sample time="28">
+					<depth value="7.01" />
+					<temp value="15.00" />
+					<deco depth="0.00" type="ndl" duration="0" />
+				</sample>
+				<sample time="30">
+					<depth value="6.98" />
+					<temp value="15.00" />
+					<deco depth="0.00" type="ndl" duration="0" />
+				</sample>
+				<sample time="32">
+					<depth value="7.16" />
+					<temp value="15.00" />
+					<deco depth="0.00" type="ndl" duration="0" />
+				</sample>
+				<sample time="34">
+					<depth value="7.23" />
+					<temp value="15.00" />
+					<deco depth="0.00" type="ndl" duration="0" />
+				</sample>
+				<sample time="36">
+					<depth value="7.21" />
+					<temp value="15.00" />
+					<deco depth="0.00" type="ndl" duration="0" />
+				</sample>
+				<sample time="38">
+					<depth value="7.24" />
+					<temp value="15.00" />
+					<deco depth="0.00" type="ndl" duration="0" />
+				</sample>
+				<sample time="40">
+					<depth value="7.29" />
+					<temp value="15.00" />
+					<deco depth="0.00" type="ndl" duration="0" />
+				</sample>
+				<sample time="42">
+					<depth value="7.26" />
+					<temp value="15.00" />
+					<deco depth="0.00" type="ndl" duration="0" />
+				</sample>
+				<sample time="44">
+					<depth value="7.19" />
+					<temp value="15.00" />
+					<deco depth="0.00" type="ndl" duration="0" />
+				</sample>
+				<sample time="46">
+					<depth value="7.16" />
+					<temp value="15.00" />
+					<deco depth="0.00" type="ndl" duration="0" />
+				</sample>
+				<sample time="48">
+					<depth value="7.14" />
+					<temp value="15.00" />
+					<deco depth="0.00" type="ndl" duration="0" />
+				</sample>
+				<sample time="50">
+					<depth value="7.10" />
+					<temp value="15.00" />
+					<deco depth="0.00" type="ndl" duration="0" />
+				</sample>
+				<sample time="52">
+					<depth value="7.25" />
+					<temp value="15.00" />
+					<deco depth="0.00" type="ndl" duration="0" />
+				</sample>
+				<sample time="54">
+					<depth value="7.17" />
+					<temp value="15.00" />
+					<deco depth="0.00" type="ndl" duration="0" />
+				</sample>
+				<sample time="56">
+					<depth value="7.24" />
+					<temp value="15.00" />
+					<deco depth="0.00" type="ndl" duration="0" />
+				</sample>
+				<sample time="58">
+					<depth value="6.90" />
+					<temp value="15.00" />
+					<deco depth="0.00" type="ndl" duration="0" />
+				</sample>
+				<sample time="60">
+					<depth value="6.65" />
+					<temp value="15.00" />
+					<deco depth="0.00" type="ndl" duration="0" />
+				</sample>
+				<sample time="62">
+					<depth value="6.28" />
+					<temp value="15.00" />
+					<deco depth="0.00" type="ndl" duration="0" />
+				</sample>
+				<sample time="64">
+					<depth value="5.31" />
+					<temp value="15.00" />
+					<deco depth="0.00" type="ndl" duration="0" />
+				</sample>
+				<sample time="66">
+					<depth value="4.25" />
+					<temp value="15.00" />
+					<deco depth="0.00" type="ndl" duration="0" />
+				</sample>
+				<sample time="68">
+					<depth value="2.55" />
+					<temp value="15.00" />
+					<deco depth="0.00" type="ndl" duration="0" />
+				</sample>
+				<sample time="70">
+					<depth value="0.96" />
+					<temp value="15.00" />
+					<event type="surface" duration="1" />
+					<event type="surface" duration="1" />
+					<deco depth="0.00" type="ndl" duration="0" />
+				</sample>
+			</samples>
+		</dive>
+		<dive number="32" date="2017-01-23" time="13:13:45" duration="70" mode="freedive">
+			<fingerprint>E10701170D0D2D</fingerprint>
+			<depth max="9.65" />
+			<samples>
+				<sample time="0">
+					<depth value="1.46" />
+					<temp value="15.00" />
+					<event type="surface" duration="0" />
+					<deco depth="0.00" type="ndl" duration="0" />
+				</sample>
+				<sample time="2">
+					<depth value="2.23" />
+					<temp value="15.00" />
+					<deco depth="0.00" type="ndl" duration="0" />
+				</sample>
+				<sample time="4">
+					<depth value="3.44" />
+					<temp value="15.00" />
+					<deco depth="0.00" type="ndl" duration="0" />
+				</sample>
+				<sample time="6">
+					<depth value="4.25" />
+					<temp value="15.00" />
+					<deco depth="0.00" type="ndl" duration="0" />
+				</sample>
+				<sample time="8">
+					<depth value="4.95" />
+					<temp value="15.00" />
+					<deco depth="0.00" type="ndl" duration="0" />
+				</sample>
+				<sample time="10">
+					<depth value="5.31" />
+					<temp value="15.00" />
+					<deco depth="0.00" type="ndl" duration="0" />
+				</sample>
+				<sample time="12">
+					<depth value="5.67" />
+					<temp value="15.00" />
+					<deco depth="0.00" type="ndl" duration="0" />
+				</sample>
+				<sample time="14">
+					<depth value="6.23" />
+					<temp value="15.00" />
+					<deco depth="0.00" type="ndl" duration="0" />
+				</sample>
+				<sample time="16">
+					<depth value="6.64" />
+					<temp value="15.00" />
+					<deco depth="0.00" type="ndl" duration="0" />
+				</sample>
+				<sample time="18">
+					<depth value="6.96" />
+					<temp value="15.00" />
+					<deco depth="0.00" type="ndl" duration="0" />
+				</sample>
+				<sample time="20">
+					<depth value="7.27" />
+					<temp value="15.00" />
+					<deco depth="0.00" type="ndl" duration="0" />
+				</sample>
+				<sample time="22">
+					<depth value="7.24" />
+					<temp value="15.00" />
+					<deco depth="0.00" type="ndl" duration="0" />
+				</sample>
+				<sample time="24">
+					<depth value="7.73" />
+					<temp value="15.00" />
+					<deco depth="0.00" type="ndl" duration="0" />
+				</sample>
+				<sample time="26">
+					<depth value="8.03" />
+					<temp value="15.00" />
+					<deco depth="0.00" type="ndl" duration="0" />
+				</sample>
+				<sample time="28">
+					<depth value="8.43" />
+					<temp value="15.00" />
+					<deco depth="0.00" type="ndl" duration="0" />
+				</sample>
+				<sample time="30">
+					<depth value="8.71" />
+					<temp value="15.00" />
+					<deco depth="0.00" type="ndl" duration="0" />
+				</sample>
+				<sample time="32">
+					<depth value="8.87" />
+					<temp value="15.00" />
+					<deco depth="0.00" type="ndl" duration="0" />
+				</sample>
+				<sample time="34">
+					<depth value="9.07" />
+					<temp value="15.00" />
+					<deco depth="0.00" type="ndl" duration="0" />
+				</sample>
+				<sample time="36">
+					<depth value="9.21" />
+					<temp value="15.00" />
+					<deco depth="0.00" type="ndl" duration="0" />
+				</sample>
+				<sample time="38">
+					<depth value="9.34" />
+					<temp value="15.00" />
+					<deco depth="0.00" type="ndl" duration="0" />
+				</sample>
+				<sample time="40">
+					<depth value="9.32" />
+					<temp value="15.00" />
+					<deco depth="0.00" type="ndl" duration="0" />
+				</sample>
+				<sample time="42">
+					<depth value="9.49" />
+					<temp value="15.00" />
+					<deco depth="0.00" type="ndl" duration="0" />
+				</sample>
+				<sample time="44">
+					<depth value="9.58" />
+					<temp value="15.00" />
+					<deco depth="0.00" type="ndl" duration="0" />
+				</sample>
+				<sample time="46">
+					<depth value="9.38" />
+					<temp value="15.00" />
+					<deco depth="0.00" type="ndl" duration="0" />
+				</sample>
+				<sample time="48">
+					<depth value="9.63" />
+					<temp value="15.00" />
+					<deco depth="0.00" type="ndl" duration="0" />
+				</sample>
+				<sample time="50">
+					<depth value="9.65" />
+					<temp value="15.00" />
+					<deco depth="0.00" type="ndl" duration="0" />
+				</sample>
+				<sample time="52">
+					<depth value="9.57" />
+					<temp value="15.00" />
+					<deco depth="0.00" type="ndl" duration="0" />
+				</sample>
+				<sample time="54">
+					<depth value="9.41" />
+					<temp value="15.00" />
+					<deco depth="0.00" type="ndl" duration="0" />
+				</sample>
+				<sample time="56">
+					<depth value="9.16" />
+					<temp value="15.00" />
+					<deco depth="0.00" type="ndl" duration="0" />
+				</sample>
+				<sample time="58">
+					<depth value="8.45" />
+					<temp value="15.00" />
+					<deco depth="0.00" type="ndl" duration="0" />
+				</sample>
+				<sample time="60">
+					<depth value="7.97" />
+					<temp value="15.00" />
+					<deco depth="0.00" type="ndl" duration="0" />
+				</sample>
+				<sample time="62">
+					<depth value="6.91" />
+					<temp value="15.00" />
+					<deco depth="0.00" type="ndl" duration="0" />
+				</sample>
+				<sample time="64">
+					<depth value="5.39" />
+					<temp value="15.00" />
+					<deco depth="0.00" type="ndl" duration="0" />
+				</sample>
+				<sample time="66">
+					<depth value="3.74" />
+					<temp value="15.00" />
+					<deco depth="0.00" type="ndl" duration="0" />
+				</sample>
+				<sample time="68">
+					<depth value="2.05" />
+					<temp value="15.00" />
+					<deco depth="0.00" type="ndl" duration="0" />
+				</sample>
+				<sample time="70">
+					<depth value="0.30" />
+					<temp value="15.00" />
+					<event type="surface" duration="0" />
+					<event type="surface" duration="0" />
+					<deco depth="0.00" type="ndl" duration="0" />
+				</sample>
+			</samples>
+		</dive>
+		<dive number="33" date="2017-01-23" time="13:10:37" duration="53" mode="freedive">
+			<fingerprint>E10701170D0A25</fingerprint>
+			<depth max="7.45" />
+			<samples>
+				<sample time="0">
+					<depth value="1.47" />
+					<temp value="15.00" />
+					<event type="surface" duration="0" />
+					<deco depth="0.00" type="ndl" duration="0" />
+				</sample>
+				<sample time="2">
+					<depth value="2.39" />
+					<temp value="15.00" />
+					<deco depth="0.00" type="ndl" duration="0" />
+				</sample>
+				<sample time="4">
+					<depth value="3.21" />
+					<temp value="15.00" />
+					<deco depth="0.00" type="ndl" duration="0" />
+				</sample>
+				<sample time="6">
+					<depth value="3.78" />
+					<temp value="15.00" />
+					<deco depth="0.00" type="ndl" duration="0" />
+				</sample>
+				<sample time="8">
+					<depth value="4.71" />
+					<temp value="15.00" />
+					<deco depth="0.00" type="ndl" duration="0" />
+				</sample>
+				<sample time="10">
+					<depth value="5.57" />
+					<temp value="15.00" />
+					<deco depth="0.00" type="ndl" duration="0" />
+				</sample>
+				<sample time="12">
+					<depth value="6.04" />
+					<temp value="15.00" />
+					<deco depth="0.00" type="ndl" duration="0" />
+				</sample>
+				<sample time="14">
+					<depth value="6.51" />
+					<temp value="15.00" />
+					<deco depth="0.00" type="ndl" duration="0" />
+				</sample>
+				<sample time="16">
+					<depth value="6.91" />
+					<temp value="15.00" />
+					<deco depth="0.00" type="ndl" duration="0" />
+				</sample>
+				<sample time="18">
+					<depth value="7.04" />
+					<temp value="15.00" />
+					<deco depth="0.00" type="ndl" duration="0" />
+				</sample>
+				<sample time="20">
+					<depth value="7.23" />
+					<temp value="15.00" />
+					<deco depth="0.00" type="ndl" duration="0" />
+				</sample>
+				<sample time="22">
+					<depth value="7.37" />
+					<temp value="15.00" />
+					<deco depth="0.00" type="ndl" duration="0" />
+				</sample>
+				<sample time="24">
+					<depth value="7.40" />
+					<temp value="15.00" />
+					<deco depth="0.00" type="ndl" duration="0" />
+				</sample>
+				<sample time="26">
+					<depth value="7.45" />
+					<temp value="15.00" />
+					<deco depth="0.00" type="ndl" duration="0" />
+				</sample>
+				<sample time="28">
+					<depth value="7.35" />
+					<temp value="15.00" />
+					<deco depth="0.00" type="ndl" duration="0" />
+				</sample>
+				<sample time="30">
+					<depth value="7.26" />
+					<temp value="15.00" />
+					<deco depth="0.00" type="ndl" duration="0" />
+				</sample>
+				<sample time="32">
+					<depth value="7.19" />
+					<temp value="15.00" />
+					<deco depth="0.00" type="ndl" duration="0" />
+				</sample>
+				<sample time="34">
+					<depth value="7.24" />
+					<temp value="15.00" />
+					<deco depth="0.00" type="ndl" duration="0" />
+				</sample>
+				<sample time="36">
+					<depth value="7.27" />
+					<temp value="15.00" />
+					<deco depth="0.00" type="ndl" duration="0" />
+				</sample>
+				<sample time="38">
+					<depth value="7.33" />
+					<temp value="15.00" />
+					<deco depth="0.00" type="ndl" duration="0" />
+				</sample>
+				<sample time="40">
+					<depth value="7.30" />
+					<temp value="15.00" />
+					<deco depth="0.00" type="ndl" duration="0" />
+				</sample>
+				<sample time="42">
+					<depth value="7.26" />
+					<temp value="15.00" />
+					<deco depth="0.00" type="ndl" duration="0" />
+				</sample>
+				<sample time="44">
+					<depth value="6.74" />
+					<temp value="15.00" />
+					<deco depth="0.00" type="ndl" duration="0" />
+				</sample>
+				<sample time="46">
+					<depth value="5.48" />
+					<temp value="15.00" />
+					<deco depth="0.00" type="ndl" duration="0" />
+				</sample>
+				<sample time="48">
+					<depth value="4.12" />
+					<temp value="15.00" />
+					<deco depth="0.00" type="ndl" duration="0" />
+				</sample>
+				<sample time="50">
+					<depth value="2.52" />
+					<temp value="15.00" />
+					<deco depth="0.00" type="ndl" duration="0" />
+				</sample>
+				<sample time="52">
+					<depth value="0.61" />
+					<temp value="15.00" />
+					<event type="surface" duration="1" />
+					<event type="surface" duration="1" />
+					<deco depth="0.00" type="ndl" duration="0" />
+				</sample>
+			</samples>
+		</dive>
+		<dive number="34" date="2017-01-23" time="13:08:14" duration="39" mode="freedive">
+			<fingerprint>E10701170D080E</fingerprint>
+			<depth max="6.74" />
+			<samples>
+				<sample time="0">
+					<depth value="2.21" />
+					<temp value="16.00" />
+					<event type="surface" duration="0" />
+					<deco depth="0.00" type="ndl" duration="0" />
+				</sample>
+				<sample time="2">
+					<depth value="3.12" />
+					<temp value="16.00" />
+					<deco depth="0.00" type="ndl" duration="0" />
+				</sample>
+				<sample time="4">
+					<depth value="4.03" />
+					<temp value="16.00" />
+					<deco depth="0.00" type="ndl" duration="0" />
+				</sample>
+				<sample time="6">
+					<depth value="5.00" />
+					<temp value="16.00" />
+					<deco depth="0.00" type="ndl" duration="0" />
+				</sample>
+				<sample time="8">
+					<depth value="5.75" />
+					<temp value="16.00" />
+					<deco depth="0.00" type="ndl" duration="0" />
+				</sample>
+				<sample time="10">
+					<depth value="6.04" />
+					<temp value="16.00" />
+					<deco depth="0.00" type="ndl" duration="0" />
+				</sample>
+				<sample time="12">
+					<depth value="6.39" />
+					<temp value="16.00" />
+					<deco depth="0.00" type="ndl" duration="0" />
+				</sample>
+				<sample time="14">
+					<depth value="6.41" />
+					<temp value="16.00" />
+					<deco depth="0.00" type="ndl" duration="0" />
+				</sample>
+				<sample time="16">
+					<depth value="6.52" />
+					<temp value="16.00" />
+					<deco depth="0.00" type="ndl" duration="0" />
+				</sample>
+				<sample time="18">
+					<depth value="6.66" />
+					<temp value="16.00" />
+					<deco depth="0.00" type="ndl" duration="0" />
+				</sample>
+				<sample time="20">
+					<depth value="6.70" />
+					<temp value="16.00" />
+					<deco depth="0.00" type="ndl" duration="0" />
+				</sample>
+				<sample time="22">
+					<depth value="6.70" />
+					<temp value="16.00" />
+					<deco depth="0.00" type="ndl" duration="0" />
+				</sample>
+				<sample time="24">
+					<depth value="6.62" />
+					<temp value="16.00" />
+					<deco depth="0.00" type="ndl" duration="0" />
+				</sample>
+				<sample time="26">
+					<depth value="6.57" />
+					<temp value="16.00" />
+					<deco depth="0.00" type="ndl" duration="0" />
+				</sample>
+				<sample time="28">
+					<depth value="6.60" />
+					<temp value="16.00" />
+					<deco depth="0.00" type="ndl" duration="0" />
+				</sample>
+				<sample time="30">
+					<depth value="6.63" />
+					<temp value="16.00" />
+					<deco depth="0.00" type="ndl" duration="0" />
+				</sample>
+				<sample time="32">
+					<depth value="6.16" />
+					<temp value="16.00" />
+					<deco depth="0.00" type="ndl" duration="0" />
+				</sample>
+				<sample time="34">
+					<depth value="4.77" />
+					<temp value="16.00" />
+					<deco depth="0.00" type="ndl" duration="0" />
+				</sample>
+				<sample time="36">
+					<depth value="2.72" />
+					<temp value="16.00" />
+					<deco depth="0.00" type="ndl" duration="0" />
+				</sample>
+				<sample time="38">
+					<depth value="0.62" />
+					<temp value="16.00" />
+					<event type="surface" duration="1" />
+					<event type="surface" duration="1" />
+					<deco depth="0.00" type="ndl" duration="0" />
+				</sample>
+			</samples>
+		</dive>
+	</dives>
+</divelog>

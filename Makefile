@@ -29,13 +29,19 @@ PNGS		 = daily.aggr.png \
 		   daily.restscatter.png \
 		   daily.scatter.png \
 		   daily.stack.png \
-		   daily.summary.png
+		   daily.summary.png \
+		   multiday.restscatter.png \
+		   multiday.stack.png \
+		   short.stack.png
 PDFS		 = daily.aggr.pdf \
 		   daily.rest.pdf \
 		   daily.restscatter.pdf \
 		   daily.scatter.pdf \
 		   daily.stack.pdf \
-		   daily.summary.pdf
+		   daily.summary.pdf \
+		   multiday.restscatter.pdf \
+		   multiday.stack.pdf \
+		   short.stack.pdf
 HTMLS		 = divecmd.1.html \
 		   divecmd2grap.1.html \
 		   divecmd2json.1.html \
@@ -44,6 +50,13 @@ HTMLS		 = divecmd.1.html \
 CSSS		 = index.css \
 		   mandoc.css
 WWWDIR		 = /var/www/vhosts/kristaps.bsd.lv/htdocs/divecmd
+XMLS		 = daily.xml \
+		   day1.xml \
+		   day2.xml \
+		   multiday.xml
+BUILT		 = screenshot1.png \
+		   screenshot2.png \
+		   slider.js
 
 all: $(BINS)
 
@@ -52,7 +65,7 @@ www: $(HTMLS) $(PDFS) $(PNGS) divecmd.tar.gz divecmd.tar.gz.sha512
 installwww: www
 	mkdir -p $(WWWDIR)
 	mkdir -p $(WWWDIR)/snapshots
-	install -m 0444 $(CSSS) $(HTMLS) $(PDFS) $(PNGS) daily.xml screenshot.png $(WWWDIR)
+	install -m 0444 $(CSSS) $(HTMLS) $(PDFS) $(PNGS) $(XMLS) $(BUILT) $(WWWDIR)
 	install -m 0444 divecmd.tar.gz $(WWWDIR)/snapshots/divecmd-$(VERSION).tar.gz
 	install -m 0444 divecmd.tar.gz.sha512 $(WWWDIR)/snapshots/divecmd-$(VERSION).tar.gz.sha512
 	install -m 0444 divecmd.tar.gz $(WWWDIR)/snapshots
@@ -98,6 +111,7 @@ index.html: index.xml
 
 clean:
 	rm -f $(OBJS) $(BINS) $(BINOBJS) $(HTMLS) $(PDFS) $(PNGS)
+	rm -f divecmd.tar.gz divecmd.tar.gz.sha512
 
 .1.1.html:
 	mandoc -Thtml -Ostyle=mandoc.css $< >$@
@@ -108,14 +122,23 @@ clean:
 .xml.restscatter.pdf:
 	./divecmd2grap -m restscatter $< | groff -Gp -Tpdf -P-p5.8i,8.3i >$@
 
+multiday.restscatter.pdf: day1.xml day2.xml
+	./divecmd2grap -s date -m restscatter day1.xml day2.xml | groff -Gp -Tpdf -P-p5.8i,8.3i >$@
+
 .xml.rest.pdf:
 	./divecmd2grap -m rest $< | groff -Gp -Tpdf -P-p5.8i,8.3i >$@
 
 .xml.stack.pdf:
 	./divecmd2grap -m stack $< | groff -Gp -Tpdf -P-p5.8i,8.3i >$@
 
+short.stack.pdf: multiday.xml
+	./divecmd2grap -s date -d -m stack multiday.xml | groff -Gp -Tpdf -P-p5.8i,8.3i >$@
+
 .xml.aggr.pdf:
 	./divecmd2grap -m aggr $< | groff -Gp -Tpdf -P-p5.8i,8.3i >$@
+
+multiday.stack.pdf: multiday.xml
+	./divecmd2grap -s date -m stack multiday.xml | groff -Gp -Tpdf -P-p5.8i,8.3i >$@
 
 .xml.scatter.pdf:
 	./divecmd2grap -m scatter $< | groff -Gp -Tpdf -P-p5.8i,8.3i >$@

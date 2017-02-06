@@ -1,0 +1,1690 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<divelog program="divecmd" version="0.0.1">
+	<dives>
+		<dive number="1" date="2013-05-02" time="08:41:00" duration="2722" mode="opencircuit">
+			<fingerprint>05020D091E</fingerprint>
+			<gasmixes>
+				<gasmix num="1" o2="28.0" n2="72.0" he="0.0" />
+				<gasmix num="2" o2="50.0" n2="50.0" he="0.0" />
+				<gasmix num="3" o2="28.0" n2="72.0" he="0.0" />
+				<gasmix num="4" o2="21.0" n2="79.0" he="0.0" />
+				<gasmix num="5" o2="21.0" n2="79.0" he="0.0" />
+			</gasmixes>
+			<depth max="14.74" mean="9.34" />
+			<samples>
+				<sample time="10">
+					<depth value="2.80" />
+				</sample>
+				<sample time="20">
+					<depth value="4.53" />
+				</sample>
+				<sample time="30">
+					<depth value="6.34" />
+				</sample>
+				<sample time="40">
+					<depth value="6.59" />
+				</sample>
+				<sample time="50">
+					<depth value="6.71" />
+				</sample>
+				<sample time="60">
+					<depth value="7.30" />
+					<temp value="21.10" />
+				</sample>
+				<sample time="70">
+					<depth value="7.05" />
+				</sample>
+				<sample time="80">
+					<depth value="7.12" />
+				</sample>
+				<sample time="90">
+					<depth value="7.36" />
+				</sample>
+				<sample time="100">
+					<depth value="7.57" />
+				</sample>
+				<sample time="110">
+					<depth value="7.74" />
+				</sample>
+				<sample time="120">
+					<depth value="8.49" />
+					<temp value="21.00" />
+				</sample>
+				<sample time="130">
+					<depth value="9.34" />
+				</sample>
+				<sample time="140">
+					<depth value="9.95" />
+				</sample>
+				<sample time="150">
+					<depth value="10.43" />
+				</sample>
+				<sample time="160">
+					<depth value="10.47" />
+				</sample>
+				<sample time="170">
+					<depth value="10.93" />
+				</sample>
+				<sample time="180">
+					<depth value="11.80" />
+					<temp value="20.90" />
+				</sample>
+				<sample time="190">
+					<depth value="12.45" />
+				</sample>
+				<sample time="200">
+					<depth value="12.69" />
+				</sample>
+				<sample time="210">
+					<depth value="12.85" />
+				</sample>
+				<sample time="220">
+					<depth value="13.49" />
+				</sample>
+				<sample time="230">
+					<depth value="14.05" />
+				</sample>
+				<sample time="240">
+					<depth value="14.06" />
+					<temp value="20.80" />
+				</sample>
+				<sample time="250">
+					<depth value="14.24" />
+				</sample>
+				<sample time="260">
+					<depth value="14.37" />
+				</sample>
+				<sample time="270">
+					<depth value="14.25" />
+				</sample>
+				<sample time="280">
+					<depth value="14.27" />
+				</sample>
+				<sample time="290">
+					<depth value="14.42" />
+				</sample>
+				<sample time="300">
+					<depth value="14.54" />
+					<temp value="20.80" />
+				</sample>
+				<sample time="310">
+					<depth value="13.76" />
+				</sample>
+				<sample time="320">
+					<depth value="12.95" />
+				</sample>
+				<sample time="330">
+					<depth value="12.24" />
+				</sample>
+				<sample time="340">
+					<depth value="11.30" />
+				</sample>
+				<sample time="350">
+					<depth value="9.94" />
+				</sample>
+				<sample time="360">
+					<depth value="8.54" />
+					<temp value="20.80" />
+				</sample>
+				<sample time="370">
+					<depth value="7.74" />
+				</sample>
+				<sample time="380">
+					<depth value="7.50" />
+				</sample>
+				<sample time="390">
+					<depth value="7.47" />
+				</sample>
+				<sample time="400">
+					<depth value="7.49" />
+				</sample>
+				<sample time="410">
+					<depth value="7.41" />
+				</sample>
+				<sample time="420">
+					<depth value="7.46" />
+					<temp value="20.70" />
+				</sample>
+				<sample time="430">
+					<depth value="7.39" />
+				</sample>
+				<sample time="440">
+					<depth value="7.61" />
+				</sample>
+				<sample time="450">
+					<depth value="8.17" />
+				</sample>
+				<sample time="460">
+					<depth value="8.33" />
+				</sample>
+				<sample time="470">
+					<depth value="8.35" />
+				</sample>
+				<sample time="480">
+					<depth value="8.38" />
+					<temp value="20.60" />
+				</sample>
+				<sample time="490">
+					<depth value="8.35" />
+				</sample>
+				<sample time="500">
+					<depth value="8.53" />
+				</sample>
+				<sample time="510">
+					<depth value="8.59" />
+				</sample>
+				<sample time="520">
+					<depth value="8.60" />
+				</sample>
+				<sample time="530">
+					<depth value="8.73" />
+				</sample>
+				<sample time="540">
+					<depth value="9.31" />
+					<temp value="20.50" />
+				</sample>
+				<sample time="550">
+					<depth value="9.31" />
+				</sample>
+				<sample time="560">
+					<depth value="9.46" />
+				</sample>
+				<sample time="570">
+					<depth value="9.45" />
+				</sample>
+				<sample time="580">
+					<depth value="9.40" />
+				</sample>
+				<sample time="590">
+					<depth value="9.42" />
+				</sample>
+				<sample time="600">
+					<depth value="10.14" />
+					<temp value="20.40" />
+				</sample>
+				<sample time="610">
+					<depth value="10.20" />
+				</sample>
+				<sample time="620">
+					<depth value="10.15" />
+				</sample>
+				<sample time="630">
+					<depth value="10.60" />
+				</sample>
+				<sample time="640">
+					<depth value="11.38" />
+				</sample>
+				<sample time="650">
+					<depth value="11.86" />
+				</sample>
+				<sample time="660">
+					<depth value="12.17" />
+					<temp value="20.40" />
+				</sample>
+				<sample time="670">
+					<depth value="12.03" />
+				</sample>
+				<sample time="680">
+					<depth value="12.18" />
+				</sample>
+				<sample time="690">
+					<depth value="12.30" />
+				</sample>
+				<sample time="700">
+					<depth value="12.20" />
+				</sample>
+				<sample time="710">
+					<depth value="12.46" />
+				</sample>
+				<sample time="720">
+					<depth value="13.34" />
+					<temp value="20.30" />
+				</sample>
+				<sample time="730">
+					<depth value="13.39" />
+				</sample>
+				<sample time="740">
+					<depth value="13.17" />
+				</sample>
+				<sample time="750">
+					<depth value="13.37" />
+				</sample>
+				<sample time="760">
+					<depth value="13.40" />
+				</sample>
+				<sample time="770">
+					<depth value="13.37" />
+				</sample>
+				<sample time="780">
+					<depth value="13.34" />
+					<temp value="20.30" />
+				</sample>
+				<sample time="790">
+					<depth value="13.19" />
+				</sample>
+				<sample time="800">
+					<depth value="12.94" />
+				</sample>
+				<sample time="810">
+					<depth value="12.69" />
+				</sample>
+				<sample time="820">
+					<depth value="12.37" />
+				</sample>
+				<sample time="830">
+					<depth value="12.31" />
+				</sample>
+				<sample time="840">
+					<depth value="12.17" />
+					<temp value="20.20" />
+				</sample>
+				<sample time="850">
+					<depth value="11.57" />
+				</sample>
+				<sample time="860">
+					<depth value="10.61" />
+				</sample>
+				<sample time="870">
+					<depth value="10.15" />
+				</sample>
+				<sample time="880">
+					<depth value="10.42" />
+				</sample>
+				<sample time="890">
+					<depth value="10.34" />
+				</sample>
+				<sample time="900">
+					<depth value="9.76" />
+					<temp value="20.30" />
+				</sample>
+				<sample time="910">
+					<depth value="9.38" />
+				</sample>
+				<sample time="920">
+					<depth value="8.72" />
+				</sample>
+				<sample time="930">
+					<depth value="8.65" />
+				</sample>
+				<sample time="940">
+					<depth value="8.28" />
+				</sample>
+				<sample time="950">
+					<depth value="7.90" />
+				</sample>
+				<sample time="960">
+					<depth value="7.47" />
+					<temp value="20.30" />
+				</sample>
+				<sample time="970">
+					<depth value="7.33" />
+				</sample>
+				<sample time="980">
+					<depth value="7.55" />
+				</sample>
+				<sample time="990">
+					<depth value="7.40" />
+				</sample>
+				<sample time="1000">
+					<depth value="7.49" />
+				</sample>
+				<sample time="1010">
+					<depth value="7.51" />
+				</sample>
+				<sample time="1020">
+					<depth value="7.68" />
+					<temp value="20.30" />
+				</sample>
+				<sample time="1030">
+					<depth value="7.88" />
+				</sample>
+				<sample time="1040">
+					<depth value="7.66" />
+				</sample>
+				<sample time="1050">
+					<depth value="7.59" />
+				</sample>
+				<sample time="1060">
+					<depth value="7.73" />
+				</sample>
+				<sample time="1070">
+					<depth value="7.37" />
+				</sample>
+				<sample time="1080">
+					<depth value="7.26" />
+					<temp value="20.30" />
+				</sample>
+				<sample time="1090">
+					<depth value="7.17" />
+				</sample>
+				<sample time="1100">
+					<depth value="7.30" />
+				</sample>
+				<sample time="1110">
+					<depth value="7.21" />
+				</sample>
+				<sample time="1120">
+					<depth value="7.31" />
+				</sample>
+				<sample time="1130">
+					<depth value="7.93" />
+				</sample>
+				<sample time="1140">
+					<depth value="7.93" />
+					<temp value="20.30" />
+				</sample>
+				<sample time="1150">
+					<depth value="8.18" />
+				</sample>
+				<sample time="1160">
+					<depth value="8.14" />
+				</sample>
+				<sample time="1170">
+					<depth value="8.21" />
+				</sample>
+				<sample time="1180">
+					<depth value="8.43" />
+				</sample>
+				<sample time="1190">
+					<depth value="8.44" />
+				</sample>
+				<sample time="1200">
+					<depth value="8.53" />
+					<temp value="20.30" />
+				</sample>
+				<sample time="1210">
+					<depth value="8.45" />
+				</sample>
+				<sample time="1220">
+					<depth value="8.59" />
+				</sample>
+				<sample time="1230">
+					<depth value="8.53" />
+				</sample>
+				<sample time="1240">
+					<depth value="8.16" />
+				</sample>
+				<sample time="1250">
+					<depth value="8.55" />
+				</sample>
+				<sample time="1260">
+					<depth value="8.69" />
+					<temp value="20.20" />
+				</sample>
+				<sample time="1270">
+					<depth value="8.84" />
+				</sample>
+				<sample time="1280">
+					<depth value="9.42" />
+				</sample>
+				<sample time="1290">
+					<depth value="9.05" />
+				</sample>
+				<sample time="1300">
+					<depth value="9.22" />
+				</sample>
+				<sample time="1310">
+					<depth value="9.34" />
+				</sample>
+				<sample time="1320">
+					<depth value="9.82" />
+					<temp value="20.20" />
+				</sample>
+				<sample time="1330">
+					<depth value="9.95" />
+				</sample>
+				<sample time="1340">
+					<depth value="9.94" />
+				</sample>
+				<sample time="1350">
+					<depth value="9.97" />
+				</sample>
+				<sample time="1360">
+					<depth value="10.00" />
+				</sample>
+				<sample time="1370">
+					<depth value="9.74" />
+				</sample>
+				<sample time="1380">
+					<depth value="9.88" />
+					<temp value="20.20" />
+				</sample>
+				<sample time="1390">
+					<depth value="9.89" />
+				</sample>
+				<sample time="1400">
+					<depth value="9.58" />
+				</sample>
+				<sample time="1410">
+					<depth value="9.60" />
+				</sample>
+				<sample time="1420">
+					<depth value="9.91" />
+				</sample>
+				<sample time="1430">
+					<depth value="9.86" />
+				</sample>
+				<sample time="1440">
+					<depth value="9.93" />
+					<temp value="20.30" />
+				</sample>
+				<sample time="1450">
+					<depth value="10.01" />
+				</sample>
+				<sample time="1460">
+					<depth value="9.92" />
+				</sample>
+				<sample time="1470">
+					<depth value="10.15" />
+				</sample>
+				<sample time="1480">
+					<depth value="10.07" />
+				</sample>
+				<sample time="1490">
+					<depth value="10.48" />
+				</sample>
+				<sample time="1500">
+					<depth value="12.07" />
+					<temp value="20.30" />
+				</sample>
+				<sample time="1510">
+					<depth value="11.97" />
+				</sample>
+				<sample time="1520">
+					<depth value="11.94" />
+				</sample>
+				<sample time="1530">
+					<depth value="12.21" />
+				</sample>
+				<sample time="1540">
+					<depth value="12.18" />
+				</sample>
+				<sample time="1550">
+					<depth value="12.25" />
+				</sample>
+				<sample time="1560">
+					<depth value="12.46" />
+					<temp value="20.30" />
+				</sample>
+				<sample time="1570">
+					<depth value="12.31" />
+				</sample>
+				<sample time="1580">
+					<depth value="13.27" />
+				</sample>
+				<sample time="1590">
+					<depth value="13.42" />
+				</sample>
+				<sample time="1600">
+					<depth value="13.43" />
+				</sample>
+				<sample time="1610">
+					<depth value="13.61" />
+				</sample>
+				<sample time="1620">
+					<depth value="13.31" />
+					<temp value="20.30" />
+				</sample>
+				<sample time="1630">
+					<depth value="13.56" />
+				</sample>
+				<sample time="1640">
+					<depth value="13.46" />
+				</sample>
+				<sample time="1650">
+					<depth value="13.34" />
+				</sample>
+				<sample time="1660">
+					<depth value="13.63" />
+				</sample>
+				<sample time="1670">
+					<depth value="13.45" />
+				</sample>
+				<sample time="1680">
+					<depth value="13.57" />
+					<temp value="20.30" />
+				</sample>
+				<sample time="1690">
+					<depth value="13.48" />
+				</sample>
+				<sample time="1700">
+					<depth value="13.56" />
+				</sample>
+				<sample time="1710">
+					<depth value="13.55" />
+				</sample>
+				<sample time="1720">
+					<depth value="13.38" />
+				</sample>
+				<sample time="1730">
+					<depth value="13.44" />
+				</sample>
+				<sample time="1740">
+					<depth value="13.35" />
+					<temp value="20.20" />
+				</sample>
+				<sample time="1750">
+					<depth value="13.43" />
+				</sample>
+				<sample time="1760">
+					<depth value="13.54" />
+				</sample>
+				<sample time="1770">
+					<depth value="13.53" />
+				</sample>
+				<sample time="1780">
+					<depth value="13.56" />
+				</sample>
+				<sample time="1790">
+					<depth value="13.60" />
+				</sample>
+				<sample time="1800">
+					<depth value="13.59" />
+					<temp value="20.30" />
+				</sample>
+				<sample time="1810">
+					<depth value="13.51" />
+				</sample>
+				<sample time="1820">
+					<depth value="13.35" />
+				</sample>
+				<sample time="1830">
+					<depth value="13.49" />
+				</sample>
+				<sample time="1840">
+					<depth value="12.86" />
+				</sample>
+				<sample time="1850">
+					<depth value="11.65" />
+				</sample>
+				<sample time="1860">
+					<depth value="11.99" />
+					<temp value="20.30" />
+				</sample>
+				<sample time="1870">
+					<depth value="11.18" />
+				</sample>
+				<sample time="1880">
+					<depth value="10.23" />
+				</sample>
+				<sample time="1890">
+					<depth value="9.33" />
+				</sample>
+				<sample time="1900">
+					<depth value="8.34" />
+				</sample>
+				<sample time="1910">
+					<depth value="7.81" />
+				</sample>
+				<sample time="1920">
+					<depth value="8.55" />
+					<temp value="20.30" />
+				</sample>
+				<sample time="1930">
+					<depth value="9.37" />
+				</sample>
+				<sample time="1940">
+					<depth value="10.23" />
+				</sample>
+				<sample time="1950">
+					<depth value="10.88" />
+				</sample>
+				<sample time="1960">
+					<depth value="11.55" />
+				</sample>
+				<sample time="1970">
+					<depth value="12.31" />
+				</sample>
+				<sample time="1980">
+					<depth value="11.85" />
+					<temp value="20.30" />
+				</sample>
+				<sample time="1990">
+					<depth value="12.99" />
+				</sample>
+				<sample time="2000">
+					<depth value="13.27" />
+				</sample>
+				<sample time="2010">
+					<depth value="13.35" />
+				</sample>
+				<sample time="2020">
+					<depth value="13.36" />
+				</sample>
+				<sample time="2030">
+					<depth value="13.06" />
+				</sample>
+				<sample time="2040">
+					<depth value="12.84" />
+					<temp value="20.30" />
+				</sample>
+				<sample time="2050">
+					<depth value="12.87" />
+				</sample>
+				<sample time="2060">
+					<depth value="12.56" />
+				</sample>
+				<sample time="2070">
+					<depth value="12.22" />
+				</sample>
+				<sample time="2080">
+					<depth value="12.17" />
+				</sample>
+				<sample time="2090">
+					<depth value="12.16" />
+				</sample>
+				<sample time="2100">
+					<depth value="11.86" />
+					<temp value="20.30" />
+				</sample>
+				<sample time="2110">
+					<depth value="11.79" />
+				</sample>
+				<sample time="2120">
+					<depth value="11.09" />
+				</sample>
+				<sample time="2130">
+					<depth value="10.81" />
+				</sample>
+				<sample time="2140">
+					<depth value="10.18" />
+				</sample>
+				<sample time="2150">
+					<depth value="9.89" />
+				</sample>
+				<sample time="2160">
+					<depth value="9.25" />
+					<temp value="20.40" />
+				</sample>
+				<sample time="2170">
+					<depth value="8.97" />
+				</sample>
+				<sample time="2180">
+					<depth value="8.32" />
+				</sample>
+				<sample time="2190">
+					<depth value="8.32" />
+				</sample>
+				<sample time="2200">
+					<depth value="8.32" />
+				</sample>
+				<sample time="2210">
+					<depth value="7.36" />
+				</sample>
+				<sample time="2220">
+					<depth value="7.16" />
+					<temp value="20.40" />
+				</sample>
+				<sample time="2230">
+					<depth value="7.15" />
+				</sample>
+				<sample time="2240">
+					<depth value="6.98" />
+				</sample>
+				<sample time="2250">
+					<depth value="7.23" />
+				</sample>
+				<sample time="2260">
+					<depth value="7.08" />
+				</sample>
+				<sample time="2270">
+					<depth value="7.09" />
+				</sample>
+				<sample time="2280">
+					<depth value="7.01" />
+					<temp value="20.40" />
+				</sample>
+				<sample time="2290">
+					<depth value="7.00" />
+				</sample>
+				<sample time="2300">
+					<depth value="6.84" />
+				</sample>
+				<sample time="2310">
+					<depth value="6.23" />
+				</sample>
+				<sample time="2320">
+					<depth value="5.60" />
+				</sample>
+				<sample time="2330">
+					<depth value="5.22" />
+				</sample>
+				<sample time="2340">
+					<depth value="5.70" />
+					<temp value="20.50" />
+				</sample>
+				<sample time="2350">
+					<depth value="5.93" />
+				</sample>
+				<sample time="2360">
+					<depth value="6.07" />
+				</sample>
+				<sample time="2370">
+					<depth value="6.00" />
+				</sample>
+				<sample time="2380">
+					<depth value="6.18" />
+				</sample>
+				<sample time="2390">
+					<depth value="5.82" />
+				</sample>
+				<sample time="2400">
+					<depth value="5.61" />
+					<temp value="20.40" />
+				</sample>
+				<sample time="2410">
+					<depth value="5.42" />
+				</sample>
+				<sample time="2420">
+					<depth value="4.93" />
+				</sample>
+				<sample time="2430">
+					<depth value="4.51" />
+				</sample>
+				<sample time="2440">
+					<depth value="4.08" />
+				</sample>
+				<sample time="2450">
+					<depth value="3.68" />
+				</sample>
+				<sample time="2460">
+					<depth value="3.66" />
+					<temp value="20.40" />
+				</sample>
+				<sample time="2470">
+					<depth value="3.91" />
+				</sample>
+				<sample time="2480">
+					<depth value="3.90" />
+				</sample>
+				<sample time="2490">
+					<depth value="3.83" />
+				</sample>
+				<sample time="2500">
+					<depth value="3.86" />
+				</sample>
+				<sample time="2510">
+					<depth value="3.80" />
+				</sample>
+				<sample time="2520">
+					<depth value="4.10" />
+					<temp value="20.40" />
+				</sample>
+				<sample time="2530">
+					<depth value="3.96" />
+				</sample>
+				<sample time="2540">
+					<depth value="4.04" />
+				</sample>
+				<sample time="2550">
+					<depth value="4.11" />
+				</sample>
+				<sample time="2560">
+					<depth value="3.76" />
+				</sample>
+				<sample time="2570">
+					<depth value="3.79" />
+				</sample>
+				<sample time="2580">
+					<depth value="3.86" />
+					<temp value="20.30" />
+				</sample>
+				<sample time="2590">
+					<depth value="3.54" />
+				</sample>
+				<sample time="2600">
+					<depth value="3.71" />
+				</sample>
+				<sample time="2610">
+					<depth value="3.58" />
+				</sample>
+				<sample time="2620">
+					<depth value="3.60" />
+				</sample>
+				<sample time="2630">
+					<depth value="3.26" />
+				</sample>
+				<sample time="2640">
+					<depth value="2.37" />
+					<temp value="20.40" />
+				</sample>
+				<sample time="2650">
+					<depth value="2.32" />
+				</sample>
+				<sample time="2660">
+					<depth value="2.43" />
+				</sample>
+				<sample time="2670">
+					<depth value="2.45" />
+				</sample>
+				<sample time="2680">
+					<depth value="1.86" />
+				</sample>
+				<sample time="2690">
+					<depth value="1.89" />
+				</sample>
+				<sample time="2700">
+					<depth value="1.06" />
+					<temp value="20.40" />
+				</sample>
+				<sample time="2710">
+					<depth value="1.36" />
+				</sample>
+				<sample time="2720">
+					<depth value="0.91" />
+				</sample>
+				<sample time="2730">
+					<depth value="0.25" />
+				</sample>
+				<sample time="2740">
+					<depth value="0.05" />
+				</sample>
+				<sample time="2750">
+					<depth value="0.41" />
+				</sample>
+				<sample time="2760">
+					<depth value="0.02" />
+					<temp value="20.40" />
+				</sample>
+				<sample time="2770">
+					<depth value="0.00" />
+				</sample>
+				<sample time="2780">
+					<depth value="0.00" />
+				</sample>
+				<sample time="2790">
+					<depth value="0.00" />
+				</sample>
+				<sample time="2800">
+					<depth value="0.00" />
+				</sample>
+				<sample time="2810">
+					<depth value="0.00" />
+				</sample>
+				<sample time="2820">
+					<depth value="0.00" />
+					<temp value="20.40" />
+				</sample>
+				<sample time="2830">
+					<depth value="0.00" />
+				</sample>
+				<sample time="2840">
+					<depth value="0.00" />
+				</sample>
+				<sample time="2850">
+					<depth value="0.00" />
+				</sample>
+				<sample time="2860">
+					<depth value="0.00" />
+				</sample>
+				<sample time="2870">
+					<depth value="0.00" />
+				</sample>
+				<sample time="2880">
+					<depth value="0.00" />
+					<temp value="20.40" />
+				</sample>
+				<sample time="2890">
+					<depth value="0.00" />
+				</sample>
+				<sample time="2900">
+					<depth value="0.00" />
+				</sample>
+				<sample time="2910">
+					<depth value="0.00" />
+				</sample>
+				<sample time="2920">
+					<depth value="0.00" />
+				</sample>
+				<sample time="2930">
+					<depth value="0.00" />
+				</sample>
+				<sample time="2940">
+					<depth value="0.00" />
+					<temp value="20.50" />
+				</sample>
+				<sample time="2950">
+					<depth value="0.00" />
+				</sample>
+				<sample time="2960">
+					<depth value="0.00" />
+				</sample>
+			</samples>
+		</dive>
+		<dive number="11" date="2017-01-02" time="13:35:57" duration="3512" mode="opencircuit">
+			<fingerprint>E10701020D2339</fingerprint>
+			<gasmixes>
+				<gasmix num="1" o2="31.0" n2="69.0" he="0.0" />
+				<gasmix num="2" o2="21.0" n2="79.0" he="0.0" />
+				<gasmix num="3" o2="21.0" n2="79.0" he="0.0" />
+			</gasmixes>
+			<depth max="7.17" />
+			<samples>
+				<sample time="0">
+					<depth value="1.23" />
+					<temp value="17.00" />
+				</sample>
+				<sample time="20">
+					<depth value="0.85" />
+					<temp value="17.00" />
+				</sample>
+				<sample time="40">
+					<depth value="1.79" />
+					<temp value="17.00" />
+				</sample>
+				<sample time="60">
+					<depth value="2.11" />
+					<temp value="17.00" />
+				</sample>
+				<sample time="80">
+					<depth value="2.25" />
+					<temp value="17.00" />
+				</sample>
+				<sample time="100">
+					<depth value="2.10" />
+					<temp value="17.00" />
+				</sample>
+				<sample time="120">
+					<depth value="2.42" />
+					<temp value="17.00" />
+				</sample>
+				<sample time="140">
+					<depth value="2.36" />
+					<temp value="17.00" />
+				</sample>
+				<sample time="160">
+					<depth value="0.60" />
+					<temp value="17.00" />
+				</sample>
+				<sample time="180">
+					<depth value="3.81" />
+					<temp value="17.00" />
+				</sample>
+				<sample time="200">
+					<depth value="4.45" />
+					<temp value="17.00" />
+				</sample>
+				<sample time="220">
+					<depth value="5.26" />
+					<temp value="17.00" />
+				</sample>
+				<sample time="240">
+					<depth value="5.49" />
+					<temp value="17.00" />
+				</sample>
+				<sample time="260">
+					<depth value="4.89" />
+					<temp value="17.00" />
+				</sample>
+				<sample time="280">
+					<depth value="5.40" />
+					<temp value="17.00" />
+				</sample>
+				<sample time="300">
+					<depth value="5.64" />
+					<temp value="17.00" />
+				</sample>
+				<sample time="320">
+					<depth value="5.51" />
+					<temp value="17.00" />
+				</sample>
+				<sample time="340">
+					<depth value="5.45" />
+					<temp value="17.00" />
+				</sample>
+				<sample time="360">
+					<depth value="5.63" />
+					<temp value="17.00" />
+				</sample>
+				<sample time="380">
+					<depth value="5.39" />
+					<temp value="17.00" />
+				</sample>
+				<sample time="400">
+					<depth value="6.23" />
+					<temp value="17.00" />
+				</sample>
+				<sample time="420">
+					<depth value="6.78" />
+					<temp value="17.00" />
+				</sample>
+				<sample time="440">
+					<depth value="6.30" />
+					<temp value="17.00" />
+				</sample>
+				<sample time="460">
+					<depth value="6.20" />
+					<temp value="17.00" />
+				</sample>
+				<sample time="480">
+					<depth value="5.91" />
+					<temp value="17.00" />
+				</sample>
+				<sample time="500">
+					<depth value="5.66" />
+					<temp value="17.00" />
+				</sample>
+				<sample time="520">
+					<depth value="5.46" />
+					<temp value="17.00" />
+				</sample>
+				<sample time="540">
+					<depth value="5.47" />
+					<temp value="17.00" />
+				</sample>
+				<sample time="560">
+					<depth value="5.63" />
+					<temp value="17.00" />
+				</sample>
+				<sample time="580">
+					<depth value="6.21" />
+					<temp value="17.00" />
+				</sample>
+				<sample time="600">
+					<depth value="5.15" />
+					<temp value="17.00" />
+				</sample>
+				<sample time="620">
+					<depth value="5.00" />
+					<temp value="17.00" />
+				</sample>
+				<sample time="640">
+					<depth value="6.59" />
+					<temp value="17.00" />
+				</sample>
+				<sample time="660">
+					<depth value="6.34" />
+					<temp value="17.00" />
+				</sample>
+				<sample time="680">
+					<depth value="6.08" />
+					<temp value="17.00" />
+				</sample>
+				<sample time="700">
+					<depth value="6.30" />
+					<temp value="17.00" />
+				</sample>
+				<sample time="720">
+					<depth value="6.41" />
+					<temp value="17.00" />
+				</sample>
+				<sample time="740">
+					<depth value="6.18" />
+					<temp value="17.00" />
+				</sample>
+				<sample time="760">
+					<depth value="5.00" />
+					<temp value="17.00" />
+				</sample>
+				<sample time="780">
+					<depth value="5.84" />
+					<temp value="17.00" />
+				</sample>
+				<sample time="800">
+					<depth value="5.90" />
+					<temp value="17.00" />
+				</sample>
+				<sample time="820">
+					<depth value="6.31" />
+					<temp value="17.00" />
+				</sample>
+				<sample time="840">
+					<depth value="5.70" />
+					<temp value="17.00" />
+				</sample>
+				<sample time="860">
+					<depth value="5.26" />
+					<temp value="17.00" />
+				</sample>
+				<sample time="880">
+					<depth value="5.72" />
+					<temp value="17.00" />
+				</sample>
+				<sample time="900">
+					<depth value="6.12" />
+					<temp value="17.00" />
+				</sample>
+				<sample time="920">
+					<depth value="6.00" />
+					<temp value="17.00" />
+				</sample>
+				<sample time="940">
+					<depth value="6.29" />
+					<temp value="17.00" />
+				</sample>
+				<sample time="960">
+					<depth value="6.11" />
+					<temp value="17.00" />
+				</sample>
+				<sample time="980">
+					<depth value="5.51" />
+					<temp value="17.00" />
+				</sample>
+				<sample time="1000">
+					<depth value="5.83" />
+					<temp value="17.00" />
+				</sample>
+				<sample time="1020">
+					<depth value="5.42" />
+					<temp value="17.00" />
+				</sample>
+				<sample time="1040">
+					<depth value="5.91" />
+					<temp value="17.00" />
+				</sample>
+				<sample time="1060">
+					<depth value="6.41" />
+					<temp value="17.00" />
+				</sample>
+				<sample time="1080">
+					<depth value="6.34" />
+					<temp value="17.00" />
+				</sample>
+				<sample time="1100">
+					<depth value="6.23" />
+					<temp value="17.00" />
+				</sample>
+				<sample time="1120">
+					<depth value="5.23" />
+					<temp value="17.00" />
+				</sample>
+				<sample time="1140">
+					<depth value="5.23" />
+					<temp value="17.00" />
+				</sample>
+				<sample time="1160">
+					<depth value="4.72" />
+					<temp value="17.00" />
+				</sample>
+				<sample time="1180">
+					<depth value="5.33" />
+					<temp value="17.00" />
+				</sample>
+				<sample time="1200">
+					<depth value="5.75" />
+					<temp value="17.00" />
+				</sample>
+				<sample time="1220">
+					<depth value="5.84" />
+					<temp value="17.00" />
+				</sample>
+				<sample time="1240">
+					<depth value="5.82" />
+					<temp value="17.00" />
+				</sample>
+				<sample time="1260">
+					<depth value="6.15" />
+					<temp value="17.00" />
+				</sample>
+				<sample time="1280">
+					<depth value="6.41" />
+					<temp value="17.00" />
+				</sample>
+				<sample time="1300">
+					<depth value="6.72" />
+					<temp value="17.00" />
+				</sample>
+				<sample time="1320">
+					<depth value="6.77" />
+					<temp value="17.00" />
+				</sample>
+				<sample time="1340">
+					<depth value="6.56" />
+					<temp value="17.00" />
+				</sample>
+				<sample time="1360">
+					<depth value="6.18" />
+					<temp value="17.00" />
+				</sample>
+				<sample time="1380">
+					<depth value="6.50" />
+					<temp value="17.00" />
+				</sample>
+				<sample time="1400">
+					<depth value="6.19" />
+					<temp value="17.00" />
+				</sample>
+				<sample time="1420">
+					<depth value="6.49" />
+					<temp value="17.00" />
+				</sample>
+				<sample time="1440">
+					<depth value="6.39" />
+					<temp value="17.00" />
+				</sample>
+				<sample time="1460">
+					<depth value="6.03" />
+					<temp value="17.00" />
+				</sample>
+				<sample time="1480">
+					<depth value="5.63" />
+					<temp value="17.00" />
+				</sample>
+				<sample time="1500">
+					<depth value="5.12" />
+					<temp value="17.00" />
+				</sample>
+				<sample time="1520">
+					<depth value="5.87" />
+					<temp value="17.00" />
+				</sample>
+				<sample time="1540">
+					<depth value="4.89" />
+					<temp value="17.00" />
+				</sample>
+				<sample time="1560">
+					<depth value="4.89" />
+					<temp value="17.00" />
+				</sample>
+				<sample time="1580">
+					<depth value="5.08" />
+					<temp value="17.00" />
+				</sample>
+				<sample time="1600">
+					<depth value="4.39" />
+					<temp value="17.00" />
+				</sample>
+				<sample time="1620">
+					<depth value="5.78" />
+					<temp value="17.00" />
+				</sample>
+				<sample time="1640">
+					<depth value="6.46" />
+					<temp value="17.00" />
+				</sample>
+				<sample time="1660">
+					<depth value="5.76" />
+					<temp value="17.00" />
+				</sample>
+				<sample time="1680">
+					<depth value="4.99" />
+					<temp value="17.00" />
+				</sample>
+				<sample time="1700">
+					<depth value="5.47" />
+					<temp value="17.00" />
+				</sample>
+				<sample time="1720">
+					<depth value="5.16" />
+					<temp value="17.00" />
+				</sample>
+				<sample time="1740">
+					<depth value="5.13" />
+					<temp value="17.00" />
+				</sample>
+				<sample time="1760">
+					<depth value="5.17" />
+					<temp value="17.00" />
+				</sample>
+				<sample time="1780">
+					<depth value="5.59" />
+					<temp value="17.00" />
+				</sample>
+				<sample time="1800">
+					<depth value="5.76" />
+					<temp value="17.00" />
+				</sample>
+				<sample time="1820">
+					<depth value="5.49" />
+					<temp value="17.00" />
+				</sample>
+				<sample time="1840">
+					<depth value="5.59" />
+					<temp value="17.00" />
+				</sample>
+				<sample time="1860">
+					<depth value="6.02" />
+					<temp value="17.00" />
+				</sample>
+				<sample time="1880">
+					<depth value="5.64" />
+					<temp value="17.00" />
+				</sample>
+				<sample time="1900">
+					<depth value="5.70" />
+					<temp value="17.00" />
+				</sample>
+				<sample time="1920">
+					<depth value="4.79" />
+					<temp value="17.00" />
+				</sample>
+				<sample time="1940">
+					<depth value="5.36" />
+					<temp value="17.00" />
+				</sample>
+				<sample time="1960">
+					<depth value="5.45" />
+					<temp value="17.00" />
+				</sample>
+				<sample time="1980">
+					<depth value="4.73" />
+					<temp value="17.00" />
+				</sample>
+				<sample time="2000">
+					<depth value="4.20" />
+					<temp value="17.00" />
+				</sample>
+				<sample time="2020">
+					<depth value="5.35" />
+					<temp value="17.00" />
+				</sample>
+				<sample time="2040">
+					<depth value="5.70" />
+					<temp value="17.00" />
+				</sample>
+				<sample time="2060">
+					<depth value="5.32" />
+					<temp value="17.00" />
+				</sample>
+				<sample time="2080">
+					<depth value="5.86" />
+					<temp value="17.00" />
+				</sample>
+				<sample time="2100">
+					<depth value="6.37" />
+					<temp value="17.00" />
+				</sample>
+				<sample time="2120">
+					<depth value="5.36" />
+					<temp value="17.00" />
+				</sample>
+				<sample time="2140">
+					<depth value="5.32" />
+					<temp value="17.00" />
+				</sample>
+				<sample time="2160">
+					<depth value="4.62" />
+					<temp value="17.00" />
+				</sample>
+				<sample time="2180">
+					<depth value="4.57" />
+					<temp value="17.00" />
+				</sample>
+				<sample time="2200">
+					<depth value="5.53" />
+					<temp value="17.00" />
+				</sample>
+				<sample time="2220">
+					<depth value="4.93" />
+					<temp value="17.00" />
+				</sample>
+				<sample time="2240">
+					<depth value="5.26" />
+					<temp value="17.00" />
+				</sample>
+				<sample time="2260">
+					<depth value="4.93" />
+					<temp value="17.00" />
+				</sample>
+				<sample time="2280">
+					<depth value="4.47" />
+					<temp value="17.00" />
+				</sample>
+				<sample time="2300">
+					<depth value="5.12" />
+					<temp value="17.00" />
+				</sample>
+				<sample time="2320">
+					<depth value="5.53" />
+					<temp value="17.00" />
+				</sample>
+				<sample time="2340">
+					<depth value="5.20" />
+					<temp value="17.00" />
+				</sample>
+				<sample time="2360">
+					<depth value="5.50" />
+					<temp value="17.00" />
+				</sample>
+				<sample time="2380">
+					<depth value="2.49" />
+					<temp value="17.00" />
+				</sample>
+				<sample time="2400">
+					<depth value="1.10" />
+					<temp value="17.00" />
+				</sample>
+				<sample time="2420">
+					<depth value="1.34" />
+					<temp value="17.00" />
+				</sample>
+				<sample time="2440">
+					<depth value="2.45" />
+					<temp value="17.00" />
+				</sample>
+				<sample time="2460">
+					<depth value="6.28" />
+					<temp value="17.00" />
+				</sample>
+				<sample time="2480">
+					<depth value="6.49" />
+					<temp value="17.00" />
+				</sample>
+				<sample time="2500">
+					<depth value="6.26" />
+					<temp value="17.00" />
+				</sample>
+				<sample time="2520">
+					<depth value="6.27" />
+					<temp value="17.00" />
+				</sample>
+				<sample time="2540">
+					<depth value="5.84" />
+					<temp value="17.00" />
+				</sample>
+				<sample time="2560">
+					<depth value="5.14" />
+					<temp value="17.00" />
+				</sample>
+				<sample time="2580">
+					<depth value="4.06" />
+					<temp value="17.00" />
+				</sample>
+				<sample time="2600">
+					<depth value="2.65" />
+					<temp value="17.00" />
+				</sample>
+				<sample time="2620">
+					<depth value="5.03" />
+					<temp value="17.00" />
+				</sample>
+				<sample time="2640">
+					<depth value="5.91" />
+					<temp value="17.00" />
+				</sample>
+				<sample time="2660">
+					<depth value="5.82" />
+					<temp value="17.00" />
+				</sample>
+				<sample time="2680">
+					<depth value="5.97" />
+					<temp value="17.00" />
+				</sample>
+				<sample time="2700">
+					<depth value="6.24" />
+					<temp value="17.00" />
+				</sample>
+				<sample time="2720">
+					<depth value="6.08" />
+					<temp value="17.00" />
+				</sample>
+				<sample time="2740">
+					<depth value="5.24" />
+					<temp value="17.00" />
+				</sample>
+				<sample time="2760">
+					<depth value="5.71" />
+					<temp value="17.00" />
+				</sample>
+				<sample time="2780">
+					<depth value="4.10" />
+					<temp value="17.00" />
+				</sample>
+				<sample time="2800">
+					<depth value="3.60" />
+					<temp value="17.00" />
+				</sample>
+				<sample time="2820">
+					<depth value="4.10" />
+					<temp value="17.00" />
+				</sample>
+				<sample time="2840">
+					<depth value="5.22" />
+					<temp value="17.00" />
+				</sample>
+				<sample time="2860">
+					<depth value="5.55" />
+					<temp value="17.00" />
+				</sample>
+				<sample time="2880">
+					<depth value="5.63" />
+					<temp value="17.00" />
+				</sample>
+				<sample time="2900">
+					<depth value="5.97" />
+					<temp value="17.00" />
+				</sample>
+				<sample time="2920">
+					<depth value="5.45" />
+					<temp value="17.00" />
+				</sample>
+				<sample time="2940">
+					<depth value="4.97" />
+					<temp value="17.00" />
+				</sample>
+				<sample time="2960">
+					<depth value="4.58" />
+					<temp value="17.00" />
+				</sample>
+				<sample time="2980">
+					<depth value="4.35" />
+					<temp value="17.00" />
+				</sample>
+				<sample time="3000">
+					<depth value="4.57" />
+					<temp value="17.00" />
+				</sample>
+				<sample time="3020">
+					<depth value="5.29" />
+					<temp value="17.00" />
+				</sample>
+				<sample time="3040">
+					<depth value="5.77" />
+					<temp value="17.00" />
+				</sample>
+				<sample time="3060">
+					<depth value="5.85" />
+					<temp value="17.00" />
+				</sample>
+				<sample time="3080">
+					<depth value="6.19" />
+					<temp value="17.00" />
+				</sample>
+				<sample time="3100">
+					<depth value="6.55" />
+					<temp value="17.00" />
+				</sample>
+				<sample time="3120">
+					<depth value="5.86" />
+					<temp value="17.00" />
+				</sample>
+				<sample time="3140">
+					<depth value="5.38" />
+					<temp value="17.00" />
+				</sample>
+				<sample time="3160">
+					<depth value="6.32" />
+					<temp value="17.00" />
+				</sample>
+				<sample time="3180">
+					<depth value="5.81" />
+					<temp value="17.00" />
+				</sample>
+				<sample time="3200">
+					<depth value="4.54" />
+					<temp value="17.00" />
+				</sample>
+				<sample time="3220">
+					<depth value="4.66" />
+					<temp value="17.00" />
+				</sample>
+				<sample time="3240">
+					<depth value="4.33" />
+					<temp value="17.00" />
+				</sample>
+				<sample time="3260">
+					<depth value="4.83" />
+					<temp value="17.00" />
+				</sample>
+				<sample time="3280">
+					<depth value="4.55" />
+					<temp value="17.00" />
+				</sample>
+				<sample time="3300">
+					<depth value="5.37" />
+					<temp value="17.00" />
+				</sample>
+				<sample time="3320">
+					<depth value="6.08" />
+					<temp value="17.00" />
+				</sample>
+				<sample time="3340">
+					<depth value="6.31" />
+					<temp value="17.00" />
+				</sample>
+				<sample time="3360">
+					<depth value="5.70" />
+					<temp value="17.00" />
+				</sample>
+				<sample time="3380">
+					<depth value="5.54" />
+					<temp value="17.00" />
+				</sample>
+				<sample time="3400">
+					<depth value="5.32" />
+					<temp value="17.00" />
+				</sample>
+				<sample time="3420">
+					<depth value="5.31" />
+					<temp value="17.00" />
+				</sample>
+				<sample time="3440">
+					<depth value="4.41" />
+					<temp value="17.00" />
+				</sample>
+				<sample time="3460">
+					<depth value="3.97" />
+					<temp value="17.00" />
+				</sample>
+				<sample time="3480">
+					<depth value="3.62" />
+					<temp value="17.00" />
+				</sample>
+				<sample time="3500">
+					<depth value="2.83" />
+					<temp value="17.00" />
+				</sample>
+				<sample time="3520">
+					<depth value="1.80" />
+					<temp value="17.00" />
+				</sample>
+				<sample time="3540">
+					<depth value="2.18" />
+					<temp value="17.00" />
+				</sample>
+				<sample time="3560">
+					<depth value="2.01" />
+					<temp value="17.00" />
+				</sample>
+				<sample time="3580">
+					<depth value="1.48" />
+					<temp value="17.00" />
+				</sample>
+				<sample time="3600">
+					<depth value="1.12" />
+					<temp value="17.00" />
+				</sample>
+			</samples>
+		</dive>
+	</dives>
+</divelog>
