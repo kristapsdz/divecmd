@@ -25,6 +25,11 @@ enum	mode {
 	MODE_CC
 };
 
+enum	group {
+	GROUP_NONE,
+	GROUP_DATE
+};
+
 struct	samp {
 	size_t		  time; /* seconds since start */
 	double		  depth; /* metres */
@@ -37,31 +42,48 @@ struct	samp {
 
 TAILQ_HEAD(sampq, samp);
 
+struct	dive;
+
+TAILQ_HEAD(diveq, dive);
+
+struct	dgroup {
+	char		 *name; /* date (or NULL) */
+	time_t		  mintime; /* minimum date in group */
+	size_t		  id; /* unique identifier */
+	struct diveq	  dives; /* all dives */
+};
+
 struct	dive {
-	time_t		  datetime; /* time or zero */
-	size_t		  num; /* number */
-	enum mode	  mode; /* dive mode */
-	size_t		  duration; /* or zero */
-	struct sampq	  samps; /* samples */
-	double		  maxdepth; /* maximum sample depth */
-	size_t		  maxtime; /* maximum sample time */
-	size_t		  nsamps; /* number of samples */
-	TAILQ_ENTRY(dive) entries;
+	time_t		     datetime; /* time or zero */
+	size_t		     num; /* number */
+	enum mode	     mode; /* dive mode */
+	size_t		     duration; /* or zero */
+	struct sampq	     samps; /* samples */
+	double		     maxdepth; /* maximum sample depth */
+	size_t		     maxtime; /* maximum sample time */
+	size_t		     nsamps; /* number of samples */
+	const struct dgroup *group; /* group identifier */
+	TAILQ_ENTRY(dive)    entries;
+	TAILQ_ENTRY(dive)    gentries;
 };
 
 struct	divestat {
 	double		  maxdepth; /* maximum over all dives */
 	time_t		  timestamp_min; /* minimum timestamp */
 	time_t		  timestamp_max; /* maximum timestamp */
+	enum group	  group; /* how we're grouping dives */
+	struct dgroup	**groups; /* all groups */
+	size_t		  groupsz; /* size of "groups" */
 };
-
-TAILQ_HEAD(diveq, dive);
 
 __BEGIN_DECLS
 
+void	 parse_init(XML_Parser *, struct diveq *, 
+		struct divestat *, enum group);
+
 int	 parse(const char *, XML_Parser, 
 		struct diveq *, struct divestat *);
-void	 parse_free(struct diveq *);
+void	 parse_free(struct diveq *, struct divestat *);
 
 extern int verbose;
 
