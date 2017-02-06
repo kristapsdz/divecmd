@@ -27,6 +27,7 @@
 .Nm divecmd2grap
 .Op Fl dv
 .Op Fl m Ar mode
+.Op Fl s Ar splitmode
 .Op Ar files...
 .Sh DESCRIPTION
 The
@@ -77,6 +78,16 @@ x-axis, depth on the y-axis.
 Each independent dive is shown on the x-axis with the maximum depth and
 time above and below, respectively, on the y-axis.
 .El
+.It Fl s Ar splitmode
+Split up
+.Pq Dq group
+dives according to a mode, which may be
+.Ar none ,
+for the default of no splitting (all in one group), and
+.Ar date ,
+which groups dives by date.
+Dive groups are each shown in an individual colour.
+All graphing modes respond intelligently to group splits.
 .It Fl v
 Parse files in verbose mode.
 .It Ar files...
@@ -104,6 +115,12 @@ and
 tools don't play nicely with landscape display.
 .Bd -literal -offset indent
 divecmd2grap -msummary dives.xml | \e
+  groff -Gp -Tpdf -P-p5.8i,8.3i > foo.pdf
+.Ed
+.Pp
+To compare free dive resting times across days:
+.Bd -literal -offset indent
+divecmd2grap -sdate -mrestscatter day1.xml day2 | \e
   groff -Gp -Tpdf -P-p5.8i,8.3i > foo.pdf
 .Ed
 .Sh SEE ALSO
