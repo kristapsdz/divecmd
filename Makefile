@@ -81,7 +81,7 @@ divecmd2term: divecmd2term.o parser.o
 	$(CC) -o $@ divecmd2term.o parser.o -lexpat -lm
 
 divecmd2grap: divecmd2grap.o parser.o
-	$(CC) -o $@ divecmd2grap.o parser.o -lexpat -lm
+	$(CC) -o $@ divecmd2grap.o parser.o -lexpat
 
 divecmd2json: divecmd2json.o parser.o
 	$(CC) -o $@ divecmd2json.o parser.o -lexpat
