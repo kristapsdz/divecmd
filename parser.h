@@ -50,8 +50,16 @@ struct	dgroup {
 	char		 *name; /* date (or NULL) */
 	time_t		  mintime; /* minimum date in group */
 	size_t		  id; /* unique identifier */
+	size_t		  ndives; /* number of dives in queue */
 	struct diveq	  dives; /* all dives */
 };
+
+struct	dlog {
+	char		 *ident; /* diver or NULL */
+	TAILQ_ENTRY(dlog) entries;
+};
+
+TAILQ_HEAD(dlogq, dlog);
 
 struct	dive {
 	time_t		     datetime; /* time or zero */
@@ -63,6 +71,7 @@ struct	dive {
 	size_t		     maxtime; /* maximum sample time */
 	size_t		     nsamps; /* number of samples */
 	const struct dgroup *group; /* group identifier */
+	const struct dlog   *log; /* source divelog */
 	TAILQ_ENTRY(dive)    entries;
 	TAILQ_ENTRY(dive)    gentries;
 };
@@ -74,6 +83,7 @@ struct	divestat {
 	enum group	  group; /* how we're grouping dives */
 	struct dgroup	**groups; /* all groups */
 	size_t		  groupsz; /* size of "groups" */
+	struct dlogq	  dlogs; /* all divelog nodes */
 };
 
 __BEGIN_DECLS

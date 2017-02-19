@@ -32,6 +32,7 @@
 struct	parse {
 	XML_Parser	  p; /* parser routine */
 	const char	 *file; /* parsed filename */
+	struct dlog	 *curlog; /* current divelog */
 	struct dive	 *curdive; /* current dive */
 	struct samp	 *cursamp; /* current sample */
 	struct diveq	 *dives; /* all dives */
@@ -78,6 +79,7 @@ group_add(struct parse *p, size_t i, struct dive *d)
 	struct dgroup	*dg = p->stat->groups[i];
 
 	d->group = dg;
+	dg->ndives++;
 
 	/* If we have no date-time, just append. */
 
@@ -149,15 +151,32 @@ parse_open(void *dat, const XML_Char *s, const XML_Char **atts)
 	size_t		  i;
 	struct dgroup	 *grp;
 
-	if (0 == strcmp(s, "dive")) {
-		if (NULL != p->cursamp) {
-			logerrx(p, "dive within sample");
-			return;
-		} else if (NULL != p->curdive) {
-			logerrx(p, "recursive dive");
+	if (0 == strcmp(s, "divelog")) {
+		/*
+		 * Top-level node of a dive.
+		 * This contains (optional) information pertaining to
+		 * the dive computer that recorded the dives.
+		 */
+
+		if (NULL != p->curlog) {
+			logerrx(p, "recursive divelog");
 			return;
 		}
+		p->curlog = calloc(1, sizeof(struct dlog));
+		if (NULL == p->curlog)
+			err(EXIT_FAILURE, NULL);
 
+		/* Grok the optional diver identifier. */
+
+		for (attp = atts; NULL != *attp; attp += 2)
+			if (0 == strcmp(attp[0], "diver")) {
+				free(p->curlog->ident);
+				p->curlog->ident = strdup(attp[1]);
+				if (NULL == p->curlog->ident)
+					err(EXIT_FAILURE, NULL);
+			}
+
+	} else if (0 == strcmp(s, "dive")) {
 		/*
 		 * We're encountering a new dive.
 		 * Allocate it and zero all values.
@@ -165,14 +184,23 @@ parse_open(void *dat, const XML_Char *s, const XML_Char **atts)
 		 * that's important to us.
 		 */
 
+		if (NULL != p->cursamp) {
+			logerrx(p, "dive within sample");
+			return;
+		} else if (NULL != p->curdive) {
+			logerrx(p, "recursive dive");
+			return;
+		} else if (NULL == p->curlog) {
+			logerrx(p, "missing divelog");
+			return;
+		}
+
 		p->curdive = dive = 
 			calloc(1, sizeof(struct dive));
 		if (NULL == dive)
 			err(EXIT_FAILURE, NULL);
-		if (verbose)
-			fprintf(stderr, "%s: new dive: %zu\n",
-				p->file, dive->num);
 		TAILQ_INIT(&dive->samps);
+		dive->log = p->curlog;
 
 		date = time = NULL;
 		for (attp = atts; NULL != *attp; attp += 2) {
@@ -196,6 +224,10 @@ parse_open(void *dat, const XML_Char *s, const XML_Char **atts)
 					logerrx(p, "unknown mode");
 			}
 		}
+
+		if (verbose)
+			fprintf(stderr, "%s: new dive: %zu\n",
+				p->file, dive->num);
 
 		/* 
 		 * Now register the dive with the dive queue.
@@ -300,12 +332,13 @@ parse_open(void *dat, const XML_Char *s, const XML_Char **atts)
 			 * (But this is still allowed.)
 			 */
 			if (GROUP_DATE == p->stat->group) {
-				logerrx(p, "ignoring dive while "
-					"grouping by date");
+				logerrx(p, "ignoring dive without "
+					"date while grouping by date");
 				free(dive);
 				p->curdive = NULL;
 				return;
 			} 
+
 			if (0 == p->stat->groupsz && verbose)
 				fprintf(stderr, "%s: new default "
 					"group\n", p->file);
@@ -418,7 +451,9 @@ parse_close(void *dat, const XML_Char *s)
 {
 	struct parse	*p = dat;
 
-	if (0 == strcmp(s, "dive"))
+	if (0 == strcmp(s, "divelog"))
+		p->curlog = NULL;
+	else if (0 == strcmp(s, "dive"))
 		p->curdive = NULL;
 	else if (0 == strcmp(s, "sample"))
 		p->cursamp = NULL;
@@ -472,6 +507,7 @@ void
 parse_free(struct diveq *dq, struct divestat *st)
 {
 	struct dive	*d;
+	struct dlog	*dl;
 	struct samp	*samp;
 	size_t		 i;
 
@@ -493,6 +529,12 @@ parse_free(struct diveq *dq, struct divestat *st)
 			free(st->groups[i]);
 		}
 		free(st->groups);
+		while ( ! TAILQ_EMPTY(&st->dlogs)) {
+			dl = TAILQ_FIRST(&st->dlogs);
+			TAILQ_REMOVE(&st->dlogs, dl, entries);
+			free(dl->ident);
+			free(dl);
+		}
 	}
 }
 
@@ -507,4 +549,5 @@ parse_init(XML_Parser *p, struct diveq *dq,
 	TAILQ_INIT(dq);
 	memset(st, 0, sizeof(struct divestat));
 	st->group = group;
+	TAILQ_INIT(&st->dlogs);
 }
