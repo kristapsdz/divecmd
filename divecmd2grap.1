@@ -17,7 +17,7 @@
 .\" Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston,
 .\" MA 02110-1301 USA
 .\" 
-.Dd $Mdocdate: February 4 2017 $
+.Dd $Mdocdate: February 6 2017 $
 .Dt DIVECMD2GRAP 1
 .Os
 .Sh NAME
@@ -81,11 +81,22 @@ time above and below, respectively, on the y-axis.
 .It Fl s Ar splitmode
 Split up
 .Pq Dq group
-dives according to a mode, which may be
-.Ar none ,
-for the default of no splitting (all in one group), and
-.Ar date ,
-which groups dives by date.
+dives according to a mode, which may be any one of the following.
+.Pp
+.Bl -tag -width Ds -compact
+.It Ar diver
+Group dives by diver
+This means having run
+.Xr divecmd 1
+with
+.Fl i .
+.It Ar none
+The default of no splitting (all in one group).
+.It Ar date
+Groups dives by date.
+The dive computer must support timestamped dives.
+.El
+.Pp
 Dive groups are each shown in an individual colour.
 All graphing modes respond intelligently to group splits.
 .It Fl v
