@@ -27,6 +27,7 @@ enum	mode {
 
 enum	group {
 	GROUP_NONE,
+	GROUP_DIVER,
 	GROUP_DATE
 };
 
