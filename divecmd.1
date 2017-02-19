@@ -31,6 +31,7 @@
 .Op Fl alnv
 .Op Fl d Ar device
 .Op Fl f Ar fingerprint
+.Op Fl i Ar ident
 .Op Fl m Ar model
 .Op Fl r Ar range
 .Ar computer
@@ -58,6 +59,10 @@ and
 .Fl n
 and disables
 .Fl r .
+.It Fl i Ar ident
+Sets these dives to the diver identified as
+.Ar ident ,
+which is an opaque string.
 .It Fl l
 Lists the dives in short format, one per line: time, type, and
 fingerprint.
@@ -162,10 +167,15 @@ The XML output is arranged as follows, with comments inline:
 .Bd -literal
 <?xml version="1.0" encoding="UTF-8" ?>
 <divelog program="divecmd" version="0.0.1"
- vendor="zzzz" product="zzzz" model="nnn">
+ vendor="zzzz" product="zzzz" model="nnn"
+ [diver="zzzz"]>
   <dives>
 .Ed
 .Pp
+The values to this element relate to the dive computer hardware, the
+diver
+.Pq if given by Fl i
+and the software version.
 Now begins the dives.
 There may be multiple dives, which is often the case with free-diving or
 any time multiple dives have been exported.
