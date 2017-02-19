@@ -36,7 +36,8 @@ enum	pmode {
 	MODE_AGGREGATE,
 	MODE_RESTING,
 	MODE_RESTING_SCATTER,
-	MODE_STACK
+	MODE_STACK,
+	MODE_VECTOR
 };
 
 int verbose = 0;
@@ -63,11 +64,11 @@ print_all(const struct diveq *dq, const struct divestat *st)
 {
 	struct dive	*d, *dp;
 	struct samp	*s;
-	size_t		 i = 0, j;
+	size_t		 i = 0, j, maxtime = 0, maxrtime = 0, 
+			 points = 0, rest;
 	time_t		 t, lastt = 0;
-	size_t		 maxtime = 0, maxrtime = 0, points = 0, rest;
-	double		 maxdepth = 0.0, lastdepth, x, y;
-	double		 height = 3.8, width = 5.4;
+	double		 maxdepth = 0.0, lastdepth, x, y, 
+			 height = 3.8, width = 5.4, x2, y2;
 	int		 free = 0;
 	struct dgroup 	*dg;
 
@@ -100,6 +101,7 @@ print_all(const struct diveq *dq, const struct divestat *st)
 
 	if (MODE_SUMMARY == mode ||
 	    MODE_SCATTER == mode ||
+	    MODE_VECTOR == mode ||
 	    MODE_RESTING == mode ||
 	    MODE_STACK == mode ||
 	    MODE_RESTING_SCATTER == mode)
@@ -249,6 +251,24 @@ print_all(const struct diveq *dq, const struct divestat *st)
 		       (3 * maxrtime / 4) / 60, 
 		       (3 * maxrtime / 4) % 60, 
 		       maxrtime / 60, maxrtime % 60);
+	else if (MODE_VECTOR == mode) 
+		printf("ticks bot out at "
+				"0.0 \"00:00\", "
+				"0.25 \"%zu:%.02zu\", "
+				"0.5 \"%zu:%.02zu\", "
+				"0.75 \"%zu:%.02zu\", "
+				"1.0 \"%zu:%.02zu\"\n"
+		       "label left \"Depth (m)\" left 0.15\n"
+		       "label bot \"Time (mm:ss)\"\n"
+		       "grid right ticks off\n"
+		       "grid top ticks off\n"
+		       "coord y 0,-1\n"
+		       "coord x 0,1\n",
+		       (maxtime / 4) / 60, (maxtime / 4) % 60, 
+		       (maxtime / 2) / 60, (maxtime / 2) % 60, 
+		       (3 * maxtime / 4) / 60, 
+		       (3 * maxtime / 4) % 60, 
+		       maxtime / 60, maxtime % 60);
 	else if (MODE_SCATTER == mode) 
 		printf("ticks bot out at "
 				"0.0 \"00:00\", "
@@ -294,7 +314,8 @@ print_all(const struct diveq *dq, const struct divestat *st)
 
 	/* Now for the data. */
 
-	if (MODE_AGGREGATE == mode) {
+	switch (mode) {
+	case MODE_AGGREGATE:
 		/*
 		 * In aggregate mode, we iterate through each of the
 		 * groups, then through all of the dives in those
@@ -331,10 +352,10 @@ print_all(const struct diveq *dq, const struct divestat *st)
 			printf("new color \"%s\"\n", 
 				cols[st->groups[i + 1]->id % COL_MAX]);
 		}
-		goto out;
-	} 
-	
-	if (MODE_RESTING == mode || MODE_RESTING_SCATTER == mode) {
+		break;
+	case MODE_RESTING:
+		/* FALLTHROUGH */
+	case MODE_RESTING_SCATTER:
 		/*
 		 * In the resting modes, we need to be within our group
 		 * because we look to the next dive, which must also be
@@ -354,51 +375,70 @@ print_all(const struct diveq *dq, const struct divestat *st)
 					cols[d->group->id % COL_MAX]);
 			}
 		}
-		goto out;
-	 }
-
-	TAILQ_FOREACH(d, dq, entries) {
-		/* 
-		 * We have a bunch of modes that just print "summary"
-		 * information and don't iterate over the dives
-		 * themselves.
-		 * Print those first.
-		 */
-		if (MODE_SUMMARY == mode) {
+		break;
+	case MODE_VECTOR:
+		for (i = 0; i < st->groupsz; i++) {
+			dg = st->groups[i];
+			j = 0;
+			TAILQ_FOREACH(d, &dg->dives, gentries) {
+				x = d->maxtime / (double)maxtime;
+				y = d->maxdepth / maxdepth;
+		       		printf("\"\\(bu\" size +3 "
+					"color \"%s\" at %g,-%g\n",
+					cols[d->group->id % COL_MAX],
+					x, y);
+				dp = TAILQ_NEXT(d, gentries);
+				if (NULL == dp)
+					break;
+				x2 = dp->maxtime / (double)maxtime;
+				y2 = dp->maxdepth / maxdepth;
+				printf("arrow from %g,-%g to %g,-%g "
+					"color \"grey%zu\"\n",
+					x, y, x2, y2, 60 - (size_t)(40 * 
+					(j / (double)d->group->ndives)));
+				j++;
+			}
+		}
+		break;
+	case MODE_SUMMARY:
+		TAILQ_FOREACH(d, dq, entries) 
 			printf("%zu %g -%g \"%s\"\n", i++, 
 				(double)d->maxtime / maxtime, 
 				d->maxdepth / maxdepth,
 				cols[d->group->id % COL_MAX]);
-			continue;
-		} else if (MODE_SCATTER == mode) {
+		break;
+	case MODE_SCATTER:
+		TAILQ_FOREACH(d, dq, entries) 
 			printf("%zu %g -%g \"%s\"\n", i++, 
 				d->maxtime / (double)maxtime, 
 				d->maxdepth,
 				cols[d->group->id % COL_MAX]);
-			continue;
-		}
+		break;
+	default:
+		TAILQ_FOREACH(d, dq, entries) {
+			puts("0 0");
+			lastdepth = 0.0;
+			TAILQ_FOREACH(s, &d->samps, entries) {
+				t = s->time;
+				x = t / (double)maxtime;
+				y = 0 == derivs ? -s->depth :
+					lastt == t ? 0.0 :
+					(lastdepth - s->depth) /
+					(t - lastt);
+				printf("%g %g\n", x, y);
+				lastdepth = s->depth;
+				lastt = t;
+			}
 
-		puts("0 0");
-		lastdepth = 0.0;
-		TAILQ_FOREACH(s, &d->samps, entries) {
-			t = s->time;
-			x = t / (double)maxtime;
-			y = 0 == derivs ? -s->depth :
-				lastt == t ? 0.0 :
-				(lastdepth - s->depth) /
-				(t - lastt);
-			printf("%g %g\n", x, y);
-			lastdepth = s->depth;
-			lastt = t;
+			x = lastt / (double)maxtime;
+			printf("%g 0\n", x);
+			if (NULL != (dp = TAILQ_NEXT(d, entries)))
+				printf("new color \"%s\"\n",
+					cols[dp->group->id % COL_MAX]);
 		}
-
-		x = lastt / (double)maxtime;
-		printf("%g 0\n", x);
-		if (NULL != (dp = TAILQ_NEXT(d, entries)))
-			printf("new color \"%s\"\n",
-				cols[dp->group->id % COL_MAX]);
+		break;
 	}
-out:
+
 	puts(".G2");
 	return(1);
 }
@@ -437,6 +477,8 @@ main(int argc, char *argv[])
 				mode = MODE_RESTING_SCATTER;
 			else if (0 == strcasecmp(optarg, "scatter"))
 				mode = MODE_SCATTER;
+			else if (0 == strcasecmp(optarg, "vector"))
+				mode = MODE_VECTOR;
 			else
 				goto usage;
 			break;
