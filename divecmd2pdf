@@ -1,0 +1,3 @@
+#! /bin/sh
+
+divecmd2grap $@ | groff -Gp -Tpdf -P-p5.8i,8.3i

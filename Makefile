@@ -16,6 +16,7 @@ BINOBJS		 = divecmd2grap.o \
 		   parser.o
 BINDIR 		 = $(PREFIX)/bin
 MANDIR 		 = $(PREFIX)/man
+PREBINS		 = divecmd2pdf
 BINS		 = divecmd \
 		   divecmd2grap \
 		   divecmd2json \
@@ -23,6 +24,7 @@ BINS		 = divecmd \
 MAN1S		 = divecmd.1 \
 		   divecmd2grap.1 \
 		   divecmd2json.1 \
+		   divecmd2pdf.1 \
 		   divecmd2term.1
 PNGS		 = daily.aggr.png \
 		   daily.rest.png \
@@ -45,6 +47,7 @@ PDFS		 = daily.aggr.pdf \
 HTMLS		 = divecmd.1.html \
 		   divecmd2grap.1.html \
 		   divecmd2json.1.html \
+		   divecmd2pdf.1.html \
 		   divecmd2term.1.html \
 		   index.html
 CSSS		 = index.css \
@@ -78,7 +81,7 @@ divecmd2term: divecmd2term.o parser.o
 	$(CC) -o $@ divecmd2term.o parser.o -lexpat -lm
 
 divecmd2grap: divecmd2grap.o parser.o
-	$(CC) -o $@ divecmd2grap.o parser.o -lexpat
+	$(CC) -o $@ divecmd2grap.o parser.o -lexpat -lm
 
 divecmd2json: divecmd2json.o parser.o
 	$(CC) -o $@ divecmd2json.o parser.o -lexpat
@@ -86,7 +89,7 @@ divecmd2json: divecmd2json.o parser.o
 install: all
 	mkdir -p $(DESTDIR)$(BINDIR)
 	mkdir -p $(DESTDIR)$(MANDIR)/man1
-	install -m 0755 $(BINS) $(DESTDIR)$(BINDIR)
+	install -m 0755 $(BINS) $(PREBINS) $(DESTDIR)$(BINDIR)
 	install -m 0444 $(MAN1S) $(DESTDIR)$(MANDIR)/man1
 
 $(PNGS): $(PDFS)

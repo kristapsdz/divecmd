@@ -1,0 +1,48 @@
+.\"	$Id$
+.\"
+.\" Copyright (c) 2017 Kristaps Dzonsons <kristaps@bsd.lv>
+.\"
+.\" This library is free software; you can redistribute it and/or
+.\" modify it under the terms of the GNU Lesser General Public
+.\" License as published by the Free Software Foundation; either
+.\" version 2.1 of the License, or (at your option) any later version.
+.\" 
+.\" This library is distributed in the hope that it will be useful,
+.\" but WITHOUT ANY WARRANTY; without even the implied warranty of
+.\" MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+.\" Lesser General Public License for more details.
+.\" 
+.\" You should have received a copy of the GNU Lesser General Public
+.\" License along with this library; if not, write to the Free Software
+.\" Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston,
+.\" MA 02110-1301 USA
+.\" 
+.Dd $Mdocdate: February 6 2017 $
+.Dt DIVECMD2PDF 1
+.Os
+.Sh NAME
+.Nm divecmd2pdf
+.Nd graph dives as PDF via grap
+.Sh SYNOPSIS
+.Nm divecmd2pdf
+.Sh DESCRIPTION
+The
+.Nm
+script is a wrapper around
+.Xr divecmd2grap 1
+and
+.Xr groff 1 .
+It accepts all of the arguments defined in
+.Xr divecmd2grap 1
+and outputs the PDF file to standard output.
+.Sh EXIT STATUS
+.Ex -std
+.Sh SEE ALSO
+.Xr divecmd2grap 1 ,
+.Xr groff 1
+.Sh AUTHORS
+The
+.Nm
+script was written by
+.An Kristaps Dzonsons ,
+.Mt kristaps@bsd.lv .
