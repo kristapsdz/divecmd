@@ -485,6 +485,8 @@ main(int argc, char *argv[])
 		case ('s'):
 			if (0 == strcasecmp(optarg, "date"))
 				group = GROUP_DATE;
+			else if (0 == strcasecmp(optarg, "diver"))
+				group = GROUP_DIVER;
 			else if (0 == strcasecmp(optarg, "none"))
 				group = GROUP_NONE;
 			else
