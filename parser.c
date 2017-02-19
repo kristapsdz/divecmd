@@ -138,6 +138,27 @@ group_alloc(struct parse *p, struct dive *d, const char *date)
 	return(group_add(p, i, d));
 }
 
+/*
+ * Get or create a group by the given "name", which might be, say, the
+ * date or the diver (it doesn't matter).
+ * Returns the created or augmented group.
+ */
+static struct dgroup *
+group_lookup(struct parse *p, struct dive *d, const char *name)
+{
+	size_t	 i;
+
+	for (i = 0; i < p->stat->groupsz; i++)
+		if (0 == strcmp(name, p->stat->groups[i]->name))
+			break;
+	if (i == p->stat->groupsz && verbose)
+		fprintf(stderr, "%s: new group: %s\n", p->file, name);
+
+	return((i == p->stat->groupsz) ?
+		group_alloc(p, d, name) :
+		group_add(p, i, d));
+}
+
 static void
 parse_open(void *dat, const XML_Char *s, const XML_Char **atts)
 {
@@ -148,7 +169,6 @@ parse_open(void *dat, const XML_Char *s, const XML_Char **atts)
 	const char	 *date, *time;
 	struct tm	  tm;
 	int		  rc;
-	size_t		  i;
 	struct dgroup	 *grp;
 
 	if (0 == strcmp(s, "divelog")) {
@@ -271,35 +291,6 @@ parse_open(void *dat, const XML_Char *s, const XML_Char **atts)
 				return;
 			}
 
-			/*
-			 * Now get (or allocate) our group.
-			 * This depends upon how our group configuration
-			 * has been arranged.
-			 */
-			grp = NULL;
-
-			if (GROUP_DATE == p->stat->group) {
-				for (i = 0; i < p->stat->groupsz; i++)
-					if (0 == strcmp
-				  	    (date, p->stat->groups[i]->name))
-						break;
-				if (i == p->stat->groupsz && verbose)
-					fprintf(stderr, "%s: new "
-						"date group: %s\n", 
-						p->file, date);
-				grp = (i == p->stat->groupsz) ?
-					group_alloc(p, dive, date) :
-					group_add(p, i, dive);
-			} else {
-				if (0 == p->stat->groupsz && verbose)
-					fprintf(stderr, "%s: new "
-						"default group\n", 
-						p->file);
-				grp = (0 == p->stat->groupsz) ?
-					group_alloc(p, dive, NULL) :
-					group_add(p, 0, dive);
-			}
-
 			/* Check against our global extrema. */
 
 			if (0 == p->stat->timestamp_min ||
@@ -308,12 +299,6 @@ parse_open(void *dat, const XML_Char *s, const XML_Char **atts)
 			if (0 == p->stat->timestamp_max ||
 			    dive->datetime > p->stat->timestamp_max)
 				p->stat->timestamp_max = dive->datetime;
-
-			/* Check against our local extrema. */
-
-			if (0 == grp->mintime ||
-			    dive->datetime < grp->mintime)
-				grp->mintime = dive->datetime;
 
 			/* Insert is in reverse order. */
 
@@ -329,25 +314,44 @@ parse_open(void *dat, const XML_Char *s, const XML_Char **atts)
 		} else {
 			/*
 			 * Un-timedated dive goes wherever.
-			 * (But this is still allowed.)
 			 */
-			if (GROUP_DATE == p->stat->group) {
-				logerrx(p, "ignoring dive without "
-					"date while grouping by date");
-				free(dive);
-				p->curdive = NULL;
-				return;
-			} 
+			TAILQ_INSERT_TAIL(p->dives, dive, entries);
+		}
 
+		/*
+		 * Now assign to our group.
+		 * Our group assignment might require data we don't
+		 * have, so we might not be grouping the dive.
+		 */
+
+		if (GROUP_DATE == p->stat->group) {
+			if (NULL == date) {
+				logerrx(p, "not sorting date-" 
+					"grouped dive without date");
+				return;
+			}
+
+			grp = group_lookup(p, dive, date);
+		} else if (GROUP_DIVER == p->stat->group) {
+			if (NULL == dive->log->ident) {
+				logerrx(p, "not sorting diver-"
+					"grouped dive without diver");
+				return;
+			}
+
+			grp = group_lookup(p, dive, dive->log->ident);
+		} else {
 			if (0 == p->stat->groupsz && verbose)
 				fprintf(stderr, "%s: new default "
 					"group\n", p->file);
 			grp = (0 == p->stat->groupsz) ?
 				group_alloc(p, dive, NULL) :
 				group_add(p, 0, dive);
-
-			TAILQ_INSERT_TAIL(p->dives, dive, entries);
 		}
+
+		if (NULL != date && 
+		    (0 == grp->mintime || dive->datetime < grp->mintime))
+			grp->mintime = dive->datetime;
 	} else if (0 == strcmp(s, "sample")) {
 		/*
 		 * Add a diving sample.
