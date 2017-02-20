@@ -46,6 +46,7 @@
 					class="nm">grap</span> implementation) piped into 
 				<a href="https://www.gnu.org/software/groff/">groff(1)</a> (or other <span class="nm">troff</span>) or <a
 					href="https://www.latex-project.org/">LaTeX</a> (or other <span class="nm">TeX</span>).
+				Plus, it has much better support and analysis tools for free diving.
 			</p>
 			<p>
 				My workflow usually begins with <a href="divecmd.1.html">divecmd(1)</a> on the day of my dive.  
@@ -73,8 +74,20 @@
 				</code>
 			</blockquote>
 			<p>
+				You can also simply use <a href="divecmd2pdf.1.html">divecmd2pdf(1)</a>, which effects the same.
+			</p>
+			<blockquote>
+				<code>
+					divecmd2pdf -m restscatter <a href="daily.xml">daily.xml</a> > <a
+						href="daily.restscatter.pdf">daily.restscatter.pdf</a>
+				</code>
+			</blockquote>
+			<p>
 				These graphs let me see my dive depths and times, and also see whether I'm following the surface-time rule of
 				thumb, where rest is twice the prior dive.
+				<strong>Note</strong>: if you're free diving and using a dive computer that lumps all free dives into one huge
+				dive without splitting them up by surface time, use <a href="divecmd2divecmd.1.html">divecmd2divecmd(1)</a> to
+				canonicalise the dives.  My HW OSTC 2C does this.
 			</p>
 			<p>
 				There are a number of ways to export from the native <a href="divecmd.1.html">divecmd(1)</a> XML file without
