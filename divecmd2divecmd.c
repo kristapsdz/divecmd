@@ -37,6 +37,10 @@ enum	pmode {
 
 int verbose = 0;
 
+/*
+ * Print the heading for a particular dive.
+ * The mode can be NULL.
+ */
 static void
 print_dive_open(time_t t, size_t num, const char *mode)
 {
@@ -160,6 +164,8 @@ print_all(enum pmode pmode, const struct diveq *dq)
 
 	puts(">\n\t<dives>");
 
+	/* XXX: we only support this mode for now. */
+
 	if (PMODE_SPLIT == pmode) {
 		TAILQ_FOREACH(d, dq, entries) {
 			if (MODE_FREEDIVE == d->mode)
@@ -193,11 +199,8 @@ main(int argc, char *argv[])
 	if (-1 == pledge("stdio rpath", NULL))
 		err(EXIT_FAILURE, "pledge");
 #endif
-	while (-1 != (c = getopt(argc, argv, "jsv")))
+	while (-1 != (c = getopt(argc, argv, "sv")))
 		switch (c) {
-		case ('j'):
-			mode = PMODE_JOIN;
-			break;
 		case ('s'):
 			mode = PMODE_SPLIT;
 			break;
@@ -239,6 +242,6 @@ out:
 	parse_free(&dq, &st);
 	return(rc ? EXIT_SUCCESS : EXIT_FAILURE);
 usage:
-	fprintf(stderr, "usage: %s [-jsv] [file]\n", getprogname());
+	fprintf(stderr, "usage: %s [-sv] [file]\n", getprogname());
 	return(EXIT_FAILURE);
 }
