@@ -40,7 +40,14 @@ data format.
 By default, dives start at time zero through their maximum time.
 Multiple dives are superimposed
 .Pq Dq stacked .
-Its arguments are as follows:
+For analysing free dives, it's important that the exported dive profile
+be in
+.Sx Canonical free diving mode
+to make analysis useful (i.e., of each separate free dive within a
+sequence).
+The arguments of
+.Nm
+are as follows:
 .Bl -tag -width Ds
 .It Fl d
 Derivatives.
@@ -54,7 +61,7 @@ modes.
 Graphing mode.
 May be one of the following:
 .Pp
-.Bl -tag -width Ds -compact
+.Bl -tag -width Ds
 .It Ar aggr
 Line graph connecting
 .Pq Dq aggregating
@@ -83,7 +90,7 @@ Split up
 .Pq Dq group
 dives according to a mode, which may be any one of the following.
 .Pp
-.Bl -tag -width Ds -compact
+.Bl -tag -width Ds
 .It Ar diver
 Group dives by diver
 This means having run
@@ -111,6 +118,33 @@ exports to the data format accepted by
 A simple
 .Xr grap 1
 documented is also emitted with width 5 inches, height 3 inches.
+Use
+.Xr divecmd2pdf 1
+to avoid needing to prepare a
+.Xr groff 1
+pipe.
+.Ss Canonical free diving mode
+Dive computers record free diving
+.Pq Do apnoea Dc mode, etc.
+in two different ways:
+some split each dive into its own dive profile and ignore the surface
+interval; others simply record everything without stopping. 
+The Suunto D6i is an example of the first, while the HW OSTC 2C is an
+example of the second.
+.Pp
+The
+.Dq canonical mode
+for free diving is when dives are split at surface intervals.
+In
+.Nm ,
+output modes handy to free diving (e.g.,
+.Ar rest )
+assume canonical free diving mode.
+The
+.Xr divecmd2divecmd 1
+utility is capable of
+.Dq splitting
+non-canonical free dive mode into canonical.
 .Sh EXIT STATUS
 .Ex -std
 .Sh EXAMPLES
@@ -136,6 +170,8 @@ divecmd2grap -sdate -mrestscatter day1.xml day2 | \e
 .Ed
 .Sh SEE ALSO
 .Xr divecmd 1 ,
+.Xr divecmd2divecmd 1 ,
+.Xr divecmd2pdf 1 ,
 .Xr grap 1 ,
 .Xr groff 1
 .Sh AUTHORS
