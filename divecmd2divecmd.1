@@ -1,0 +1,73 @@
+.\"	$Id$
+.\"
+.\" Copyright (c) 2017 Kristaps Dzonsons <kristaps@bsd.lv>
+.\"
+.\" This library is free software; you can redistribute it and/or
+.\" modify it under the terms of the GNU Lesser General Public
+.\" License as published by the Free Software Foundation; either
+.\" version 2.1 of the License, or (at your option) any later version.
+.\" 
+.\" This library is distributed in the hope that it will be useful,
+.\" but WITHOUT ANY WARRANTY; without even the implied warranty of
+.\" MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+.\" Lesser General Public License for more details.
+.\" 
+.\" You should have received a copy of the GNU Lesser General Public
+.\" License along with this library; if not, write to the Free Software
+.\" Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston,
+.\" MA 02110-1301 USA
+.\" 
+.Dd $Mdocdate: February 20 2017 $
+.Dt DIVECMD2DIVECMD 1
+.Os
+.Sh NAME
+.Nm divecmd2divecmd
+.Nd heuristically split or join dives by sample analysis
+.Sh SYNOPSIS
+.Nm divecmd2divecmd
+.Fl v
+.Ar file
+.Sh DESCRIPTION
+The
+.Nm
+utility accepts a single dive file produced by
+.Xr divecmd 1
+and splits apart or joins dives in a dive sequence based on sample
+readings.
+This is useful for enforcing
+.Dq canonical free dive mode ,
+which is where each free dive in a sequence has its own dive profile and
+surface time is omitted.
+Many dive computers automatically produce canonical free diving mode,
+but some, like the HW OSTC 2C, do not.
+The
+.Xr divecmd2grap 1
+utility makes significant use of canonical free diving mode.
+.Pp
+For now,
+.Nm
+is only able to split dives into canonical mode.
+Its only argument is
+.Fl v ,
+which triggers verbose parsing.
+It produces output compatible with
+.Xr divecmd 1 .
+.Pp
+If a dive sequence is already in canonical mode,
+.Nm
+has no effect.
+.Sh EXIT STATUS
+.Ex -std
+.Sh SEE ALSO
+.Xr divecmd2 1 ,
+.Xr divecmd2grap 1
+.Sh AUTHORS
+The
+.Nm
+utility was written by
+.An Kristaps Dzonsons ,
+.Mt kristaps@bsd.lv .
+.Sh CAVEATS
+Data (e.g., non-temperature and non-depth samples) is ignored when
+making this conversion.
+It's really only meant for free diving modes, for now.
