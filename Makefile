@@ -10,7 +10,8 @@ OBJS		 = common.o \
 		   download.o \
 		   list.o \
 		   xml.o
-BINOBJS		 = divecmd2grap.o \
+BINOBJS		 = divecmd2divecmd.o \
+		   divecmd2grap.o \
 		   divecmd2json.o \
 		   divecmd2term.o \
 		   parser.o
@@ -18,6 +19,7 @@ BINDIR 		 = $(PREFIX)/bin
 MANDIR 		 = $(PREFIX)/man
 PREBINS		 = divecmd2pdf
 BINS		 = divecmd \
+		   divecmd2divecmd \
 		   divecmd2grap \
 		   divecmd2json \
 		   divecmd2term
@@ -76,6 +78,9 @@ installwww: www
 
 divecmd: $(OBJS)
 	$(CC) -o $@ $(OBJS) $(LDFLAGS) 
+
+divecmd2divecmd: divecmd2divecmd.o parser.o
+	$(CC) -o $@ divecmd2divecmd.o parser.o -lexpat
 
 divecmd2term: divecmd2term.o parser.o
 	$(CC) -o $@ divecmd2term.o parser.o -lexpat -lm
