@@ -2,15 +2,22 @@
 
 *divecmd* drives [libdivecomputer](http://www.libdivecomputer.org) to
 extract the contents of your dive computer in a safe, simple manner.  It
-has three programs: 
+has several programs: 
 [divecmd(1)](https://kristaps.bsd.lv/divecmd/divecmd.1.html), which
 downloads, parses, and formats dives;
 [divecmd2term(1)](https://kristaps.bsd.lv/divecmd/divecmd2term.1.html),
 which graphs formatted dives in an ANSI/VT100 terminal;
-[divecmd2grap](https://kristaps.bsd.lv/divecmd/divecmd2grap.1.html),
+[divecmd2grap(1)](https://kristaps.bsd.lv/divecmd/divecmd2grap.1.html),
 which graphs using *grap(1)*; and 
-[divecmd2json](https://kristaps.bsd.lv/divecmd/divecmd2json.1.html),
+[divecmd2json(1)](https://kristaps.bsd.lv/divecmd/divecmd2json.1.html),
 which exports dive profiles to the JSON format.
+
+There are also some supporting utilities, such as
+[divecmd2pdf(1)](https://kristaps.bsd.lv/divecmd/divecmd2pdf.1.html),
+which manages a *groff(1)* toolchain; and
+[divecmd2divecmd(1)](https://kristaps.bsd.lv/divecmd/divecmd2divecmd.1.html),
+which converts some dive computers' output into a form allowing for
+better free dive analysis.
 
 I forked [libdivecomputer](http://www.libdivecomputer.org)'s *dctool* to
 write [divecmd(1)](https://kristaps.bsd.lv/divecmd/divecmd.1.html) ---
@@ -27,7 +34,7 @@ See "[Dive computer
 analysis](https://divelog.blue/blog.html?entryid=68)" and "[Visualising
 recovery time when free
 diving](https://divelog.blue/blog.html?entryid=69)" for examples of how
-[divecmd2grap](https://kristaps.bsd.lv/divecmd/divecmd2grap.1.html),
+[divecmd2grap(1)](https://kristaps.bsd.lv/divecmd/divecmd2grap.1.html),
 operates.
 
 ## License
