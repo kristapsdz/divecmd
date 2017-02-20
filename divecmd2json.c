@@ -35,50 +35,55 @@ int verbose = 0;
 static int aggr = 0;
 
 static void
-print_all(const struct diveq *dq, const struct divestat *st)
+print_all(const struct divestat *st)
 {
 	struct dive	*d;
+	struct dgroup	*dg;
 	struct samp	*s;
 	time_t		 t;
-
-	assert( ! TAILQ_EMPTY(dq));
+	size_t		 i;
 
 	puts("{\"divecmd2json\":");
 	puts("\t{\"version\": \"" VERSION "\",");
 	puts("\t \"divers\": [");
-	puts("\t\t{\"dives\": [");
 
-	TAILQ_FOREACH(d, dq, entries) {
-		printf("\t\t\t{\"num\": %zu,\n", d->num);
-		if (0 != d->duration)
-			printf("\t\t\t \"duration\": %zu,\n", 
-				d->duration);
-		if (0 != d->datetime)
-			printf("\t\t\t \"datetime\": %lld,\n", 
-				d->datetime);
-		puts("\t\t\t \"samples\": [");
-		TAILQ_FOREACH(s, &d->samps, entries) {
-			t = s->time;
-			if (aggr) {
-				t += d->datetime;
-				t -= st->timestamp_min;
+	for (i = 0; i < st->groupsz; i++) {
+		dg = st->groups[i];
+		printf("\t\t{\"ident\": \"%s\",\n",
+			NULL == dg->name ?  "" : dg->name);
+		printf("\t\t \"dives\": [\n");
+		TAILQ_FOREACH(d, &dg->dives, gentries) {
+			printf("\t\t\t{\"num\": %zu,\n", d->num);
+			if (0 != d->duration)
+				printf("\t\t\t \"duration\": %zu,\n", 
+					d->duration);
+			if (0 != d->datetime)
+				printf("\t\t\t \"datetime\": %lld,\n", 
+					d->datetime);
+			puts("\t\t\t \"samples\": [");
+			TAILQ_FOREACH(s, &d->samps, entries) {
+				t = s->time;
+				if (aggr) {
+					t += d->datetime;
+					t -= st->timestamp_min;
+				}
+				printf("\t\t\t\t{\"time\": %lld", t);
+				if (SAMP_DEPTH & s->flags)
+					printf(", \"depth\": %g", s->depth);
+				if (SAMP_TEMP & s->flags)
+					printf(", \"temp\": %g", s->temp);
+				printf("}%s\n", 
+					TAILQ_NEXT(s, entries) ? "," : "");
 			}
-			printf("\t\t\t\t{\"time\": %lld", t);
-			if (SAMP_DEPTH & s->flags)
-				printf(", \"depth\": %g", s->depth);
-			if (SAMP_TEMP & s->flags)
-				printf(", \"temp\": %g", s->temp);
-			printf("}%s\n", 
-				TAILQ_NEXT(s, entries) ? "," : "");
+			puts("\t\t\t\t]");
+			if (TAILQ_NEXT(d, gentries)) 
+				puts("\t\t\t},");
+			else
+				puts("\t\t\t}]");
 		}
-		puts("\t\t\t\t]");
-		if (TAILQ_NEXT(d, entries)) 
-			puts("\t\t\t},");
-		else
-			puts("\t\t\t}]");
+		printf("\t\t}%s\n", i < st->groupsz - 1 ? "," : "");
 	}
-	puts("\t\t}]");
-	puts("\t}");
+	puts("\t ]}");
 	puts("}");
 }
 
@@ -110,7 +115,7 @@ main(int argc, char *argv[])
 	argc -= optind;
 	argv += optind;
 
-	parse_init(&p, &dq, &st, GROUP_NONE);
+	parse_init(&p, &dq, &st, GROUP_DIVER);
 
 	if (0 == argc)
 		rc = parse("-", p, &dq, &st);
@@ -133,7 +138,7 @@ main(int argc, char *argv[])
 		goto out;
 	}
 
-	print_all(&dq, &st);
+	print_all(&st);
 out:
 	parse_free(&dq, &st);
 	return(rc ? EXIT_SUCCESS : EXIT_FAILURE);
