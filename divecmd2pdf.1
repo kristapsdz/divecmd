@@ -22,23 +22,28 @@
 .Os
 .Sh NAME
 .Nm divecmd2pdf
-.Nd graph dives as PDF via grap
+.Nd graph dives as PDF files
 .Sh SYNOPSIS
 .Nm divecmd2pdf
 .Sh DESCRIPTION
 The
 .Nm
 script is a wrapper around
-.Xr divecmd2grap 1
+.Xr divecmd2grap 1 ,
+.Xr grap 1 ,
 and
 .Xr groff 1 .
 It accepts all of the arguments defined in
 .Xr divecmd2grap 1
 and outputs the PDF file to standard output.
+In other words, this manages the correct invocation of
+.Xr groff 1 ,
+which is time-consuming to type.
 .Sh EXIT STATUS
 .Ex -std
 .Sh SEE ALSO
 .Xr divecmd2grap 1 ,
+.Xr grap 1 ,
 .Xr groff 1
 .Sh AUTHORS
 The
