@@ -326,20 +326,17 @@ parse_open(void *dat, const XML_Char *s, const XML_Char **atts)
 
 		if (GROUP_DATE == p->stat->group) {
 			if (NULL == date) {
-				logerrx(p, "not sorting date-" 
-					"grouped dive without date");
-				return;
-			}
-
-			grp = group_lookup(p, dive, date);
+				logerrx(p, "group dive without date");
+				grp = group_lookup(p, dive, "");
+			} else
+				grp = group_lookup(p, dive, date);
 		} else if (GROUP_DIVER == p->stat->group) {
 			if (NULL == dive->log->ident) {
-				logerrx(p, "not sorting diver-"
-					"grouped dive without diver");
-				return;
-			}
-
-			grp = group_lookup(p, dive, dive->log->ident);
+				logerrx(p, "group dive without diver");
+				grp = group_lookup(p, dive, "");
+			} else
+				grp = group_lookup(p, 
+					dive, dive->log->ident);
 		} else {
 			if (0 == p->stat->groupsz && verbose)
 				fprintf(stderr, "%s: new default "
