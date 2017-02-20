@@ -25,8 +25,8 @@
 .Nd heuristically split or join dives by sample analysis
 .Sh SYNOPSIS
 .Nm divecmd2divecmd
-.Fl v
-.Ar file
+.Op Fl v
+.Op Ar file
 .Sh DESCRIPTION
 The
 .Nm
@@ -40,6 +40,8 @@ which is where each free dive in a sequence has its own dive profile and
 surface time is omitted.
 Many dive computers automatically produce canonical free diving mode,
 but some, like the HW OSTC 2C, do not.
+.Pp
+Why is this useful?
 The
 .Xr divecmd2grap 1
 utility makes significant use of canonical free diving mode.
