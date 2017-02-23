@@ -2,7 +2,7 @@
 .PHONY: clean
 
 PREFIX 		 = /usr/local
-VERSION		 = 0.0.3
+VERSION		 = 0.0.4
 LDFLAGS		+= -L/usr/local/lib -ldivecomputer
 CFLAGS		+= -g -I/usr/local/include -W -Wall -DVERSION="\"$(VERSION)\""
 OBJS		 = common.o \
