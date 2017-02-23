@@ -25,39 +25,48 @@
 .Nd heuristically split or join dives by sample analysis
 .Sh SYNOPSIS
 .Nm divecmd2divecmd
-.Op Fl v
+.Op Fl jsv
 .Op Ar file
 .Sh DESCRIPTION
 The
 .Nm
 utility accepts a single dive file produced by
 .Xr divecmd 1
-and splits apart or joins dives in a dive sequence based on sample
-readings.
-This is useful for enforcing
+.Pq with a single divelog entry
+and splits apart or joins its dives.
+This is useful for enforcing or undoing
 .Dq canonical free dive mode ,
-which is where each free dive in a sequence has its own dive profile and
-surface time is omitted.
+wherein each dive in a sequence has its own dive profile and surface
+time is omitted.
 Many dive computers automatically produce canonical free diving mode,
-but some, like the HW OSTC 2C, do not.
+for example, the Suunto D6i.
+Others, like the HW OSTC 2C, do not.
 .Pp
-Why is this useful?
+Why is splitting dives useful?
 The
 .Xr divecmd2grap 1
 utility makes significant use of canonical free diving mode.
+This utility allows non-canonical dive computers to be recognised.
+Joining dives is useful when exporting canonical mode to utilities that
+expect a single sequence of ascents and descents such as Subsurface.
 .Pp
 For now,
 .Nm
-is only able to split dives into canonical mode.
-Its only argument is
+is only able to split dives into canonical mode with
+.Fl s
+and join them with
+.Fl j .
+If dives already are split,
+.Fl s
+is a noop; same goes with
+.Fl j .
+The only other argument is
 .Fl v ,
 which triggers verbose parsing.
-It produces output compatible with
-.Xr divecmd 1 .
 .Pp
-If a dive sequence is already in canonical mode,
 .Nm
-has no effect.
+produces output on standard output compatible with
+.Xr divecmd 1 .
 .Sh EXIT STATUS
 .Ex -std
 .Sh SEE ALSO
@@ -73,3 +82,5 @@ utility was written by
 Data (e.g., non-temperature and non-depth samples) is ignored when
 making this conversion.
 It's really only meant for free diving modes, for now.
+Also, some data is omitted from the translated XML file, such as the
+make of the dive computer.

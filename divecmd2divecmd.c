@@ -61,6 +61,60 @@ print_dive_open(time_t t, size_t num, const char *mode)
 }
 
 /*
+ * Put all dive samples into the same dive profile.
+ * We insert "top-side" dives during the surface interval between dive
+ * sets.
+ */
+static void
+print_join(const struct dive *d, time_t *last, time_t first)
+{
+	struct samp     *s1, *s2, *s;
+	time_t           span;
+
+	/* 
+	 * First, compute how this dive computer records times (e.g.,
+	 * once per second, etc.).
+	 * We'll use this to create our fake entries.
+	 */
+
+	if (NULL == (s1 = TAILQ_FIRST(&d->samps)) ||
+	    NULL == (s2 = TAILQ_NEXT(s1, entries)))
+		return;
+
+	assert(s1->time < s2->time);
+	span = s2->time - s1->time;
+
+	/*
+	 * Print a fake sample for each spanned interval between the
+	 * last dive (if specified) and the current one.
+	 */
+
+	if (*last && (*last += span) < d->datetime)
+		do {
+			printf("\t\t\t\t<sample time=\"%lld\">\n"
+			       "\t\t\t\t\t<depth value=\"0\" />\n"
+			       "\t\t\t\t</sample>\n",
+				(long long)(*last - first));
+			*last += span;
+		} while (*last < d->datetime);
+
+	/* Now print the samples. */
+
+	TAILQ_FOREACH(s, &d->samps, entries) {
+		printf("\t\t\t\t<sample time=\"%lld\">\n",
+			(long long)((s->time + d->datetime) - first));
+		if (SAMP_DEPTH & s->flags)
+			printf("\t\t\t\t\t<depth value=\"%g\" />\n",
+				s->depth);
+		if (SAMP_TEMP & s->flags)
+			printf("\t\t\t\t\t<temp value=\"%g\" />\n",
+				s->temp);
+		puts("\t\t\t\t</sample>");
+		*last = s->time + d->datetime;
+	}
+}
+
+/*
  * Given a single dive entry, split it into multiple dive entries when
  * we have two consecutive dives <1 metre.
  * We then ignore samples until the next dive is >1 metre.
@@ -134,20 +188,23 @@ again:
 	}
 }
 
+/*
+ * Take a single input file and either split or join it.
+ */
 static int
-print_all(enum pmode pmode, const struct diveq *dq)
+print_all(enum pmode pmode, const struct dlog *dl, 
+	const struct diveq *dq)
 {
 	const struct dive *d;
-	const struct dlog *dl;
 	size_t		 num = 0;
-	const char	*mode;
+	const char	*modestr;
+	time_t		 last, first;
+	enum mode	 mode;
 	
-	/* Grab the first divelog entry and use its data. */
-
-	d = TAILQ_FIRST(dq);
-	assert(NULL != d);
-	dl = d->log;
-	assert(NULL != dl);
+	/* 
+	 * Grab the first divelog entry and use its data.
+	 * Make sure we only have one divelog.
+	 */
 
 	TAILQ_FOREACH(d, dq, entries)
 		if (0 == d->datetime) {
@@ -164,22 +221,45 @@ print_all(enum pmode pmode, const struct diveq *dq)
 
 	puts(">\n\t<dives>");
 
-	/* XXX: we only support this mode for now. */
-
 	if (PMODE_SPLIT == pmode) {
 		TAILQ_FOREACH(d, dq, entries) {
 			if (MODE_FREEDIVE == d->mode)
-				mode = "freedive";
+				modestr = "freedive";
 			else if (MODE_GAUGE == d->mode)
-				mode = "gauge";
+				modestr = "gauge";
 			else if (MODE_OC == d->mode)
-				mode = "opencircuit";
+				modestr = "opencircuit";
 			else if (MODE_CC == d->mode)
-				mode = "closedcircuit";
+				modestr = "closedcircuit";
 			else
-				mode = NULL;
-			print_split(d, &num, mode);
+				modestr = NULL;
+			print_split(d, &num, modestr);
 		}
+	} else {
+		d = TAILQ_FIRST(dq);
+		assert (NULL != d);
+		mode = d->mode;
+		if (MODE_FREEDIVE == d->mode)
+			modestr = "freedive";
+		else if (MODE_GAUGE == d->mode)
+			modestr = "gauge";
+		else if (MODE_OC == d->mode)
+			modestr = "opencircuit";
+		else if (MODE_CC == d->mode)
+			modestr = "closedcircuit";
+		else
+			modestr = NULL;
+		print_dive_open(d->datetime, 1, modestr);
+		first = d->datetime;
+		last = 0;
+		TAILQ_FOREACH(d, dq, entries) {
+			if (d->mode != mode)
+				warnx("mode mismatch: not "
+					"%s", modestr);
+			print_join(d, &last, first);
+		}
+		puts("\t\t\t</samples>");
+		puts("\t\t</dive>");
 	}
 
 	puts("\t</dives>\n</divelog>");
@@ -193,14 +273,19 @@ main(int argc, char *argv[])
 	enum pmode	 mode = PMODE_SPLIT;
 	XML_Parser	 p;
 	struct diveq	 dq;
+	struct dlog 	*dl;
 	struct divestat	 st;
 
 #if defined(__OpenBSD__) && OpenBSD > 201510
 	if (-1 == pledge("stdio rpath", NULL))
 		err(EXIT_FAILURE, "pledge");
 #endif
-	while (-1 != (c = getopt(argc, argv, "sv")))
+
+	while (-1 != (c = getopt(argc, argv, "jsv")))
 		switch (c) {
+		case ('j'):
+			mode = PMODE_JOIN;
+			break;
 		case ('s'):
 			mode = PMODE_SPLIT;
 			break;
@@ -232,16 +317,25 @@ main(int argc, char *argv[])
 
 	if ( ! rc)
 		goto out;
+
 	if (TAILQ_EMPTY(&dq)) {
 		warnx("no dives to display");
 		goto out;
 	}
 
-	rc = print_all(mode, &dq);
+	dl = TAILQ_FIRST(&st.dlogs);
+	assert(NULL != dl);
+
+	if (TAILQ_NEXT(dl, entries)) {
+		warnx("multiple divelog entries");
+		goto out;
+	}
+
+	rc = print_all(mode, dl, &dq);
 out:
 	parse_free(&dq, &st);
 	return(rc ? EXIT_SUCCESS : EXIT_FAILURE);
 usage:
-	fprintf(stderr, "usage: %s [-sv] [file]\n", getprogname());
+	fprintf(stderr, "usage: %s [-jsv] [file]\n", getprogname());
 	return(EXIT_FAILURE);
 }
