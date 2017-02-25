@@ -168,6 +168,13 @@ To compare free dive resting times across days:
 divecmd2grap -sdate -mrestscatter day1.xml day2 | \e
   groff -Gp -Tpdf -P-p5.8i,8.3i > foo.pdf
 .Ed
+.Pp
+You can always use
+.Xr divecmd2pdf 1
+to make this call easier:
+.Bd -literal -offset indent
+divecmd2pdf -sdate -mrestscatter day1.xml day2 > foo.pdf
+.Ed
 .Sh SEE ALSO
 .Xr divecmd 1 ,
 .Xr divecmd2divecmd 1 ,
