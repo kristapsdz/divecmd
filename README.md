@@ -31,9 +31,9 @@ If you have a feature in mind, I'm very happy to be encouraged to
 implement it with new dive computers, gear, or a place to dive...
 
 See "[Dive computer
-analysis](https://divelog.blue/blog.html?entryid=68)" and "[Visualising
+analysis](https://divelog.blue/cgi-bin/dblg/public.html?entryid=68)" and "[Visualising
 recovery time when free
-diving](https://divelog.blue/blog.html?entryid=69)" for examples of how
+diving](https://divelog.blue/cgi-bin/dblg/public.html?entryid=69)" for examples of how
 [divecmd2grap(1)](https://kristaps.bsd.lv/divecmd/divecmd2grap.1.html),
 operates.
 

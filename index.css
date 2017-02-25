@@ -91,7 +91,7 @@ div.figures > section.figures		{ position: relative;
 					  padding: 0;
 					  margin: 0; }
 section.figures > div 			{ float: left; }
-#divecmd2grap-figures >section >div	{ width: 11.11%; }
-#divecmd2grap-figures >section 		{ width: 900%; }
+#divecmd2grap-figures >section >div	{ width: 10%; }
+#divecmd2grap-figures >section 		{ width: 1000%; }
 #divecmd2term-figures >section >div	{ width: 50%; }
 #divecmd2term-figures >section 		{ width: 200%; }

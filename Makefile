@@ -1,4 +1,4 @@
-.SUFFIXES: .1.html .1 .xml .rest.pdf .restscatter.pdf .summary.pdf .png .pdf .stack.pdf .aggr.pdf .scatter.pdf
+.SUFFIXES: .1.html .1 .xml .rest.pdf .restscatter.pdf .summary.pdf .png .pdf .stack.pdf .aggr.pdf .scatter.pdf .aggrtemp.pdf
 .PHONY: clean
 
 PREFIX 		 = /usr/local
@@ -30,6 +30,7 @@ MAN1S		 = divecmd.1 \
 		   divecmd2pdf.1 \
 		   divecmd2term.1
 PNGS		 = daily.aggr.png \
+		   daily.aggrtemp.png \
 		   daily.rest.png \
 		   daily.restscatter.png \
 		   daily.scatter.png \
@@ -39,6 +40,7 @@ PNGS		 = daily.aggr.png \
 		   multiday.stack.png \
 		   short.stack.png
 PDFS		 = daily.aggr.pdf \
+		   daily.aggrtemp.pdf \
 		   daily.rest.pdf \
 		   daily.restscatter.pdf \
 		   daily.scatter.pdf \
@@ -60,7 +62,8 @@ WWWDIR		 = /var/www/vhosts/kristaps.bsd.lv/htdocs/divecmd
 XMLS		 = daily.xml \
 		   day1.xml \
 		   day2.xml \
-		   multiday.xml
+		   multiday.xml \
+		   temperature.xml
 BUILT		 = screenshot1.png \
 		   screenshot2.png \
 		   slider.js
@@ -146,6 +149,9 @@ short.stack.pdf: multiday.xml
 
 .xml.aggr.pdf:
 	./divecmd2grap -m aggr $< | groff -Gp -Tpdf -P-p5.8i,8.3i >$@
+
+daily.aggrtemp.pdf: temperature.xml
+	./divecmd2grap -m aggrtemp temperature.xml | groff -Gp -Tpdf -P-p5.8i,8.3i >$@
 
 multiday.stack.pdf: multiday.xml
 	./divecmd2grap -s date -m stack multiday.xml | groff -Gp -Tpdf -P-p5.8i,8.3i >$@

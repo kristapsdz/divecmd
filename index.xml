@@ -150,6 +150,19 @@
 						</figure>
 					</div>
 					<div>
+						<figure id="mode-temp">
+							<a class="img" href="daily.aggrtemp.png"><img src="daily.aggrtemp.png" alt="" /></a>
+							<figcaption>
+								<h4>aggrtemp</h4>
+								<p>
+									Also available as <q>stacktemp</q>, for stacked dives.
+									This shows the temperature recorded by your dive computer, either as an
+									aggregate or stacked.
+								</p>
+							</figcaption>
+						</figure>
+					</div>
+					<div>
 						<figure id="mode-rest">
 							<a class="img" href="daily.rest.png"><img src="daily.rest.png" alt="" /></a>
 							<figcaption>
