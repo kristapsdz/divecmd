@@ -34,9 +34,11 @@ enum	pmode {
 	MODE_SCATTER,
 	MODE_SUMMARY,
 	MODE_AGGREGATE,
+	MODE_AGGREGATE_TEMP,
 	MODE_RESTING,
 	MODE_RESTING_SCATTER,
 	MODE_STACK,
+	MODE_STACK_TEMP,
 	MODE_VECTOR
 };
 
@@ -68,7 +70,8 @@ print_all(const struct diveq *dq, const struct divestat *st)
 			 points = 0, rest;
 	time_t		 t, lastt = 0;
 	double		 maxdepth = 0.0, lastdepth, x, y, 
-			 height = 3.8, width = 5.4, x2, y2;
+			 height = 3.8, width = 5.4, x2, y2,
+			 mintemp = 100.0, maxtemp = 0.0;
 	int		 free = 0;
 	struct dgroup 	*dg;
 
@@ -82,6 +85,7 @@ print_all(const struct diveq *dq, const struct divestat *st)
 	 */
 
 	if (MODE_AGGREGATE == mode ||
+	    MODE_AGGREGATE_TEMP == mode ||
 	    MODE_RESTING == mode ||
 	    MODE_RESTING_SCATTER == mode) 
 		TAILQ_FOREACH(d, dq, entries)
@@ -90,7 +94,16 @@ print_all(const struct diveq *dq, const struct divestat *st)
 				return(0);
 			}
 
-	if (MODE_AGGREGATE == mode)
+	if (MODE_STACK_TEMP == mode ||
+	    MODE_AGGREGATE_TEMP == mode) 
+		TAILQ_FOREACH(d, dq, entries)
+			if (0 == d->hastemp) {
+				warnx("temperature required");
+				return(0);
+			}
+
+	if (MODE_AGGREGATE == mode ||
+	    MODE_AGGREGATE_TEMP == mode) 
 		TAILQ_FOREACH(d, dq, entries) {
 			t = (d->datetime + d->maxtime) - 
 				d->group->mintime;
@@ -104,6 +117,7 @@ print_all(const struct diveq *dq, const struct divestat *st)
 	    MODE_VECTOR == mode ||
 	    MODE_RESTING == mode ||
 	    MODE_STACK == mode ||
+	    MODE_STACK_TEMP == mode ||
 	    MODE_RESTING_SCATTER == mode)
 		TAILQ_FOREACH(d, dq, entries) {
 			free += MODE_FREEDIVE == d->mode;
@@ -113,6 +127,16 @@ print_all(const struct diveq *dq, const struct divestat *st)
 			if (d->maxdepth > maxdepth)
 				maxdepth = d->maxdepth;
 			points++;
+		}
+
+	if (MODE_AGGREGATE_TEMP == mode ||
+	    MODE_STACK_TEMP == mode) 
+		TAILQ_FOREACH(d, dq, entries) {
+			dp = TAILQ_NEXT(d, entries);
+			if (d->maxtemp > maxtemp)
+				maxtemp = d->maxtemp;
+			if (d->mintemp > mintemp)
+				mintemp = d->mintemp;
 		}
 
 	if (MODE_RESTING == mode ||
@@ -291,6 +315,23 @@ print_all(const struct diveq *dq, const struct divestat *st)
 		       (3 * maxtime / 4) % 60, 
 		       maxtime / 60, maxtime % 60,
 		       maxdepth);
+	else if (MODE_STACK_TEMP == mode ||
+	   	 MODE_AGGREGATE_TEMP == mode)
+		printf("ticks bot out at "
+				"0.0 \"00:00\", "
+				"0.25 \"%zu:%.02zu\", "
+				"0.5 \"%zu:%.02zu\", "
+				"0.75 \"%zu:%.02zu\", "
+				"1.0 \"%zu:%.02zu\"\n"
+		       "grid right ticks off\n"
+		       "grid top ticks off\n"
+		       "label left \"Temp (C)\" left 0.1\n"
+		       "label bot \"Time (mm:ss)\"\n",
+		       (maxtime / 4) / 60, (maxtime / 4) % 60, 
+		       (maxtime / 2) / 60, (maxtime / 2) % 60, 
+		       (3 * maxtime / 4) / 60, 
+		       (3 * maxtime / 4) % 60, 
+		       maxtime / 60, maxtime % 60);
 	else 
 		printf("ticks bot out at "
 				"0.0 \"00:00\", "
@@ -301,20 +342,37 @@ print_all(const struct diveq *dq, const struct divestat *st)
 		       "grid right ticks off\n"
 		       "grid top ticks off\n"
 		       "label left \"%s\" left 0.1\n"
-		       "label bot \"Time (mm:ss)\"\n"
-		       "new color \"%s\"\n",
+		       "label bot \"Time (mm:ss)\"\n",
 		       (maxtime / 4) / 60, (maxtime / 4) % 60, 
 		       (maxtime / 2) / 60, (maxtime / 2) % 60, 
 		       (3 * maxtime / 4) / 60, 
 		       (3 * maxtime / 4) % 60, 
 		       maxtime / 60, maxtime % 60,
 		       ! derivs ?  "Depth (m)" :
-		       "Velocity (vertical m/s)",
-		       cols[0]);
+		       "Velocity (vertical m/s)");
 
 	/* Now for the data. */
 
 	switch (mode) {
+	case MODE_AGGREGATE_TEMP:
+		for (i = 0; i < st->groupsz; i++) {
+			dg = st->groups[i];
+			printf("new color \"%s\"\n", 
+				cols[dg->id % COL_MAX]);
+			TAILQ_FOREACH(d, &dg->dives, gentries) {
+				TAILQ_FOREACH(s, &d->samps, entries) {
+					if ( ! (SAMP_TEMP & s->flags))
+						continue;
+					t = s->time;
+					t += d->datetime;
+					t -= dg->mintime;
+					x = t / (double)maxtime;
+					y = s->temp;
+					printf("%g %g\n", x, y);
+				}
+			}
+		}
+		break;
 	case MODE_AGGREGATE:
 		/*
 		 * In aggregate mode, we iterate through each of the
@@ -325,6 +383,8 @@ print_all(const struct diveq *dq, const struct divestat *st)
 		 */
 		for (i = 0; i < st->groupsz; i++) {
 			dg = st->groups[i];
+			printf("new color \"%s\"\n", 
+				cols[dg->id % COL_MAX]);
 			lastt = 0;
 			TAILQ_FOREACH(d, &dg->dives, gentries) {
 				lastdepth = 0.0;
@@ -347,10 +407,6 @@ print_all(const struct diveq *dq, const struct divestat *st)
 				x = lastt / (double)maxtime;
 				printf("%g 0\n", x);
 			}
-			if (i == st->groupsz - 1)
-				continue;
-			printf("new color \"%s\"\n", 
-				cols[st->groups[i + 1]->id % COL_MAX]);
 		}
 		break;
 	case MODE_RESTING:
@@ -414,27 +470,49 @@ print_all(const struct diveq *dq, const struct divestat *st)
 				d->maxdepth,
 				cols[d->group->id % COL_MAX]);
 		break;
-	default:
-		TAILQ_FOREACH(d, dq, entries) {
-			puts("0 0");
-			lastdepth = 0.0;
-			TAILQ_FOREACH(s, &d->samps, entries) {
-				t = s->time;
-				x = t / (double)maxtime;
-				y = 0 == derivs ? -s->depth :
-					lastt == t ? 0.0 :
-					(lastdepth - s->depth) /
-					(t - lastt);
-				printf("%g %g\n", x, y);
-				lastdepth = s->depth;
-				lastt = t;
+	case MODE_STACK_TEMP:
+		for (i = 0; i < st->groupsz; i++) {
+			dg = st->groups[i];
+			printf("new color \"%s\"\n",
+				cols[dg->id % COL_MAX]);
+			TAILQ_FOREACH(d, &dg->dives, gentries) {
+				TAILQ_FOREACH(s, &d->samps, entries) {
+					if ( ! (SAMP_TEMP & s->flags))
+						continue;
+					t = s->time;
+					x = t / (double)maxtime;
+					y = s->temp;
+					printf("%g %g\n", x, y);
+				}
+				if (TAILQ_NEXT(d, gentries))
+					puts("new");
 			}
-
-			x = lastt / (double)maxtime;
-			printf("%g 0\n", x);
-			if (NULL != (dp = TAILQ_NEXT(d, entries)))
-				printf("new color \"%s\"\n",
-					cols[dp->group->id % COL_MAX]);
+		}
+		break;
+	default:
+		for (i = 0; i < st->groupsz; i++) {
+			dg = st->groups[i];
+			printf("new color \"%s\"\n",
+				cols[dg->id % COL_MAX]);
+			TAILQ_FOREACH(d, &dg->dives, gentries) {
+				puts("0 0");
+				lastdepth = 0.0;
+				TAILQ_FOREACH(s, &d->samps, entries) {
+					t = s->time;
+					x = t / (double)maxtime;
+					y = 0 == derivs ? -s->depth :
+						lastt == t ? 0.0 :
+						(lastdepth - s->depth) /
+						(t - lastt);
+					printf("%g %g\n", x, y);
+					lastdepth = s->depth;
+					lastt = t;
+				}
+				x = lastt / (double)maxtime;
+				printf("%g 0\n", x);
+				if (NULL != (dp = TAILQ_NEXT(d, entries)))
+					puts("new");
+			}
 		}
 		break;
 	}
@@ -467,8 +545,12 @@ main(int argc, char *argv[])
 		case ('m'):
 			if (0 == strcasecmp(optarg, "stack"))
 				mode = MODE_STACK;
+			else if (0 == strcasecmp(optarg, "stacktemp"))
+				mode = MODE_STACK_TEMP;
 			else if (0 == strcasecmp(optarg, "aggr"))
 				mode = MODE_AGGREGATE;
+			else if (0 == strcasecmp(optarg, "aggrtemp"))
+				mode = MODE_AGGREGATE_TEMP;
 			else if (0 == strcasecmp(optarg, "summary"))
 				mode = MODE_SUMMARY;
 			else if (0 == strcasecmp(optarg, "rest"))
