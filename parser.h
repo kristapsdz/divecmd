@@ -69,6 +69,9 @@ struct	dive {
 	size_t		     duration; /* or zero */
 	struct sampq	     samps; /* samples */
 	double		     maxdepth; /* maximum sample depth */
+	int		     hastemp; /* do we have temps? */
+	double		     maxtemp; /* maximum (hottest) temp */
+	double		     mintemp; /* minimum (coldest) temp */
 	size_t		     maxtime; /* maximum sample time */
 	size_t		     nsamps; /* number of samples */
 	const struct dgroup *group; /* group identifier */
