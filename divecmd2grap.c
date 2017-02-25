@@ -46,6 +46,8 @@ int verbose = 0;
 
 static	enum pmode mode = MODE_STACK;
 
+#define	LINE_THICKNESS 0.8
+
 #define	COL_MAX 5
 
 static	const char *cols[COL_MAX] = {
@@ -357,8 +359,9 @@ print_all(const struct diveq *dq, const struct divestat *st)
 	case MODE_AGGREGATE_TEMP:
 		for (i = 0; i < st->groupsz; i++) {
 			dg = st->groups[i];
-			printf("new color \"%s\"\n", 
-				cols[dg->id % COL_MAX]);
+			printf("new color \"%s\" thickness %g\n", 
+				cols[dg->id % COL_MAX],
+				LINE_THICKNESS);
 			TAILQ_FOREACH(d, &dg->dives, gentries) {
 				TAILQ_FOREACH(s, &d->samps, entries) {
 					if ( ! (SAMP_TEMP & s->flags))
@@ -383,8 +386,9 @@ print_all(const struct diveq *dq, const struct divestat *st)
 		 */
 		for (i = 0; i < st->groupsz; i++) {
 			dg = st->groups[i];
-			printf("new color \"%s\"\n", 
-				cols[dg->id % COL_MAX]);
+			printf("new color \"%s\" thickness %g\n", 
+				cols[dg->id % COL_MAX], 
+				LINE_THICKNESS);
 			lastt = 0;
 			TAILQ_FOREACH(d, &dg->dives, gentries) {
 				lastdepth = 0.0;
@@ -473,8 +477,9 @@ print_all(const struct diveq *dq, const struct divestat *st)
 	case MODE_STACK_TEMP:
 		for (i = 0; i < st->groupsz; i++) {
 			dg = st->groups[i];
-			printf("new color \"%s\"\n",
-				cols[dg->id % COL_MAX]);
+			printf("new color \"%s\" thickness %g\n",
+				cols[dg->id % COL_MAX],
+				LINE_THICKNESS);
 			TAILQ_FOREACH(d, &dg->dives, gentries) {
 				TAILQ_FOREACH(s, &d->samps, entries) {
 					if ( ! (SAMP_TEMP & s->flags))
@@ -492,8 +497,9 @@ print_all(const struct diveq *dq, const struct divestat *st)
 	default:
 		for (i = 0; i < st->groupsz; i++) {
 			dg = st->groups[i];
-			printf("new color \"%s\"\n",
-				cols[dg->id % COL_MAX]);
+			printf("new color \"%s\" thickness %g\n",
+				cols[dg->id % COL_MAX],
+				LINE_THICKNESS);
 			TAILQ_FOREACH(d, &dg->dives, gentries) {
 				puts("0 0");
 				lastdepth = 0.0;
