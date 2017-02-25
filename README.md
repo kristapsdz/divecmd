@@ -27,8 +27,8 @@ significantly simplify the code, to add sandboxing via
 [pledge(2)](http://man.openbsd.org/pledge.2), and to provide multiple
 front-ends.
 
-**It is still in the earliest phases of development.** Though I welcome
-being sent on dives to give the system more support...
+If you have a feature in mind, I'm very happy to be encouraged to
+implement it with new dive computers, gear, or a place to dive...
 
 See "[Dive computer
 analysis](https://divelog.blue/blog.html?entryid=68)" and "[Visualising
@@ -36,6 +36,10 @@ recovery time when free
 diving](https://divelog.blue/blog.html?entryid=69)" for examples of how
 [divecmd2grap(1)](https://kristaps.bsd.lv/divecmd/divecmd2grap.1.html),
 operates.
+
+Also see "[Suunto D6i temperature
+rounding](https://divelog.blue/cgi-bin/dblg/public.html?entryid=77)",
+which showcases both temperature and split (by diver) modes.
 
 ## License
 
