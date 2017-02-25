@@ -444,6 +444,17 @@ parse_open(void *dat, const XML_Char *s, const XML_Char **atts)
 
 		samp->temp = atof(attp[1]);
 		samp->flags |= SAMP_TEMP;
+
+		if (0 == p->curdive->hastemp) {
+			p->curdive->maxtemp = samp->temp;
+			p->curdive->mintemp = samp->temp;
+			p->curdive->hastemp = 1;
+		} else {
+			if (samp->temp > p->curdive->maxtemp)
+				p->curdive->maxtemp = samp->temp;
+			if (samp->temp < p->curdive->mintemp)
+				p->curdive->mintemp = samp->temp;
+		}
 	}
 }
 
