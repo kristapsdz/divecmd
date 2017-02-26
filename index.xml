@@ -37,7 +37,8 @@
 		</header>
 		<article>
 			<p>
-				<span class="nm">divecmd</span> is a suite of command-line UNIX tools to extract dives from dive computers.
+				<span class="nm">divecmd</span> is a suite of command-line UNIX tools (OpenBSD, Linux, Mac OS X) to extract
+				dives from dive computers.
 				It wraps thinly around the excellent <a href="http://www.libdivecomputer.org/">libdivecomputer</a>, which does
 				the heavy lifting to interface with your device.
 				Why use <span class="nm">divecmd</span> instead of, say, <a href="https://subsurface-divelog.org/">subsurface</a>?
@@ -60,26 +61,16 @@
 				</code>
 			</blockquote>
 			<p>
-				Following that, I'll analyse my dives by plotting them with <a href="divecmd2grap.1.html">divecmd2grap(1)</a>.
+				Following that, I'll analyse my dives by plotting them with <a href="divecmd2grap.1.html">divecmd2grap(1)</a> via
+				<a href="divecmd2pdf.1.html">divecmd2pdf(1)</a>.
 				In the case of free diving, for example, I might do this:
 			</p>
 			<blockquote>
 				<code>
-					divecmd2grap -m summary <a href="daily.xml">daily.xml</a> | groff -Gp -Tpdf -P-p5.8i,8.3i > <a
-						href="daily.summary.pdf">daily.summary.pdf</a>
+					divecmd2pdf -m summary <a href="daily.xml">daily.xml</a> | > <a href="daily.summary.pdf">daily.summary.pdf</a>
 				</code>
 				<code>
-					divecmd2grap -m restscatter <a href="daily.xml">daily.xml</a> | groff -Gp -Tpdf -P-p5.8i,8.3i > <a
-						href="daily.restscatter.pdf">daily.restscatter.pdf</a>
-				</code>
-			</blockquote>
-			<p>
-				You can also simply use <a href="divecmd2pdf.1.html">divecmd2pdf(1)</a>, which effects the same.
-			</p>
-			<blockquote>
-				<code>
-					divecmd2pdf -m restscatter <a href="daily.xml">daily.xml</a> > <a
-						href="daily.restscatter.pdf">daily.restscatter.pdf</a>
+					divecmd2pdf -m restscatter <a href="daily.xml">daily.xml</a> > <a href="daily.restscatter.pdf">daily.restscatter.pdf</a>
 				</code>
 			</blockquote>
 			<p>
@@ -105,6 +96,7 @@
 				to manage the intermediary files of <a href="http://www.gnuplot.info/">gnuplot</a> or <a
 					href="https://www.latex-project.org/">LaTeX</a>.
 				I use these other tools all of the time, but prefer to avoid them for that reason.
+				See also <a href="divecmd2pdf.1.html">divecmd2pdf(1)</a>, which manages the groff pipeline.
 			</p>
 			<p>
 				There are a number of graphing modes available to <a href="divecmd2grap.1.html">divecmd2grap(1)</a>.
