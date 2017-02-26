@@ -42,6 +42,23 @@ Also see "[Suunto D6i temperature
 rounding](https://divelog.blue/cgi-bin/dblg/public.html?entryid=77)",
 which showcases both temperature and split (by diver) modes.
 
+## Installation
+
+To install *divecmd*, you need a recent version of
+[libdivecomputer](http://www.libdivecomputer.org) and
+[libexpat](http://expat.sourceforge.net/).  You'll probably also want
+*groff(1)* and *grap(1)*.
+
+Just run the following:
+
+```
+./configure
+make
+sudo make install
+```
+
+Or if you're on OpenBSD, use `doas` instead of `sudo`.  That's it!
+
 ## License
 
 The sources use the LGPL as printed in the [LICENSE.md](LICENSE.md)
