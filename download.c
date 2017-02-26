@@ -18,9 +18,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston,
  * MA 02110-1301 USA
  */
-#ifdef __OpenBSD_
-# include <sys/param.h>
-#endif
+#include "config.h"
 
 #include <assert.h>
 #include <err.h>
@@ -271,7 +269,7 @@ parse(dc_context_t *context, dc_descriptor_t *descriptor,
 		goto cleanup;
 	}
 
-#if defined(__OpenBSD__) && OpenBSD > 201510
+#if HAVE_PLEDGE
 	if (-1 == pledge("stdio", NULL))
 		err(EXIT_FAILURE, "pledge");
 #endif

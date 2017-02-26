@@ -572,7 +572,7 @@ main(int argc, char *argv[])
 	struct dcmd_rng	*rng = NULL;
 	int	 	 model = -1;
 
-#if defined(__OpenBSD__) && OpenBSD > 201510
+#if HAVE_PLEDGE
 	if (-1 == pledge("stdio rpath", NULL))
 		err(EXIT_FAILURE, "pledge");
 #endif
