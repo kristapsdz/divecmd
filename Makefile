@@ -26,6 +26,7 @@ BINS		 = divecmd \
 		   divecmd2json \
 		   divecmd2term
 MAN1S		 = divecmd.1 \
+		   divecmd2csv.1 \
 		   divecmd2divecmd.1 \
 		   divecmd2grap.1 \
 		   divecmd2json.1 \
@@ -53,6 +54,7 @@ PDFS		 = daily.aggr.pdf \
 		   multiday.stack.pdf \
 		   short.stack.pdf
 HTMLS		 = divecmd.1.html \
+		   divecmd2csv.1.html \
 		   divecmd2divecmd.1.html \
 		   divecmd2grap.1.html \
 		   divecmd2json.1.html \
