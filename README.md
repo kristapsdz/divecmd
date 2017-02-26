@@ -11,6 +11,7 @@ which graphs formatted dives in an ANSI/VT100 terminal;
 which graphs using *grap(1)*; and 
 [divecmd2json(1)](https://kristaps.bsd.lv/divecmd/divecmd2json.1.html),
 which exports dive profiles to the JSON format.
+It compiles and runs on Linux, Mac OS X, and OpenBSD.
 
 There are also some supporting utilities, such as
 [divecmd2pdf(1)](https://kristaps.bsd.lv/divecmd/divecmd2pdf.1.html),
