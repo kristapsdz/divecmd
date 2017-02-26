@@ -17,7 +17,8 @@ BINOBJS		 = divecmd2divecmd.o \
 		   divecmd2json.o \
 		   divecmd2term.o \
 		   parser.o
-PREBINS		 = divecmd2pdf
+PREBINS		 = divecmd2pdf \
+		   divecmd2ps
 BINS		 = divecmd \
 		   divecmd2divecmd \
 		   divecmd2grap \
@@ -28,6 +29,7 @@ MAN1S		 = divecmd.1 \
 		   divecmd2grap.1 \
 		   divecmd2json.1 \
 		   divecmd2pdf.1 \
+		   divecmd2ps.1 \
 		   divecmd2term.1
 PNGS		 = daily.aggr.png \
 		   daily.aggrtemp.png \
@@ -54,6 +56,7 @@ HTMLS		 = divecmd.1.html \
 		   divecmd2grap.1.html \
 		   divecmd2json.1.html \
 		   divecmd2pdf.1.html \
+		   divecmd2ps.1.html \
 		   divecmd2term.1.html \
 		   index.html
 CSSS		 = index.css \
