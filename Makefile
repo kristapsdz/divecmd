@@ -1,10 +1,12 @@
 .SUFFIXES: .1.html .1 .xml .rest.pdf .restscatter.pdf .summary.pdf .png .pdf .stack.pdf .aggr.pdf .scatter.pdf .aggrtemp.pdf
 .PHONY: clean
 
+.include "Makefile.configure"
+
 PREFIX 		 = /usr/local
 VERSION		 = 0.0.5
 LDFLAGS		+= -L/usr/local/lib -ldivecomputer
-CFLAGS		+= -g -I/usr/local/include -W -Wall -DVERSION="\"$(VERSION)\""
+CFLAGS		+= -I/usr/local/include -DVERSION="\"$(VERSION)\""
 OBJS		 = common.o \
 		   main.o \
 		   download.o \
@@ -15,8 +17,6 @@ BINOBJS		 = divecmd2divecmd.o \
 		   divecmd2json.o \
 		   divecmd2term.o \
 		   parser.o
-BINDIR 		 = $(PREFIX)/bin
-MANDIR 		 = $(PREFIX)/man
 PREBINS		 = divecmd2pdf
 BINS		 = divecmd \
 		   divecmd2divecmd \
@@ -81,6 +81,12 @@ installwww: www
 	install -m 0444 divecmd.tar.gz $(WWWDIR)/snapshots
 	install -m 0444 divecmd.tar.gz.sha512 $(WWWDIR)/snapshots
 
+install: all
+	mkdir -p $(DESTDIR)$(BINDIR)
+	mkdir -p $(DESTDIR)$(MANDIR)/man1
+	install -m 0755 $(BINS) $(PREBINS) $(DESTDIR)$(BINDIR)
+	install -m 0444 $(MAN1S) $(DESTDIR)$(MANDIR)/man1
+
 divecmd: $(OBJS)
 	$(CC) -o $@ $(OBJS) $(LDFLAGS) 
 
@@ -95,12 +101,6 @@ divecmd2grap: divecmd2grap.o parser.o
 
 divecmd2json: divecmd2json.o parser.o
 	$(CC) -o $@ divecmd2json.o parser.o -lexpat
-
-install: all
-	mkdir -p $(DESTDIR)$(BINDIR)
-	mkdir -p $(DESTDIR)$(MANDIR)/man1
-	install -m 0755 $(BINS) $(PREBINS) $(DESTDIR)$(BINDIR)
-	install -m 0444 $(MAN1S) $(DESTDIR)$(MANDIR)/man1
 
 $(PNGS): $(PDFS)
 
@@ -123,8 +123,11 @@ index.html: index.xml
 	sed "s!@VERSION@!$(VERSION)!g" index.xml >$@
 
 clean:
-	rm -f $(OBJS) $(BINS) $(BINOBJS) $(HTMLS) $(PDFS) $(PNGS)
+	rm -f $(OBJS) $(BINS) $(BINOBJS) $(HTMLS) $(PDFS) $(PNGS) config.h config.log
 	rm -f divecmd.tar.gz divecmd.tar.gz.sha512
+
+distclean: clean
+	rm -f Makefile.configure
 
 .1.1.html:
 	mandoc -Thtml -Ostyle=mandoc.css $< >$@
