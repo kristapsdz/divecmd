@@ -14,9 +14,8 @@
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  */
-#ifdef __OpenBSD_
-# include <sys/param.h>
-#endif
+#include "config.h"
+
 #include <sys/queue.h>
 
 #include <assert.h>
@@ -59,7 +58,7 @@ print_all(const struct divestat *st)
 					d->duration);
 			if (0 != d->datetime)
 				printf("\t\t\t \"datetime\": %lld,\n", 
-					d->datetime);
+					(long long)d->datetime);
 			puts("\t\t\t \"samples\": [");
 			TAILQ_FOREACH(s, &d->samps, entries) {
 				t = s->time;
@@ -67,7 +66,8 @@ print_all(const struct divestat *st)
 					t += d->datetime;
 					t -= st->timestamp_min;
 				}
-				printf("\t\t\t\t{\"time\": %lld", t);
+				printf("\t\t\t\t{\"time\": %lld", 
+					(long long)t);
 				if (SAMP_DEPTH & s->flags)
 					printf(", \"depth\": %g", s->depth);
 				if (SAMP_TEMP & s->flags)
@@ -96,7 +96,7 @@ main(int argc, char *argv[])
 	struct diveq	 dq;
 	struct divestat	 st;
 
-#if defined(__OpenBSD__) && OpenBSD > 201510
+#if HAVE_PLEDGE
 	if (-1 == pledge("stdio rpath", NULL))
 		err(EXIT_FAILURE, "pledge");
 #endif
@@ -124,7 +124,7 @@ main(int argc, char *argv[])
 		if ( ! (rc = parse(argv[i], p, &dq, &st)))
 			break;
 
-#if defined(__OpenBSD__) && OpenBSD > 201510
+#if HAVE_PLEDGE
 	if (-1 == pledge("stdio", NULL))
 		err(EXIT_FAILURE, "pledge");
 #endif

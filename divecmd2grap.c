@@ -14,9 +14,7 @@
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  */
-#ifdef __OpenBSD_
-# include <sys/param.h>
-#endif
+#include "config.h"
 #include <sys/queue.h>
 
 #include <assert.h>
@@ -539,7 +537,7 @@ main(int argc, char *argv[])
 
 	/* Pledge us early: only reading files. */
 
-#if defined(__OpenBSD__) && OpenBSD > 201510
+#if HAVE_PLEDGE
 	if (-1 == pledge("stdio rpath", NULL))
 		err(EXIT_FAILURE, "pledge");
 #endif
@@ -608,7 +606,7 @@ main(int argc, char *argv[])
 		if ( ! (rc = parse(argv[i], p, &dq, &st)))
 			break;
 
-#if defined(__OpenBSD__) && OpenBSD > 201510
+#if HAVE_PLEDGE
 	if (-1 == pledge("stdio", NULL))
 		err(EXIT_FAILURE, "pledge");
 #endif

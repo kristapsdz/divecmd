@@ -14,9 +14,7 @@
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  */
-#ifdef __OpenBSD_
-# include <sys/param.h>
-#endif
+#include "config.h"
 #include <sys/queue.h>
 
 #include <assert.h>
@@ -24,6 +22,7 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
+#include <time.h>
 #include <unistd.h>
 
 #include <expat.h>
@@ -276,7 +275,7 @@ main(int argc, char *argv[])
 	struct dlog 	*dl;
 	struct divestat	 st;
 
-#if defined(__OpenBSD__) && OpenBSD > 201510
+#if HAVE_PLEDGE
 	if (-1 == pledge("stdio rpath", NULL))
 		err(EXIT_FAILURE, "pledge");
 #endif
@@ -308,7 +307,7 @@ main(int argc, char *argv[])
 		parse("-", p, &dq, &st) :
 		parse(argv[0], p, &dq, &st);
 
-#if defined(__OpenBSD__) && OpenBSD > 201510
+#if HAVE_PLEDGE
 	if (-1 == pledge("stdio", NULL))
 		err(EXIT_FAILURE, "pledge");
 #endif
