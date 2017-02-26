@@ -3,19 +3,27 @@
 *divecmd* drives [libdivecomputer](http://www.libdivecomputer.org) to
 extract the contents of your dive computer in a safe, simple manner.  It
 has several programs: 
-[divecmd(1)](https://kristaps.bsd.lv/divecmd/divecmd.1.html), which
-downloads, parses, and formats dives;
-[divecmd2term(1)](https://kristaps.bsd.lv/divecmd/divecmd2term.1.html),
-which graphs formatted dives in an ANSI/VT100 terminal;
-[divecmd2grap(1)](https://kristaps.bsd.lv/divecmd/divecmd2grap.1.html),
-which graphs using *grap(1)*; and 
-[divecmd2json(1)](https://kristaps.bsd.lv/divecmd/divecmd2json.1.html),
-which exports dive profiles to the JSON format.
+
+- [divecmd(1)](https://kristaps.bsd.lv/divecmd/divecmd.1.html), which
+  downloads, parses, and formats dives;
+- [divecmd2term(1)](https://kristaps.bsd.lv/divecmd/divecmd2term.1.html),
+  which graphs formatted dives in an ANSI/VT100 terminal;
+- [divecmd2grap(1)](https://kristaps.bsd.lv/divecmd/divecmd2grap.1.html),
+  which graphs using *grap(1)*; 
+- [divecmd2json(1)](https://kristaps.bsd.lv/divecmd/divecmd2json.1.html),
+  which exports dive profiles to the JSON format; and
+- [divecmd2csv(1)](https://kristaps.bsd.lv/divecmd/divecmd2csv.1.html),
+  which exports to CSV (usually for use by
+  [Subsurface](https://subsurface-divelog.org/).
+
 It compiles and runs on Linux, Mac OS X, and OpenBSD.
 
 There are also some supporting utilities, such as
 [divecmd2pdf(1)](https://kristaps.bsd.lv/divecmd/divecmd2pdf.1.html),
-which manages a *groff(1)* toolchain; and
+which manages a *groff(1)* toolchain into PDF; 
+[divecmd2ps(1)](https://kristaps.bsd.lv/divecmd/divecmd2ps.1.html),
+which does the same but for PS (Mac OS X's *groff(1)* doesn't have PDF
+support); and
 [divecmd2divecmd(1)](https://kristaps.bsd.lv/divecmd/divecmd2divecmd.1.html),
 which converts some dive computers' output into a form allowing for
 better free dive analysis.
@@ -47,7 +55,8 @@ which showcases both temperature and split (by diver) modes.
 To install *divecmd*, you need a recent version of
 [libdivecomputer](http://www.libdivecomputer.org) and
 [libexpat](http://expat.sourceforge.net/).  You'll probably also want
-*groff(1)* and *grap(1)*.
+*groff(1)* and *grap(1)*.  **Note**: if you're running Mac OS X, your
+version of *groff(1)* doesn't support PDF output.
 
 Just run the following:
 
