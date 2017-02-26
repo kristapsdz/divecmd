@@ -13,20 +13,20 @@ has several programs:
 - [divecmd2json(1)](https://kristaps.bsd.lv/divecmd/divecmd2json.1.html),
   which exports dive profiles to the JSON format; and
 - [divecmd2csv(1)](https://kristaps.bsd.lv/divecmd/divecmd2csv.1.html),
-  which exports to CSV (usually for use by
-  [Subsurface](https://subsurface-divelog.org/).
+  which exports to CSV (usually for [Subsurface](https://subsurface-divelog.org/)).
 
 It compiles and runs on Linux, Mac OS X, and OpenBSD.
 
-There are also some supporting utilities, such as
-[divecmd2pdf(1)](https://kristaps.bsd.lv/divecmd/divecmd2pdf.1.html),
-which manages a *groff(1)* toolchain into PDF; 
-[divecmd2ps(1)](https://kristaps.bsd.lv/divecmd/divecmd2ps.1.html),
-which does the same but for PS (Mac OS X's *groff(1)* doesn't have PDF
-support); and
-[divecmd2divecmd(1)](https://kristaps.bsd.lv/divecmd/divecmd2divecmd.1.html),
-which converts some dive computers' output into a form allowing for
-better free dive analysis.
+There are also some supporting utilities:
+
+- [divecmd2pdf(1)](https://kristaps.bsd.lv/divecmd/divecmd2pdf.1.html), which
+  manages a *groff(1)* toolchain into PDF; 
+- [divecmd2ps(1)](https://kristaps.bsd.lv/divecmd/divecmd2ps.1.html), which
+  does the same but for PS (Mac OS X's *groff(1)* doesn't have PDF support);
+  and
+- [divecmd2divecmd(1)](https://kristaps.bsd.lv/divecmd/divecmd2divecmd.1.html),
+  which converts some dive computers' output into a form allowing for better
+  free dive analysis.
 
 I forked [libdivecomputer](http://www.libdivecomputer.org)'s *dctool* to
 write [divecmd(1)](https://kristaps.bsd.lv/divecmd/divecmd.1.html) ---
@@ -44,23 +44,22 @@ analysis](https://divelog.blue/cgi-bin/dblg/public.html?entryid=68)" and "[Visua
 recovery time when free
 diving](https://divelog.blue/cgi-bin/dblg/public.html?entryid=69)" for examples of how
 [divecmd2grap(1)](https://kristaps.bsd.lv/divecmd/divecmd2grap.1.html),
-operates.
-
-Also see "[Suunto D6i temperature
-rounding](https://divelog.blue/cgi-bin/dblg/public.html?entryid=77)",
-which showcases both temperature and split (by diver) modes.
+operates.  Also see "[Suunto D6i temperature
+rounding](https://divelog.blue/cgi-bin/dblg/public.html?entryid=77)", which
+showcases both temperature and split (by diver) modes.
 
 ## Installation
 
 To install *divecmd*, you need a recent version of
 [libdivecomputer](http://www.libdivecomputer.org) and
-[libexpat](http://expat.sourceforge.net/).  You'll probably also want
+[libexpat](http://expat.sourceforge.net/) (the latter is installed by
+default on most modern UNIX machines).  You'll probably also want
 *groff(1)* and *grap(1)*.  **Note**: if you're running Mac OS X, your
 version of *groff(1)* doesn't support PDF output.
 
 Just run the following:
 
-```
+```sh
 ./configure
 make
 sudo make install
