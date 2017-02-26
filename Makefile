@@ -20,6 +20,7 @@ BINOBJS		 = divecmd2divecmd.o \
 PREBINS		 = divecmd2pdf \
 		   divecmd2ps
 BINS		 = divecmd \
+		   divecmd2csv \
 		   divecmd2divecmd \
 		   divecmd2grap \
 		   divecmd2json \
@@ -110,6 +111,9 @@ divecmd2grap: divecmd2grap.o parser.o $(COMPAT_OBJS)
 
 divecmd2json: divecmd2json.o parser.o $(COMPAT_OBJS)
 	$(CC) -o $@ divecmd2json.o parser.o $(COMPAT_OBJS) -lexpat
+
+divecmd2csv: divecmd2csv.o parser.o $(COMPAT_OBJS)
+	$(CC) -o $@ divecmd2csv.o parser.o $(COMPAT_OBJS) -lexpat
 
 $(PNGS): $(PDFS)
 
