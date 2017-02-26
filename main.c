@@ -18,9 +18,8 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston,
  * MA 02110-1301 USA
  */
-#ifdef __OpenBSD_
-# include <sys/param.h>
-#endif
+#include "config.h"
+
 #include <sys/stat.h>
 
 #include <assert.h>
@@ -164,7 +163,7 @@ show_devices(void)
 	struct descr	*ds = NULL;
 	size_t		 maxds = 0, dsz = 0, i;
 
-#if defined(__OpenBSD__) && OpenBSD > 201510
+#if HAVE_PLEDGE
 	if (-1 == pledge("stdio", NULL))
 		err(EXIT_FAILURE, "pledge");
 #endif
@@ -337,7 +336,7 @@ static dc_buffer_t *
 fprint_get(int *fd, char **filep, int all, dc_descriptor_t *desc)
 {
 	char		*cp, *ccp, *file;
-	char		 buf[1024];
+	unsigned char	 buf[1024];
 	dc_buffer_t	*res = NULL;
 	struct stat	 st;
 	size_t		 sz;
