@@ -1,7 +1,7 @@
 .SUFFIXES: .1.html .1 .xml .rest.pdf .restscatter.pdf .summary.pdf .png .pdf .stack.pdf .aggr.pdf .scatter.pdf .aggrtemp.pdf
 .PHONY: clean
 
-include "Makefile.configure"
+include Makefile.configure
 
 PREFIX 		 = /usr/local
 VERSION		 = 0.0.5
@@ -67,6 +67,12 @@ XMLS		 = daily.xml \
 BUILT		 = screenshot1.png \
 		   screenshot2.png \
 		   slider.js
+COMPAT_OBJS	 = compat_err.o \
+		   compat_progname.o \
+		   compat_reallocarray.o \
+		   compat_strlcat.o \
+		   compat_strlcpy.o \
+		   compat_strtonum.o
 
 all: $(BINS)
 
@@ -87,28 +93,30 @@ install: all
 	install -m 0755 $(BINS) $(PREBINS) $(DESTDIR)$(BINDIR)
 	install -m 0444 $(MAN1S) $(DESTDIR)$(MANDIR)/man1
 
-divecmd: $(OBJS)
-	$(CC) -o $@ $(OBJS) $(LDFLAGS) 
+divecmd: $(OBJS) $(COMPAT_OBJS)
+	$(CC) -o $@ $(OBJS) $(COMPAT_OBJS) $(LDFLAGS) 
 
-divecmd2divecmd: divecmd2divecmd.o parser.o
-	$(CC) -o $@ divecmd2divecmd.o parser.o -lexpat
+divecmd2divecmd: divecmd2divecmd.o parser.o $(COMPAT_OBJS)
+	$(CC) -o $@ divecmd2divecmd.o parser.o $(COMPAT_OBJS) -lexpat
 
-divecmd2term: divecmd2term.o parser.o
-	$(CC) -o $@ divecmd2term.o parser.o -lexpat -lm
+divecmd2term: divecmd2term.o parser.o $(COMPAT_OBJS)
+	$(CC) -o $@ divecmd2term.o parser.o $(COMPAT_OBJS) -lexpat -lm
 
-divecmd2grap: divecmd2grap.o parser.o
-	$(CC) -o $@ divecmd2grap.o parser.o -lexpat
+divecmd2grap: divecmd2grap.o parser.o $(COMPAT_OBJS)
+	$(CC) -o $@ divecmd2grap.o parser.o $(COMPAT_OBJS) -lexpat
 
-divecmd2json: divecmd2json.o parser.o
-	$(CC) -o $@ divecmd2json.o parser.o -lexpat
+divecmd2json: divecmd2json.o parser.o $(COMPAT_OBJS)
+	$(CC) -o $@ divecmd2json.o parser.o $(COMPAT_OBJS) -lexpat
 
 $(PNGS): $(PDFS)
 
 $(PDFS): divecmd2grap
 
-$(OBJS): extern.h
+$(OBJS): extern.h config.h
 
-$(BINOBJS): parser.h
+$(COMPAT_OBJS): config.h
+
+$(BINOBJS): parser.h config.h
 
 divecmd.tar.gz:
 	mkdir -p .dist/divecmd-$(VERSION)/
@@ -123,11 +131,11 @@ index.html: index.xml
 	sed "s!@VERSION@!$(VERSION)!g" index.xml >$@
 
 clean:
-	rm -f $(OBJS) $(BINS) $(BINOBJS) $(HTMLS) $(PDFS) $(PNGS) config.h config.log
+	rm -f $(OBJS) $(COMPAT_OBJS) $(BINS) $(BINOBJS) $(HTMLS) $(PDFS) $(PNGS)
 	rm -f divecmd.tar.gz divecmd.tar.gz.sha512
 
 distclean: clean
-	rm -f Makefile.configure
+	rm -f Makefile.configure config.h config.log
 
 .1.1.html:
 	mandoc -Thtml -Ostyle=mandoc.css $< >$@
