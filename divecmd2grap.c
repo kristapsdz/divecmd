@@ -37,17 +37,21 @@ enum	pmode {
 	MODE_RESTING_SCATTER,
 	MODE_STACK,
 	MODE_STACK_TEMP,
+	MODE_TEMP,
 	MODE_VECTOR
 };
 
-int verbose = 0;
-
-static	enum pmode mode = MODE_STACK;
-
+/*
+ * How thick our lines will be (in points). 
+ */
 #define	LINE_THICKNESS 0.8
 
+/*
+ * Our line colours.
+ * I just got these by looking at some gnuplot pallettes and roughly
+ * converting from hex to an X11 colour.
+ */
 #define	COL_MAX 5
-
 static	const char *cols[COL_MAX] = {
 	"dodgerblue2",
 	"darkorange",
@@ -56,9 +60,10 @@ static	const char *cols[COL_MAX] = {
 	"limegreen",
 };
 
-/*
- * Print derivatives, aka velocity.
- */
+int verbose = 0;
+/* Our print mode. */
+static	enum pmode mode = MODE_STACK;
+/* Print derivatives, aka velocity. */
 static int derivs = 0;
 
 static int
@@ -67,22 +72,23 @@ print_all(const struct diveq *dq, const struct divestat *st)
 	struct dive	*d, *dp;
 	struct samp	*s;
 	size_t		 i = 0, j, maxtime = 0, maxrtime = 0, 
-			 points = 0, rest;
+			 ndives = 0, free = 0, rest;
 	time_t		 t, lastt = 0;
 	double		 maxdepth = 0.0, lastdepth, x, y, 
 			 height = 3.8, width = 5.4, x2, y2,
 			 mintemp = 100.0, maxtemp = 0.0;
-	int		 free = 0;
 	struct dgroup 	*dg;
 
 	assert( ! TAILQ_EMPTY(dq));
 
-	/*
-	 * For aggregate and the resting modes, we need our date-time to
-	 * compute relative positions of dives with respect to each
-	 * other.
-	 * Thus, make sure that a date-time exists for all dives.
-	 */
+	/* Start with basic accounting. */
+
+	TAILQ_FOREACH(d, dq, entries) {
+		free += MODE_FREEDIVE == d->mode;
+		ndives++;
+	}
+
+	/* These modes require a datetime stamp. */
 
 	if (MODE_AGGREGATE == mode ||
 	    MODE_AGGREGATE_TEMP == mode ||
@@ -94,13 +100,18 @@ print_all(const struct diveq *dq, const struct divestat *st)
 				return(0);
 			}
 
+	/* These modes require temperatures. */
+
 	if (MODE_STACK_TEMP == mode ||
+	    MODE_TEMP == mode ||
 	    MODE_AGGREGATE_TEMP == mode) 
 		TAILQ_FOREACH(d, dq, entries)
 			if (0 == d->hastemp) {
 				warnx("temperature required");
 				return(0);
 			}
+
+	/* Aggregate mode uses group extrema for axes. */
 
 	if (MODE_AGGREGATE == mode ||
 	    MODE_AGGREGATE_TEMP == mode) 
@@ -111,33 +122,37 @@ print_all(const struct diveq *dq, const struct divestat *st)
 			if ((size_t)t > maxtime)
 				maxtime = t;
 		}
+	
+	/* These (most) have time and depth extrema. */
 
 	if (MODE_SUMMARY == mode ||
 	    MODE_SCATTER == mode ||
+	    MODE_TEMP == mode ||
 	    MODE_VECTOR == mode ||
 	    MODE_RESTING == mode ||
 	    MODE_STACK == mode ||
 	    MODE_STACK_TEMP == mode ||
 	    MODE_RESTING_SCATTER == mode)
 		TAILQ_FOREACH(d, dq, entries) {
-			free += MODE_FREEDIVE == d->mode;
-			dp = TAILQ_NEXT(d, entries);
 			if (d->maxtime > maxtime)
 				maxtime = d->maxtime;
 			if (d->maxdepth > maxdepth)
 				maxdepth = d->maxdepth;
-			points++;
 		}
 
+	/* These have temperature extrema. */
+
 	if (MODE_AGGREGATE_TEMP == mode ||
+	    MODE_TEMP == mode ||
 	    MODE_STACK_TEMP == mode) 
 		TAILQ_FOREACH(d, dq, entries) {
-			dp = TAILQ_NEXT(d, entries);
 			if (d->maxtemp > maxtemp)
 				maxtemp = d->maxtemp;
-			if (d->mintemp > mintemp)
+			if (d->mintemp < mintemp)
 				mintemp = d->mintemp;
 		}
+
+	/* These use subsequent dive times for extrema. */
 
 	if (MODE_RESTING == mode ||
 	    MODE_RESTING_SCATTER == mode)
@@ -153,10 +168,7 @@ print_all(const struct diveq *dq, const struct divestat *st)
 			}
 		}
 
-	/*
-	 * Print our labels, axes, and so on.
-	 * This depends primarily upon our mode.
-	 */
+	/* Start with the frame of our box. */
 
 	printf(".G1\n"
 	       "draw solid\n"
@@ -173,42 +185,28 @@ print_all(const struct diveq *dq, const struct divestat *st)
 		printf("line dashed 0.05 from 0,0 to %g,1\n",
 			2.0 * (maxtime / (double)maxrtime));
 
-	if (MODE_SUMMARY == mode)
-		printf("ticks left out at "
-				"-1.0 \"-%.2f\", "
-				"-0.75 \"-%.2f\", "
-				"-0.5 \"-%.2f\", "
-				"-0.25 \"-%.2f\", "
-				"0.0, "
+	/* Now each mode ordered by alpha. */
+
+	switch (mode) {
+	case MODE_AGGREGATE_TEMP:
+	case MODE_STACK_TEMP:
+		printf("ticks bot out at "
+				"0.0 \"00:00\", "
 				"0.25 \"%zu:%.02zu\", "
 				"0.5 \"%zu:%.02zu\", "
 				"0.75 \"%zu:%.02zu\", "
 				"1.0 \"%zu:%.02zu\"\n"
-		       "grid left from -1 to 1 by 0.25 \"\"\n"
-		       "ticks bot off\n"
-		       "line from 0,0.0 to %zu,0.0\n"
-		       "label right \"Time (mm:ss)\" up %g left 0.2\n"
-		       "label left \"Depth (m)\" down %g left 0.3\n"
-		       "copy thru {\n"
-		       " \"\\(bu\" size +3 color $4 at $1,$3\n"
-		       " line dashed 0.05 from $1,0 to $1,$3 color $4\n"
-		       " circle at $1,$2 color $4\n"
-		       " line from $1,0 to $1,$2 color $4\n"
-		       "}\n",
-		       maxdepth, 
-		       0.75 * maxdepth,
-		       0.5 * maxdepth,
-		       0.25 * maxdepth,
-		       (maxtime / 4) / 60, 
-		       (maxtime / 4) % 60, 
-		       (maxtime / 2) / 60, 
-		       (maxtime / 2) % 60, 
+		       "grid right ticks off\n"
+		       "grid top ticks off\n"
+		       "label left \"Temp (\\[de]C)\" left 0.1\n"
+		       "label bot \"Time (mm:ss)\"\n",
+		       (maxtime / 4) / 60, (maxtime / 4) % 60, 
+		       (maxtime / 2) / 60, (maxtime / 2) % 60, 
 		       (3 * maxtime / 4) / 60, 
 		       (3 * maxtime / 4) % 60, 
-		       maxtime / 60, 
-		       maxtime % 60, points - 1,
-		       0.25 * height, 0.25 * height);
-	else if (MODE_RESTING == mode)
+		       maxtime / 60, maxtime % 60);
+		break;
+	case MODE_RESTING:
 		printf("ticks left out at "
 				"-1.0 \"%zu:%.02zu\", "
 				"-0.75 \"%zu:%.02zu\", "
@@ -241,9 +239,10 @@ print_all(const struct diveq *dq, const struct divestat *st)
 		       (3 * maxrtime / 4) / 60, 
 		       (3 * maxrtime / 4) % 60, 
 		       maxrtime / 60, maxrtime % 60, 
-		       points - 1, 0.25 * height, 0.25 * height,
+		       ndives - 1, 0.25 * height, 0.25 * height,
 		       free ? " \"\\(en\" at $1,$4\n" : "");
-	else if (MODE_RESTING_SCATTER == mode) 
+		break;
+	case MODE_RESTING_SCATTER:
 		printf("ticks left out at "
 				"0.0 \"00:00\", "
 				"0.25 \"%zu:%.02zu\", "
@@ -275,25 +274,8 @@ print_all(const struct diveq *dq, const struct divestat *st)
 		       (3 * maxrtime / 4) / 60, 
 		       (3 * maxrtime / 4) % 60, 
 		       maxrtime / 60, maxrtime % 60);
-	else if (MODE_VECTOR == mode) 
-		printf("ticks bot out at "
-				"0.0 \"00:00\", "
-				"0.25 \"%zu:%.02zu\", "
-				"0.5 \"%zu:%.02zu\", "
-				"0.75 \"%zu:%.02zu\", "
-				"1.0 \"%zu:%.02zu\"\n"
-		       "label left \"Depth (m)\" left 0.15\n"
-		       "label bot \"Time (mm:ss)\"\n"
-		       "grid right ticks off\n"
-		       "grid top ticks off\n"
-		       "coord y 0,-1\n"
-		       "coord x 0,1\n",
-		       (maxtime / 4) / 60, (maxtime / 4) % 60, 
-		       (maxtime / 2) / 60, (maxtime / 2) % 60, 
-		       (3 * maxtime / 4) / 60, 
-		       (3 * maxtime / 4) % 60, 
-		       maxtime / 60, maxtime % 60);
-	else if (MODE_SCATTER == mode) 
+		break;
+	case MODE_SCATTER:
 		printf("ticks bot out at "
 				"0.0 \"00:00\", "
 				"0.25 \"%zu:%.02zu\", "
@@ -315,24 +297,94 @@ print_all(const struct diveq *dq, const struct divestat *st)
 		       (3 * maxtime / 4) % 60, 
 		       maxtime / 60, maxtime % 60,
 		       maxdepth);
-	else if (MODE_STACK_TEMP == mode ||
-	   	 MODE_AGGREGATE_TEMP == mode)
+		break;
+	case MODE_SUMMARY:
+		printf("ticks left out at "
+				"-1.0 \"-%.2f\", "
+				"-0.75 \"-%.2f\", "
+				"-0.5 \"-%.2f\", "
+				"-0.25 \"-%.2f\", "
+				"0.0, "
+				"0.25 \"%zu:%.02zu\", "
+				"0.5 \"%zu:%.02zu\", "
+				"0.75 \"%zu:%.02zu\", "
+				"1.0 \"%zu:%.02zu\"\n"
+		       "grid left from -1 to 1 by 0.25 \"\"\n"
+		       "ticks bot off\n"
+		       "line from 0,0.0 to %zu,0.0\n"
+		       "label right \"Time (mm:ss)\" up %g left 0.2\n"
+		       "label left \"Depth (m)\" down %g left 0.3\n"
+		       "copy thru {\n"
+		       " \"\\(bu\" size +3 color $4 at $1,$3\n"
+		       " line dashed 0.05 from $1,0 to $1,$3 color $4\n"
+		       " circle at $1,$2 color $4\n"
+		       " line from $1,0 to $1,$2 color $4\n"
+		       "}\n",
+		       maxdepth, 
+		       0.75 * maxdepth,
+		       0.5 * maxdepth,
+		       0.25 * maxdepth,
+		       (maxtime / 4) / 60, 
+		       (maxtime / 4) % 60, 
+		       (maxtime / 2) / 60, 
+		       (maxtime / 2) % 60, 
+		       (3 * maxtime / 4) / 60, 
+		       (3 * maxtime / 4) % 60, 
+		       maxtime / 60, 
+		       maxtime % 60, ndives - 1,
+		       0.25 * height, 0.25 * height);
+		break;
+	case MODE_TEMP:
+		printf("ticks left out at "
+				"-1.0 \"-%.2f\", "
+				"-0.75 \"-%.2f\", "
+				"-0.5 \"-%.2f\", "
+				"-0.25 \"-%.2f\", "
+				"0.0, "
+				"0.25 \"%.1f\", "
+				"0.5 \"%.1f\", "
+				"0.75 \"%.1f\", "
+				"1.0\n"
+		       "grid left from -1 to 1 by 0.25 \"\"\n"
+		       "ticks bot off\n"
+		       "line from 0,0.0 to %zu,0.0\n"
+		       "label right \"Temp (\\[de]C)\" up %g left 0.2\n"
+		       "label left \"Depth (m)\" down %g left 0.3\n"
+		       "copy thru {\n"
+		       " \"\\(bu\" size +3 color $4 at $1,$3\n"
+		       " line dashed 0.05 from $1,0 to $1,$3 color $4\n"
+		       " circle at $1,$2 color $4\n"
+		       " line from $1,0 to $1,$2 color $4\n"
+		       "}\n",
+		       maxdepth, 0.75 * maxdepth,
+		       0.5 * maxdepth, 0.25 * maxdepth,
+
+		       0.25 * (mintemp + (maxtemp - mintemp)), 
+		       0.5 * (mintemp + (maxtemp - mintemp)), 
+		       0.75 * (mintemp + (maxtemp - mintemp)),
+		       ndives - 1,
+		       0.25 * height, 0.25 * height);
+		break;
+	case MODE_VECTOR:
 		printf("ticks bot out at "
 				"0.0 \"00:00\", "
 				"0.25 \"%zu:%.02zu\", "
 				"0.5 \"%zu:%.02zu\", "
 				"0.75 \"%zu:%.02zu\", "
 				"1.0 \"%zu:%.02zu\"\n"
+		       "label left \"Depth (m)\" left 0.15\n"
+		       "label bot \"Time (mm:ss)\"\n"
 		       "grid right ticks off\n"
 		       "grid top ticks off\n"
-		       "label left \"Temp (C)\" left 0.1\n"
-		       "label bot \"Time (mm:ss)\"\n",
+		       "coord y 0,-1\n"
+		       "coord x 0,1\n",
 		       (maxtime / 4) / 60, (maxtime / 4) % 60, 
 		       (maxtime / 2) / 60, (maxtime / 2) % 60, 
 		       (3 * maxtime / 4) / 60, 
 		       (3 * maxtime / 4) % 60, 
 		       maxtime / 60, maxtime % 60);
-	else 
+		break;
+	default:
 		printf("ticks bot out at "
 				"0.0 \"00:00\", "
 				"0.25 \"%zu:%.02zu\", "
@@ -350,30 +402,11 @@ print_all(const struct diveq *dq, const struct divestat *st)
 		       maxtime / 60, maxtime % 60,
 		       ! derivs ?  "Depth (m)" :
 		       "Velocity (vertical m/s)");
+	}
 
-	/* Now for the data. */
+	/* Now for the data, mode ordered by alpha. */
 
 	switch (mode) {
-	case MODE_AGGREGATE_TEMP:
-		for (i = 0; i < st->groupsz; i++) {
-			dg = st->groups[i];
-			printf("new color \"%s\" thickness %g\n", 
-				cols[dg->id % COL_MAX],
-				LINE_THICKNESS);
-			TAILQ_FOREACH(d, &dg->dives, gentries) {
-				TAILQ_FOREACH(s, &d->samps, entries) {
-					if ( ! (SAMP_TEMP & s->flags))
-						continue;
-					t = s->time;
-					t += d->datetime;
-					t -= dg->mintime;
-					x = t / (double)maxtime;
-					y = s->temp;
-					printf("%g %g\n", x, y);
-				}
-			}
-		}
-		break;
 	case MODE_AGGREGATE:
 		/*
 		 * In aggregate mode, we iterate through each of the
@@ -411,8 +444,27 @@ print_all(const struct diveq *dq, const struct divestat *st)
 			}
 		}
 		break;
+	case MODE_AGGREGATE_TEMP:
+		for (i = 0; i < st->groupsz; i++) {
+			dg = st->groups[i];
+			printf("new color \"%s\" thickness %g\n", 
+				cols[dg->id % COL_MAX],
+				LINE_THICKNESS);
+			TAILQ_FOREACH(d, &dg->dives, gentries) {
+				TAILQ_FOREACH(s, &d->samps, entries) {
+					if ( ! (SAMP_TEMP & s->flags))
+						continue;
+					t = s->time;
+					t += d->datetime;
+					t -= dg->mintime;
+					x = t / (double)maxtime;
+					y = s->temp;
+					printf("%g %g\n", x, y);
+				}
+			}
+		}
+		break;
 	case MODE_RESTING:
-		/* FALLTHROUGH */
 	case MODE_RESTING_SCATTER:
 		/*
 		 * In the resting modes, we need to be within our group
@@ -433,37 +485,6 @@ print_all(const struct diveq *dq, const struct divestat *st)
 					cols[d->group->id % COL_MAX]);
 			}
 		}
-		break;
-	case MODE_VECTOR:
-		for (i = 0; i < st->groupsz; i++) {
-			dg = st->groups[i];
-			j = 0;
-			TAILQ_FOREACH(d, &dg->dives, gentries) {
-				x = d->maxtime / (double)maxtime;
-				y = d->maxdepth / maxdepth;
-		       		printf("\"\\(bu\" size +3 "
-					"color \"%s\" at %g,-%g\n",
-					cols[d->group->id % COL_MAX],
-					x, y);
-				dp = TAILQ_NEXT(d, gentries);
-				if (NULL == dp)
-					break;
-				x2 = dp->maxtime / (double)maxtime;
-				y2 = dp->maxdepth / maxdepth;
-				printf("arrow from %g,-%g to %g,-%g "
-					"color \"grey%zu\"\n",
-					x, y, x2, y2, 60 - (size_t)(40 * 
-					(j / (double)d->group->ndives)));
-				j++;
-			}
-		}
-		break;
-	case MODE_SUMMARY:
-		TAILQ_FOREACH(d, dq, entries) 
-			printf("%zu %g -%g \"%s\"\n", i++, 
-				(double)d->maxtime / maxtime, 
-				d->maxdepth / maxdepth,
-				cols[d->group->id % COL_MAX]);
 		break;
 	case MODE_SCATTER:
 		TAILQ_FOREACH(d, dq, entries) 
@@ -489,6 +510,44 @@ print_all(const struct diveq *dq, const struct divestat *st)
 				}
 				if (TAILQ_NEXT(d, gentries))
 					puts("new");
+			}
+		}
+		break;
+	case MODE_SUMMARY:
+		TAILQ_FOREACH(d, dq, entries) 
+			printf("%zu %g -%g \"%s\"\n", i++, 
+				(double)d->maxtime / maxtime, 
+				d->maxdepth / maxdepth,
+				cols[d->group->id % COL_MAX]);
+		break;
+	case MODE_TEMP:
+		TAILQ_FOREACH(d, dq, entries) 
+			printf("%zu %g -%g \"%s\"\n", i++, 
+				(maxtemp - d->mintemp) / (maxtemp - mintemp),
+				d->maxdepth / maxdepth, 
+				cols[d->group->id % COL_MAX]);
+		break;
+	case MODE_VECTOR:
+		for (i = 0; i < st->groupsz; i++) {
+			dg = st->groups[i];
+			j = 0;
+			TAILQ_FOREACH(d, &dg->dives, gentries) {
+				x = d->maxtime / (double)maxtime;
+				y = d->maxdepth / maxdepth;
+		       		printf("\"\\(bu\" size +3 "
+					"color \"%s\" at %g,-%g\n",
+					cols[d->group->id % COL_MAX],
+					x, y);
+				dp = TAILQ_NEXT(d, gentries);
+				if (NULL == dp)
+					break;
+				x2 = dp->maxtime / (double)maxtime;
+				y2 = dp->maxdepth / maxdepth;
+				printf("arrow from %g,-%g to %g,-%g "
+					"color \"grey%zu\"\n",
+					x, y, x2, y2, 60 - (size_t)(40 * 
+					(j / (double)d->group->ndives)));
+				j++;
 			}
 		}
 		break;
@@ -563,6 +622,8 @@ main(int argc, char *argv[])
 				mode = MODE_RESTING_SCATTER;
 			else if (0 == strcasecmp(optarg, "scatter"))
 				mode = MODE_SCATTER;
+			else if (0 == strcasecmp(optarg, "temp"))
+				mode = MODE_TEMP;
 			else if (0 == strcasecmp(optarg, "vector"))
 				mode = MODE_VECTOR;
 			else
