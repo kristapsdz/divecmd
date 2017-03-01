@@ -572,11 +572,6 @@ main(int argc, char *argv[])
 	struct dcmd_rng	*rng = NULL;
 	int	 	 model = -1;
 
-#if HAVE_PLEDGE
-	if (-1 == pledge("stdio rpath", NULL))
-		err(EXIT_FAILURE, "pledge");
-#endif
-
 	while (-1 != (ch = getopt (argc, argv, "ad:f:i:lm:nr:sv"))) {
 		switch (ch) {
 		case 'a':
