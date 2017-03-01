@@ -304,12 +304,19 @@
 				<span>divecmd2json</span> &#8212; export to the dynamic web
 			</h2>
 			<p>
-				The last and arguably most used output mode is also the simplest: <a
-					href="divecmd2json.1.html">divecmd2json(1)</a>, which converts graphs to JSON.
+				The arguably most-used output mode is also the simplest: <a href="divecmd2json.1.html">divecmd2json(1)</a>,
+				which converts graphs to JSON.
 				I use it constantly for <a href="https://divelog.blue">divelog.blue</a>, specifically to show the <a
 					href="https://divelog.blue/article040.html">dive profiles</a>.
 				Technically, I could simply bundle the native <a href="divecmd.1.html">divecmd(1)</a> output directly and use an
 				XML-to-JSON formatter in the client, but this is easier.
+			</p>
+			<h2>
+				<span>divecmd2csv</span> &#8212; export to a comma-separated value file
+			</h2>
+			<p>
+				As much as I use <a href="divecmd2grap.1.html">divecmd2grap(1)</a> and friends for my needs, others prefer using
+				tools like <a href="https://subsurface-divelog.org">Subsurface</a> 
 			</p>
 		</article>
 		<footer>
