@@ -269,11 +269,6 @@ parse(dc_context_t *context, dc_descriptor_t *descriptor,
 		goto cleanup;
 	}
 
-#if HAVE_PLEDGE
-	if (-1 == pledge("stdio", NULL))
-		err(EXIT_FAILURE, "pledge");
-#endif
-
 	if (NULL != fprint && NULL == ofprint) {
 		if (verbose)
 			fprintf(stderr, "%s: setting "
