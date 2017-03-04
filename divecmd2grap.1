@@ -25,7 +25,7 @@
 .Nd graph dives with grap
 .Sh SYNOPSIS
 .Nm divecmd2grap
-.Op Fl dv
+.Op Fl adv
 .Op Fl m Ar mode
 .Op Fl s Ar splitmode
 .Op Ar files...
@@ -49,6 +49,14 @@ The arguments of
 .Nm
 are as follows:
 .Bl -tag -width Ds
+.It Fl a
+.Dq Adjust
+some split-graph values so that the y-axis is adjusted above and below
+the axis, and not linear.
+This is useful when y-values are clustered very close, but not near
+zero, thus looking like a horizontal line.
+This only applies to
+.Fl m Ar temp .
 .It Fl d
 Derivatives.
 Show change in velocity instead of depth.
@@ -96,6 +104,9 @@ time above and below, respectively, the y-axis.
 .It Ar temp
 Each independent dive is shown on the x-axis with the minimum
 temperature and time above and below, respectively, the y-axis.
+Consider using
+.Fl a
+to de-linearise the y-axis.
 .El
 .It Fl s Ar splitmode
 Split up
@@ -131,6 +142,8 @@ A simple
 documented is also emitted with width 5 inches, height 3 inches.
 Use
 .Xr divecmd2pdf 1
+or
+.Xr divecmd2ps 1
 to avoid needing to prepare a
 .Xr groff 1
 pipe.
@@ -182,6 +195,8 @@ divecmd2grap -sdate -mrestscatter day1.xml day2 | \e
 .Pp
 You can always use
 .Xr divecmd2pdf 1
+or
+.Xr divecmd2ps 1
 to make this call easier:
 .Bd -literal -offset indent
 divecmd2pdf -sdate -mrestscatter day1.xml day2 > foo.pdf
