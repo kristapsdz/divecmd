@@ -197,7 +197,9 @@ parse_open(void *dat, const XML_Char *s, const XML_Char **atts)
 				if (NULL == p->curlog->ident)
 					err(EXIT_FAILURE, NULL);
 			}
-
+		TAILQ_INSERT_TAIL(&p->stat->dlogs, p->curlog, entries);
+		if (verbose)
+			fprintf(stderr, "%s: new divelog\n", p->file);
 	} else if (0 == strcmp(s, "dive")) {
 		/*
 		 * We're encountering a new dive.
