@@ -246,8 +246,22 @@
 								<h4>summary</h4>
 								<p>
 									Each independent dive is shown on the x-axis with the maximum depth and
-									time above and below, respectively, on the y-axis.
+									time above and below, respectively, the y-axis.
 									See <b>scatter</b> for how this looks in a scatter graph.
+								</p>
+							</figcaption>
+						</figure>
+					</div>
+					<div>
+						<figure id="mode-temp">
+							<a class="img" href="daily.temp.png"><img src="daily.temp.png" alt="" /></a>
+							<figcaption>
+								<h4>temp</h4>
+								<p>
+									Each independent dive is shown on the x-axis with the minimum
+									tepmerature and time above and below, respectively, the y-axis.
+									This is shown with <b>-a</b> to de-linearise the temperature values so
+									that they don't cluster.
 								</p>
 							</figcaption>
 						</figure>
