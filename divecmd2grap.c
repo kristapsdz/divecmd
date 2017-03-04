@@ -19,6 +19,8 @@
 
 #include <assert.h>
 #include <err.h>
+#include <float.h>
+#include <math.h>
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
@@ -61,10 +63,15 @@ static	const char *cols[COL_MAX] = {
 };
 
 int verbose = 0;
+
 /* Our print mode. */
 static	enum pmode mode = MODE_STACK;
+
 /* Print derivatives, aka velocity. */
 static int derivs = 0;
+
+/* Adjust values. */
+static int adjust = 0;
 
 static int
 print_all(const struct diveq *dq, const struct divestat *st)
@@ -140,17 +147,26 @@ print_all(const struct diveq *dq, const struct divestat *st)
 				maxdepth = d->maxdepth;
 		}
 
-	/* These have temperature extrema. */
+	/* 
+	 * These have temperature extrema.
+	 * XXX: maxtemp is really maxmintemp.
+	 */
 
 	if (MODE_AGGREGATE_TEMP == mode ||
 	    MODE_TEMP == mode ||
 	    MODE_STACK_TEMP == mode) 
 		TAILQ_FOREACH(d, dq, entries) {
-			if (d->maxtemp > maxtemp)
-				maxtemp = d->maxtemp;
+			if (d->mintemp > maxtemp)
+				maxtemp = d->mintemp;
 			if (d->mintemp < mintemp)
 				mintemp = d->mintemp;
 		}
+
+	/* Require a non-zero spread. */
+
+	if (fabs(maxtemp - mintemp) < FLT_EPSILON)
+		maxtemp = mintemp + FLT_EPSILON;
+		
 
 	/* These use subsequent dive times for extrema. */
 
@@ -358,11 +374,12 @@ print_all(const struct diveq *dq, const struct divestat *st)
 		       "}\n",
 		       maxdepth, 0.75 * maxdepth,
 		       0.5 * maxdepth, 0.25 * maxdepth,
-		       0.25 * mintemp,
-		       0.5 * mintemp,
-		       0.75 * mintemp,
-		       mintemp,
-		       ndives - 1,
+		       adjust ? mintemp : 0.25 * maxtemp,
+		       adjust ? mintemp + 0.33 * (maxtemp - mintemp) : 
+			       0.5 * maxtemp,
+		       adjust ?  mintemp + 0.66 * (maxtemp - mintemp) :
+			       0.75 * maxtemp,
+		       maxtemp, ndives - 1,
 		       0.25 * height, 0.25 * height);
 		break;
 	case MODE_VECTOR:
@@ -522,8 +539,11 @@ print_all(const struct diveq *dq, const struct divestat *st)
 		break;
 	case MODE_TEMP:
 		TAILQ_FOREACH(d, dq, entries) 
-			printf("%zu %g -%g \"%s\"\n", i++, 
-				d->mintemp / mintemp,
+			printf("%zu %g -%g \"%s\"\n", i++, adjust ? 
+				 0.25 + (0.75 * 
+					((d->mintemp - mintemp) / 
+					 (maxtemp - mintemp))) : 
+				 d->mintemp / maxtemp,
 				d->maxdepth / maxdepth, 
 				cols[d->group->id % COL_MAX]);
 		break;
@@ -600,8 +620,11 @@ main(int argc, char *argv[])
 	if (-1 == pledge("stdio rpath", NULL))
 		err(EXIT_FAILURE, "pledge");
 #endif
-	while (-1 != (c = getopt(argc, argv, "dm:s:v")))
+	while (-1 != (c = getopt(argc, argv, "adm:s:v")))
 		switch (c) {
+		case ('a'):
+			adjust = 1;
+			break;
 		case ('d'):
 			derivs = 1;
 			break;
@@ -652,6 +675,9 @@ main(int argc, char *argv[])
 	if (derivs && 
 	    (MODE_AGGREGATE != mode && MODE_STACK != mode))
 		warnx("-d: ignoring flag");
+	
+	if (adjust && (MODE_TEMP != mode))
+		warnx("-a: ignoring flag");
 
 	parse_init(&p, &dq, &st, group);
 
@@ -686,7 +712,8 @@ out:
 	parse_free(&dq, &st);
 	return(rc ? EXIT_SUCCESS : EXIT_FAILURE);
 usage:
-	fprintf(stderr, "usage: %s [-dv] "
+	fprintf(stderr, "usage: %s "
+		"[-adv] "
 		"[-m mode] "
 		"[-s splitgroup] "
 		"[file...]\n", getprogname());
