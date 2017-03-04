@@ -12,7 +12,8 @@ OBJS		 = common.o \
 		   download.o \
 		   list.o \
 		   xml.o
-BINOBJS		 = divecmd2divecmd.o \
+BINOBJS		 = divecmd2csv.o \
+		   divecmd2divecmd.o \
 		   divecmd2grap.o \
 		   divecmd2json.o \
 		   divecmd2term.o \
