@@ -5,7 +5,7 @@ include Makefile.configure
 
 PREFIX 		 = /usr/local
 VERSION		 = 0.0.6
-LDFLAGS		+= -L/usr/local/lib -ldivecomputer
+LDFLAGS		+= -L/usr/local/lib -ldivecomputer -lm
 CFLAGS		+= -I/usr/local/include -DVERSION="\"$(VERSION)\""
 OBJS		 = common.o \
 		   main.o \
@@ -40,6 +40,7 @@ PNGS		 = daily.aggr.png \
 		   daily.scatter.png \
 		   daily.stack.png \
 		   daily.summary.png \
+		   daily.temp.png \
 		   multiday.restscatter.png \
 		   multiday.stack.png \
 		   short.stack.png
@@ -50,6 +51,7 @@ PDFS		 = daily.aggr.pdf \
 		   daily.scatter.pdf \
 		   daily.stack.pdf \
 		   daily.summary.pdf \
+		   daily.temp.pdf \
 		   multiday.restscatter.pdf \
 		   multiday.stack.pdf \
 		   short.stack.pdf
@@ -119,7 +121,7 @@ divecmd2csv: divecmd2csv.o parser.o $(COMPAT_OBJS)
 
 $(PNGS): $(PDFS)
 
-$(PDFS): divecmd2grap
+$(PDFS): divecmd2grap divecmd2divecmd
 
 $(OBJS): extern.h config.h
 
@@ -129,7 +131,7 @@ $(BINOBJS): parser.h config.h
 
 divecmd.tar.gz:
 	mkdir -p .dist/divecmd-$(VERSION)/
-	install -m 0644 *.c *.h Makefile *.1 .dist/divecmd-$(VERSION)
+	install -m 0644 configure *.c *.h Makefile *.1 .dist/divecmd-$(VERSION)
 	( cd .dist/ && tar zcf ../$@ ./ )
 	rm -rf .dist/
 
@@ -172,6 +174,9 @@ short.stack.pdf: multiday.xml
 
 daily.aggrtemp.pdf: temperature.xml
 	./divecmd2grap -m aggrtemp temperature.xml | groff -Gp -Tpdf -P-p5.8i,8.3i >$@
+
+daily.temp.pdf: temperature.xml
+	./divecmd2divecmd -s temperature.xml | ./divecmd2grap -am temp | groff -Gp -Tpdf -P-p5.8i,8.3i >$@
 
 multiday.stack.pdf: multiday.xml
 	./divecmd2grap -s date -m stack multiday.xml | groff -Gp -Tpdf -P-p5.8i,8.3i >$@
