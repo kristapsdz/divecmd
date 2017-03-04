@@ -60,7 +60,6 @@ modes.
 .It Fl m Ar mode
 Graphing mode.
 May be one of the following:
-.Pp
 .Bl -tag -width Ds
 .It Ar aggr
 Line graph connecting
@@ -93,13 +92,15 @@ except with temperatures on the y-axis.
 Your dive computer(s) must support temperature readings.
 .It Ar summary
 Each independent dive is shown on the x-axis with the maximum depth and
-time above and below, respectively, on the y-axis.
+time above and below, respectively, the y-axis.
+.It Ar temp
+Each independent dive is shown on the x-axis with the minimum
+temperature and time above and below, respectively, the y-axis.
 .El
 .It Fl s Ar splitmode
 Split up
 .Pq Dq group
 dives according to a mode, which may be any one of the following.
-.Pp
 .Bl -tag -width Ds
 .It Ar diver
 Group dives by diver
@@ -138,7 +139,7 @@ Dive computers record free diving
 .Pq Do apnoea Dc mode, etc.
 in two different ways:
 some split each dive into its own dive profile and ignore the surface
-interval; others simply record everything without stopping. 
+interval; others simply record everything without stopping.
 The Suunto D6i is an example of the first, while the HW OSTC 2C is an
 example of the second.
 .Pp
