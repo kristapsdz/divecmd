@@ -344,7 +344,7 @@ print_all(const struct diveq *dq, const struct divestat *st)
 				"0.25 \"%.1f\", "
 				"0.5 \"%.1f\", "
 				"0.75 \"%.1f\", "
-				"1.0\n"
+				"1.0 \"%.1f\"\n"
 		       "grid left from -1 to 1 by 0.25 \"\"\n"
 		       "ticks bot off\n"
 		       "line from 0,0.0 to %zu,0.0\n"
@@ -358,10 +358,10 @@ print_all(const struct diveq *dq, const struct divestat *st)
 		       "}\n",
 		       maxdepth, 0.75 * maxdepth,
 		       0.5 * maxdepth, 0.25 * maxdepth,
-
-		       0.25 * (mintemp + (maxtemp - mintemp)), 
-		       0.5 * (mintemp + (maxtemp - mintemp)), 
-		       0.75 * (mintemp + (maxtemp - mintemp)),
+		       0.25 * mintemp,
+		       0.5 * mintemp,
+		       0.75 * mintemp,
+		       mintemp,
 		       ndives - 1,
 		       0.25 * height, 0.25 * height);
 		break;
@@ -523,7 +523,7 @@ print_all(const struct diveq *dq, const struct divestat *st)
 	case MODE_TEMP:
 		TAILQ_FOREACH(d, dq, entries) 
 			printf("%zu %g -%g \"%s\"\n", i++, 
-				(maxtemp - d->mintemp) / (maxtemp - mintemp),
+				d->mintemp / mintemp,
 				d->maxdepth / maxdepth, 
 				cols[d->group->id % COL_MAX]);
 		break;
