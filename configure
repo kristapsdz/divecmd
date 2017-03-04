@@ -26,6 +26,10 @@
 # or BSDmakefile---whichever---try to import/include Makefile.configure
 # at the beginning of the file.
 #
+# Like so (note no quotes, no period, etc.):
+#
+#   include Makefile.configure
+#
 # If it exists, configure was run; otherwise, it wasn't.
 #
 # You'll probably want to change parts of this file.  I've noted the
@@ -79,6 +83,7 @@ INSTALL_DATA=
 # You WANT to change this.
 #----------------------------------------------------------------------
 
+HAVE_CAPSICUM=
 HAVE_ERR=
 HAVE_PATH_MAX=
 HAVE_PLEDGE=
@@ -136,27 +141,27 @@ ismanual() {
 
 singletest() {
 	cat 1>&3 << __HEREDOC__
-${1}${3}: testing...
-${COMP} -o test-${1} test-${1}.c ${3}
+${1}: testing...
+${COMP} ${3} -o test-${1} test-${1}.c
 __HEREDOC__
 
-	if ${COMP} -o "test-${1}" "test-${1}.c" ${3} 1>&3 2>&3; then
-		echo "${1}${3}: ${CC} succeeded" 1>&3
+	if ${COMP} ${3} -o "test-${1}" "test-${1}.c" 1>&3 2>&3; then
+		echo "${1}: ${CC} succeeded" 1>&3
 	else
-		echo "${1}${3}: ${CC} failed with $?" 1>&3
+		echo "${1}: ${CC} failed with $?" 1>&3
 		echo 1>&3
 		return 1
 	fi
 
 	if ./test-${1} 1>&3 2>&3; then
-		echo "${1}${3}: yes" 1>&2
-		echo "${1}${3}: yes" 1>&3
+		echo "${1}: yes" 1>&2
+		echo "${1}: yes" 1>&3
 		echo 1>&3
 		eval HAVE_${2}=1
 		rm "test-${1}"
 		return 0
 	else
-		echo "${1}${3}: execution failed with $?" 1>&3
+		echo "${1}: execution failed with $?" 1>&3
 		echo 1>&3
 		rm "test-${1}"
 		return 1
@@ -172,12 +177,12 @@ runtest() {
 	ismanual "${1}" "${2}" "${_manual}" && return 0
 	if [ ! -r "test-${1}.c" ]
 	then
-		echo "${1}${3}: skipping (no test file)" 1>&2
+		echo "${1}: skipping (no test file)" 1>&2
 		eval HAVE_${2}=0
 		return 1
 	fi
 	singletest "${1}" "${2}" "${3}" && return 0
-	echo "${1}${3}: no" 1>&2
+	echo "${1}: no" 1>&2
 	eval HAVE_${2}=0
 	return 1
 }
@@ -189,15 +194,16 @@ runtest() {
 # You WANT to change this.
 #----------------------------------------------------------------------
 
-runtest err		ERR		|| true
-runtest PATH_MAX	PATH_MAX	|| true
-runtest pledge		PLEDGE		|| true
-runtest progname	PROGNAME	|| true
-runtest reallocarray	REALLOCARRAY	|| true
-runtest sandbox_init	SANDBOX_INIT	|| true
-runtest strlcat		STRLCAT		|| true
-runtest strlcpy		STRLCPY		|| true
-runtest strtonum	STRTONUM	|| true
+runtest capsicum	CAPSICUM			  || true
+runtest err		ERR				  || true
+runtest PATH_MAX	PATH_MAX			  || true
+runtest pledge		PLEDGE				  || true
+runtest progname	PROGNAME			  || true
+runtest reallocarray	REALLOCARRAY			  || true
+runtest sandbox_init	SANDBOX_INIT	"-Wno-deprecated" || true
+runtest strlcat		STRLCAT				  || true
+runtest strlcpy		STRLCPY				  || true
+runtest strtonum	STRTONUM			  || true
 
 #----------------------------------------------------------------------
 # Output writing: generate the config.h file.
@@ -237,6 +243,7 @@ __HEREDOC__
 	&& echo "#define PATH_MAX 4096"
 
 cat << __HEREDOC__
+#define HAVE_CAPSICUM ${HAVE_CAPSICUM}
 #define HAVE_ERR ${HAVE_ERR}
 #define HAVE_PLEDGE ${HAVE_PLEDGE}
 #define HAVE_PROGNAME ${HAVE_PROGNAME}
@@ -258,6 +265,7 @@ fi
 
 if [ ${HAVE_PROGNAME} -eq 0 ]; then
 	echo "extern const char *getprogname(void);"
+	echo "extern void setprogname(const char *);"
 fi
 
 if [ ${HAVE_REALLOCARRAY} -eq 0 ]; then
