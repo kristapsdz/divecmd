@@ -95,8 +95,19 @@ __BEGIN_DECLS
 void	 parse_init(XML_Parser *, struct diveq *, 
 		struct divestat *, enum group);
 
+/*
+ * Parse a set of dives, accumulating the dives into "dq" and into the
+ * group dives.
+ * Dives in "dq" are ordered, by default, by date.
+ * If a split is specified, however, they're ordered by relative date
+ * from the first dive of the given group.
+ * So for example, if you have GROUP_DATE and two days, the dives will
+ * be ordered by the relative from the beginning of each day's first
+ * dive.
+ * This lets them be interleaved nicely.
+ */
 int	 parse(const char *, XML_Parser, 
-		struct diveq *, struct divestat *);
+		struct diveq *dq, struct divestat *);
 void	 parse_free(struct diveq *, struct divestat *);
 
 extern int verbose;

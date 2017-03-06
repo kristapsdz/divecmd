@@ -101,12 +101,20 @@ Your dive computer(s) must support temperature readings.
 .It Ar summary
 Each independent dive is shown on the x-axis with the maximum depth and
 time above and below, respectively, the y-axis.
+Dives on the x-axis are ordered by date; or if a
+.Fl s
+split is specified, ordered between groups by relative offset from
+respective group's first dive time.
 .It Ar temp
 Each independent dive is shown on the x-axis with the minimum
 temperature and time above and below, respectively, the y-axis.
 Consider using
 .Fl a
 to de-linearise the y-axis.
+Dives on the x-axis are ordered by date; or if a
+.Fl s
+split is specified, ordered between groups by relative offset from
+respective group's first dive time.
 .El
 .It Fl s Ar splitmode
 Split up

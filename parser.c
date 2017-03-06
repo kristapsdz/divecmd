@@ -253,18 +253,9 @@ parse_open(void *dat, const XML_Char *s, const XML_Char **atts)
 			fprintf(stderr, "%s: new dive: %zu\n",
 				p->file, dive->num);
 
-		/* 
-		 * Now register the dive with the dive queue.
-		 * If the dive has a date and time, we order everything
-		 * by time.
-		 * If not, we just append to the queue.
-		 * If we have group sorting, drop any dives without a
-		 * date and time.
-		 */
+		/* Configure date and time. */
 
 		if (NULL != date && NULL != time) {
-			/* We now perform our date conversion. */
-
 			memset(&tm, 0, sizeof(struct tm));
 
 			rc = sscanf(date, "%d-%d-%d", 
@@ -303,24 +294,7 @@ parse_open(void *dat, const XML_Char *s, const XML_Char **atts)
 			if (0 == p->stat->timestamp_max ||
 			    dive->datetime > p->stat->timestamp_max)
 				p->stat->timestamp_max = dive->datetime;
-
-			/* Insert is in reverse order. */
-
-			TAILQ_FOREACH(dp, p->dives, entries)
-				if (dp->datetime &&
-				    dp->datetime > dive->datetime)
-					break;
-
-			if (NULL == dp)
-				TAILQ_INSERT_TAIL(p->dives, dive, entries);
-			else
-				TAILQ_INSERT_BEFORE(dp, dive, entries);
-		} else {
-			/*
-			 * Un-timedated dive goes wherever.
-			 */
-			TAILQ_INSERT_TAIL(p->dives, dive, entries);
-		}
+		} 
 
 		/*
 		 * Now assign to our group.
@@ -353,6 +327,35 @@ parse_open(void *dat, const XML_Char *s, const XML_Char **atts)
 		if (NULL != date && 
 		    (0 == grp->mintime || dive->datetime < grp->mintime))
 			grp->mintime = dive->datetime;
+
+		/* 
+		 * Now register the dive with the dive queue.
+		 * If the dive has a date and time, we order everything
+		 * by time; and furthermore, we order it by offsetting
+		 * from our group's start time.
+		 * If there's no date/time, we just append to the queue.
+		 */
+
+		if (NULL != date && NULL != time) {
+			/* 
+			 * Insert is in reverse order. 
+			 */
+			TAILQ_FOREACH(dp, p->dives, entries)
+				if (dp->datetime - dp->group->mintime &&
+				    dp->datetime - dp->group->mintime > 
+				    dive->datetime - dive->group->mintime)
+					break;
+			if (NULL == dp)
+				TAILQ_INSERT_TAIL(p->dives, dive, entries);
+			else
+				TAILQ_INSERT_BEFORE(dp, dive, entries);
+		} else {
+			/*
+			 * Un-timedated dive goes wherever.
+			 */
+			TAILQ_INSERT_TAIL(p->dives, dive, entries);
+		}
+
 	} else if (0 == strcmp(s, "sample")) {
 		/*
 		 * Add a diving sample.
