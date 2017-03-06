@@ -4,7 +4,7 @@
 include Makefile.configure
 
 PREFIX 		 = /usr/local
-VERSION		 = 0.0.7
+VERSION		 = 0.0.8
 LDFLAGS		+= -L/usr/local/lib -ldivecomputer -lm
 CFLAGS		+= -I/usr/local/include -DVERSION="\"$(VERSION)\""
 OBJS		 = common.o \
