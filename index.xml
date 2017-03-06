@@ -253,6 +253,19 @@
 						</figure>
 					</div>
 					<div>
+						<figure id="mode-rsummary">
+							<a class="img" href="multiday.rsummary.png"><img src="multiday.rsummary.png" alt="" /></a>
+							<figcaption>
+								<h4>rsummary</h4>
+								<p>
+									Like <b>summary</b>, except dives are shown on an x-axis of their start
+									time relative to the first dive in a grouped sequence.
+									This example shows two dives sequences split by <b>-s</b><i>date</i>.
+								</p>
+							</figcaption>
+						</figure>
+					</div>
+					<div>
 						<figure id="mode-temp">
 							<a class="img" href="daily.temp.png"><img src="daily.temp.png" alt="" /></a>
 							<figcaption>
