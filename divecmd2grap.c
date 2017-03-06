@@ -32,6 +32,7 @@
 
 enum	pmode {
 	MODE_SCATTER,
+	MODE_RSUMMARY,
 	MODE_SUMMARY,
 	MODE_AGGREGATE,
 	MODE_AGGREGATE_TEMP,
@@ -79,7 +80,7 @@ print_all(const struct diveq *dq, const struct divestat *st)
 	struct dive	*d, *dp;
 	struct samp	*s;
 	size_t		 i = 0, j, maxtime = 0, maxrtime = 0, 
-			 ndives = 0, free = 0, rest;
+			 ndives = 0, free = 0, rest, maxdtime;
 	time_t		 t, lastt = 0;
 	double		 maxdepth = 0.0, lastdepth, x, y, 
 			 height = 3.8, width = 5.4, x2, y2,
@@ -121,7 +122,8 @@ print_all(const struct diveq *dq, const struct divestat *st)
 	/* Aggregate mode uses group extrema for axes. */
 
 	if (MODE_AGGREGATE == mode ||
-	    MODE_AGGREGATE_TEMP == mode) 
+	    MODE_AGGREGATE_TEMP == mode ||
+	    MODE_RSUMMARY == mode) 
 		TAILQ_FOREACH(d, dq, entries) {
 			t = (d->datetime + d->maxtime) - 
 				d->group->mintime;
@@ -129,10 +131,21 @@ print_all(const struct diveq *dq, const struct divestat *st)
 			if ((size_t)t > maxtime)
 				maxtime = t;
 		}
+
+	/* 
+	 * The "rsummary" (relative summary) mode needs both maximum
+	 * extent (maxdtime) and maximum per-dive time (maxtime).
+	 */
+
+	if (MODE_RSUMMARY == mode) {
+		maxdtime = maxtime; 
+		maxtime = 0;
+	}
 	
 	/* These (most) have time and depth extrema. */
 
 	if (MODE_SUMMARY == mode ||
+	    MODE_RSUMMARY == mode ||
 	    MODE_SCATTER == mode ||
 	    MODE_TEMP == mode ||
 	    MODE_VECTOR == mode ||
@@ -240,10 +253,10 @@ print_all(const struct diveq *dq, const struct divestat *st)
 		       "label left \"Dive time (mm:ss)\" down %g left 0.3\n"
 		       "copy thru {\n"
 		       " \"\\(bu\" size +3 color $5 at $1,$3\n"
-		       " line dotted from $1,0 to $1,$3 color $5\n"
+		       " line dotted from $1,0 to $1,$3 color $5 thickness %g\n"
 		       "%s"
 		       " circle at $1,$2 color $5\n"
-		       " line from $1,0 to $1,$2 color $5\n"
+		       " line from $1,0 to $1,$2 color $5 thickness %g\n"
 		       "}\n",
 		       maxtime / 60, maxtime % 60, 
 		       (3 * maxtime / 4) / 60, 
@@ -256,7 +269,9 @@ print_all(const struct diveq *dq, const struct divestat *st)
 		       (3 * maxrtime / 4) % 60, 
 		       maxrtime / 60, maxrtime % 60, 
 		       ndives - 1, 0.25 * height, 0.25 * height,
-		       free ? " \"\\(en\" at $1,$4\n" : "");
+		       LINE_THICKNESS, 
+		       free ? " \"\\(en\" at $1,$4\n" : "",
+		       LINE_THICKNESS);
 		break;
 	case MODE_RESTING_SCATTER:
 		printf("ticks left out at "
@@ -314,6 +329,56 @@ print_all(const struct diveq *dq, const struct divestat *st)
 		       maxtime / 60, maxtime % 60,
 		       maxdepth);
 		break;
+	case MODE_RSUMMARY:
+		printf("ticks left out at "
+				"-1.0 \"-%.2f\", "
+				"-0.75 \"-%.2f\", "
+				"-0.5 \"-%.2f\", "
+				"-0.25 \"-%.2f\", "
+				"0.0, "
+				"0.25 \"%zu:%.02zu\", "
+				"0.5 \"%zu:%.02zu\", "
+				"0.75 \"%zu:%.02zu\", "
+				"1.0 \"%zu:%.02zu\"\n"
+		       "ticks bot out at "
+				"0.0 \"00:00\", "
+				"0.25 \"%zu:%.02zu\", "
+				"0.5 \"%zu:%.02zu\", "
+				"0.75 \"%zu:%.02zu\", "
+				"1.0 \"%zu:%.02zu\"\n"
+		       "grid left from -1 to 1 by 0.25 \"\"\n"
+		       "line from 0,0.0 to 1.0,0.0\n"
+		       "label right \"Time (mm:ss)\" up %g left 0.2\n"
+		       "label left \"Depth (m)\" down %g left 0.3\n"
+		       "copy thru {\n"
+		       " \"\\(bu\" size +3 color $4 at $1,$3\n"
+		       " line dashed 0.05 from $1,0 to $1,$3 color $4 thickness %g\n"
+		       " circle at $1,$2 color $4\n"
+		       " line from $1,0 to $1,$2 color $4 thickness %g\n"
+		       "}\n",
+		       maxdepth, 
+		       0.75 * maxdepth,
+		       0.5 * maxdepth,
+		       0.25 * maxdepth,
+		       (maxtime / 4) / 60, 
+		       (maxtime / 4) % 60, 
+		       (maxtime / 2) / 60, 
+		       (maxtime / 2) % 60, 
+		       (3 * maxtime / 4) / 60, 
+		       (3 * maxtime / 4) % 60, 
+		       maxtime / 60, 
+		       maxtime % 60, 
+		       (maxdtime / 4) / 60, 
+		       (maxdtime / 4) % 60, 
+		       (maxdtime / 2) / 60, 
+		       (maxdtime / 2) % 60, 
+		       (3 * maxdtime / 4) / 60, 
+		       (3 * maxdtime / 4) % 60, 
+		       maxdtime / 60, 
+		       maxdtime % 60, 
+		       0.25 * height, 0.25 * height,
+		       LINE_THICKNESS, LINE_THICKNESS);
+		break;
 	case MODE_SUMMARY:
 		printf("ticks left out at "
 				"-1.0 \"-%.2f\", "
@@ -332,9 +397,9 @@ print_all(const struct diveq *dq, const struct divestat *st)
 		       "label left \"Depth (m)\" down %g left 0.3\n"
 		       "copy thru {\n"
 		       " \"\\(bu\" size +3 color $4 at $1,$3\n"
-		       " line dashed 0.05 from $1,0 to $1,$3 color $4\n"
+		       " line dashed 0.05 from $1,0 to $1,$3 color $4 thickness %g\n"
 		       " circle at $1,$2 color $4\n"
-		       " line from $1,0 to $1,$2 color $4\n"
+		       " line from $1,0 to $1,$2 color $4 thickness %g\n"
 		       "}\n",
 		       maxdepth, 
 		       0.75 * maxdepth,
@@ -348,7 +413,8 @@ print_all(const struct diveq *dq, const struct divestat *st)
 		       (3 * maxtime / 4) % 60, 
 		       maxtime / 60, 
 		       maxtime % 60, ndives - 1,
-		       0.25 * height, 0.25 * height);
+		       0.25 * height, 0.25 * height,
+		       LINE_THICKNESS, LINE_THICKNESS);
 		break;
 	case MODE_TEMP:
 		printf("ticks left out at "
@@ -368,9 +434,9 @@ print_all(const struct diveq *dq, const struct divestat *st)
 		       "label left \"Depth (m)\" down %g left 0.3\n"
 		       "copy thru {\n"
 		       " \"\\(bu\" size +3 color $4 at $1,$3\n"
-		       " line dashed 0.05 from $1,0 to $1,$3 color $4\n"
+		       " line dashed 0.05 from $1,0 to $1,$3 color $4 thickness %g\n"
 		       " circle at $1,$2 color $4\n"
-		       " line from $1,0 to $1,$2 color $4\n"
+		       " line from $1,0 to $1,$2 color $4 thickness %g\n"
 		       "}\n",
 		       maxdepth, 0.75 * maxdepth,
 		       0.5 * maxdepth, 0.25 * maxdepth,
@@ -380,7 +446,8 @@ print_all(const struct diveq *dq, const struct divestat *st)
 		       adjust ?  mintemp + 0.66 * (maxtemp - mintemp) :
 			       0.75 * maxtemp,
 		       maxtemp, ndives - 1,
-		       0.25 * height, 0.25 * height);
+		       0.25 * height, 0.25 * height,
+		       LINE_THICKNESS, LINE_THICKNESS);
 		break;
 	case MODE_VECTOR:
 		printf("ticks bot out at "
@@ -487,6 +554,8 @@ print_all(const struct diveq *dq, const struct divestat *st)
 		 * In the resting modes, we need to be within our group
 		 * because we look to the next dive, which must also be
 		 * in our group.
+		 * FIXME: make this not so, so these can be ordered in
+		 * the same way that MODE_SUMMARY is ordered.
 		 */
 		for (i = j = 0; i < st->groupsz; i++) {
 			dg = st->groups[i];
@@ -528,6 +597,16 @@ print_all(const struct diveq *dq, const struct divestat *st)
 				if (TAILQ_NEXT(d, gentries))
 					puts("new");
 			}
+		}
+		break;
+	case MODE_RSUMMARY:
+		TAILQ_FOREACH(d, dq, entries)  {
+			t = d->datetime - d->group->mintime;
+			x = t / (double)maxdtime;
+			printf("%g %g -%g \"%s\"\n", x,
+				(double)d->maxtime / maxtime, 
+				d->maxdepth / maxdepth,
+				cols[d->group->id % COL_MAX]);
 		}
 		break;
 	case MODE_SUMMARY:
@@ -637,6 +716,8 @@ main(int argc, char *argv[])
 				mode = MODE_AGGREGATE;
 			else if (0 == strcasecmp(optarg, "aggrtemp"))
 				mode = MODE_AGGREGATE_TEMP;
+			else if (0 == strcasecmp(optarg, "rsummary"))
+				mode = MODE_RSUMMARY;
 			else if (0 == strcasecmp(optarg, "summary"))
 				mode = MODE_SUMMARY;
 			else if (0 == strcasecmp(optarg, "rest"))
