@@ -43,6 +43,7 @@ PNGS		 = daily.aggr.png \
 		   daily.summary.png \
 		   daily.temp.png \
 		   multiday.restscatter.png \
+		   multiday.rsummary.png \
 		   multiday.stack.png \
 		   short.stack.png
 PDFS		 = daily.aggr.pdf \
@@ -54,6 +55,7 @@ PDFS		 = daily.aggr.pdf \
 		   daily.summary.pdf \
 		   daily.temp.pdf \
 		   multiday.restscatter.pdf \
+		   multiday.rsummary.pdf \
 		   multiday.stack.pdf \
 		   short.stack.pdf
 HTMLS		 = divecmd.1.html \
@@ -181,6 +183,9 @@ daily.temp.pdf: temperature.xml
 
 multiday.stack.pdf: multiday.xml
 	./divecmd2grap -s date -m stack multiday.xml | groff -Gp -Tpdf -P-p5.8i,8.3i >$@
+
+multiday.rsummary.pdf: day1.xml day2.xml
+	./divecmd2grap -s date -m rsummary day1.xml day2.xml | groff -Gp -Tpdf -P-p5.8i,8.3i >$@
 
 .xml.scatter.pdf:
 	./divecmd2grap -m scatter $< | groff -Gp -Tpdf -P-p5.8i,8.3i >$@
