@@ -31,17 +31,46 @@
 #include "parser.h"
 
 enum	pmode {
-	MODE_SCATTER,
-	MODE_RSUMMARY,
-	MODE_SUMMARY,
-	MODE_AGGREGATE,
+	MODE_AGGREGATE = 0,
 	MODE_AGGREGATE_TEMP,
 	MODE_RESTING,
 	MODE_RESTING_SCATTER,
+	MODE_RSUMMARY,
+	MODE_SCATTER,
 	MODE_STACK,
 	MODE_STACK_TEMP,
+	MODE_SUMMARY,
 	MODE_TEMP,
-	MODE_VECTOR
+	MODE_VECTOR,
+	MODE__MAX
+};
+
+static	const char *pmodetitles[MODE__MAX] = {
+	"Aggregate depths", /* MODE_AGGREGATE */
+	"Aggregate temperatures", /* MODE_AGGREGATE_TEMP */
+	"Recovery", /* MODE_RESTING */
+	"Recovery per time", /* MODE_RESTING_SCATTER */
+	"Depth and time summary", /* MODE_RSUMMARY */
+	"Depth per time", /* MODE_SCATTER */
+	"Stacked depths", /* MODE_STACK */
+	"Stacked temperatures", /* MODE_STACK_TEMP */
+	"Depth and time summary", /* MODE_SUMMARY */
+	"Temperature", /* MODE_TEMP */
+	"Depth vector", /* MODE_VECTOR */
+};
+
+static	const char *pmodes[MODE__MAX] = {
+	"aggr", /* MODE_AGGREGATE */
+	"aggrtemp", /* MODE_AGGREGATE_TEMP */
+	"rest", /* MODE_RESTING */
+	"restscatter", /* MODE_RESTING_SCATTER */
+	"rsummary", /* MODE_RSUMMARY */
+	"scatter", /* MODE_SCATTER */
+	"stack", /* MODE_STACK */
+	"stacktemp", /* MODE_STACK_TEMP */
+	"summary", /* MODE_SUMMARY */
+	"temp", /* MODE_TEMP */
+	"vector", /* MODE_VECTOR */
 };
 
 /*
@@ -65,9 +94,6 @@ static	const char *cols[COL_MAX] = {
 
 int verbose = 0;
 
-/* Our print mode. */
-static	enum pmode mode = MODE_STACK;
-
 /* Print derivatives, aka velocity. */
 static int derivs = 0;
 
@@ -75,7 +101,8 @@ static int derivs = 0;
 static int adjust = 0;
 
 static int
-print_all(const struct diveq *dq, const struct divestat *st)
+print_all(enum pmode mode, const struct diveq *dq, 
+	const struct divestat *st, const char *title)
 {
 	struct dive	*d, *dp;
 	struct samp	*s;
@@ -87,6 +114,7 @@ print_all(const struct diveq *dq, const struct divestat *st)
 			 mintemp = 100.0, maxtemp = 0.0;
 	struct dgroup 	*dg;
 
+	assert(MODE__MAX != mode);
 	assert( ! TAILQ_EMPTY(dq));
 
 	/* Start with basic accounting. */
@@ -209,6 +237,9 @@ print_all(const struct diveq *dq, const struct divestat *st)
 	 * To do so, "square" the matrix and draw for twice the rest to
 	 * surface time.
 	 */
+
+	if (NULL != title)
+		printf("label top \"%s\"\n", title);
 
 	if (MODE_RESTING_SCATTER == mode && free)
 		printf("line dashed 0.05 from 0,0 to %g,1\n",
@@ -692,6 +723,7 @@ main(int argc, char *argv[])
 	XML_Parser	 p;
 	struct diveq	 dq;
 	struct divestat	 st;
+	enum pmode 	 mode = MODE_STACK;
 
 	/* Pledge us early: only reading files. */
 
@@ -708,29 +740,14 @@ main(int argc, char *argv[])
 			derivs = 1;
 			break;
 		case ('m'):
-			if (0 == strcasecmp(optarg, "stack"))
-				mode = MODE_STACK;
-			else if (0 == strcasecmp(optarg, "stacktemp"))
-				mode = MODE_STACK_TEMP;
-			else if (0 == strcasecmp(optarg, "aggr"))
-				mode = MODE_AGGREGATE;
-			else if (0 == strcasecmp(optarg, "aggrtemp"))
-				mode = MODE_AGGREGATE_TEMP;
-			else if (0 == strcasecmp(optarg, "rsummary"))
-				mode = MODE_RSUMMARY;
-			else if (0 == strcasecmp(optarg, "summary"))
-				mode = MODE_SUMMARY;
-			else if (0 == strcasecmp(optarg, "rest"))
-				mode = MODE_RESTING;
-			else if (0 == strcasecmp(optarg, "restscatter"))
-				mode = MODE_RESTING_SCATTER;
-			else if (0 == strcasecmp(optarg, "scatter"))
-				mode = MODE_SCATTER;
-			else if (0 == strcasecmp(optarg, "temp"))
-				mode = MODE_TEMP;
-			else if (0 == strcasecmp(optarg, "vector"))
-				mode = MODE_VECTOR;
-			else
+			if (0 == strcasecmp(optarg, "all")) {
+				mode = MODE__MAX;
+				break;
+			}
+			for (mode = 0; mode < MODE__MAX; mode++)
+				if (0 == strcasecmp(optarg, pmodes[mode]))
+					break;
+			if (mode == MODE__MAX)
 				goto usage;
 			break;
 		case ('s'):
@@ -754,10 +771,14 @@ main(int argc, char *argv[])
 	argv += optind;
 
 	if (derivs && 
-	    (MODE_AGGREGATE != mode && MODE_STACK != mode))
+	    (MODE_AGGREGATE != mode && 
+	     MODE__MAX != mode &&
+	     MODE_STACK != mode))
 		warnx("-d: ignoring flag");
 	
-	if (adjust && (MODE_TEMP != mode))
+	if (adjust && 
+	    (MODE_TEMP != mode &&
+	     MODE__MAX != mode))
 		warnx("-a: ignoring flag");
 
 	parse_init(&p, &dq, &st, group);
@@ -788,7 +809,15 @@ main(int argc, char *argv[])
 		goto out;
 	}
 
-	rc = print_all(&dq, &st);
+	if (MODE__MAX == mode) {
+		for (mode = 0; mode < MODE__MAX; mode++) {
+			rc = print_all(mode, &dq, 
+				&st, pmodetitles[mode]);
+			if (mode < MODE__MAX - 1)
+				puts(".bp");
+		}
+	} else
+		rc = print_all(mode, &dq, &st, NULL);
 out:
 	parse_free(&dq, &st);
 	return(rc ? EXIT_SUCCESS : EXIT_FAILURE);
