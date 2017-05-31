@@ -94,6 +94,7 @@ static void
 sample_cb(dc_sample_type_t type, dc_sample_value_t v, void *userdata)
 {
 	struct dcmd_samp *sd = userdata;
+	unsigned int i;
 
 	switch (type) {
 	case DC_SAMPLE_TIME:
@@ -127,6 +128,19 @@ sample_cb(dc_sample_type_t type, dc_sample_value_t v, void *userdata)
 		fprintf(sd->f, "\t\t\t\t\t"
 			"<event type=\"%s\" duration=\"%u\" />\n", 
 			dcmd_event_types[v.event.type], v.event.time);
+		break;
+	case DC_SAMPLE_RBT:
+		fprintf(sd->f, "\t\t\t\t\t"
+			"<rbt value=\"%u\" />\n", 
+			v.rbt);
+		break;
+	case DC_SAMPLE_VENDOR:
+		fprintf(sd->f, "\t\t\t\t\t"
+			"<vendor type=\"%u\" data=\"%02x", 
+			v.vendor.type, *((unsigned char*)v.vendor.data));
+		for(i = 1; i < v.vendor.size; i++)
+			fprintf(sd->f, "%02x", *((unsigned char*)v.vendor.data+1));
+		fprintf(sd->f, "\" />\n");
 		break;
 	default:
 		if ( ! verbose)
