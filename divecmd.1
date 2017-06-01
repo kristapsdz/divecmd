@@ -237,6 +237,7 @@ And now, the samples...
 .Bd -literal
       <samples>
         <sample time="ss">
+         [<rbt value="xxx" />]
          [<depth value="xxx" />]
          [<temp value="xxx" />]
          [<pressure value="xxx" tank="nnn" />]
@@ -250,6 +251,11 @@ The sample time is in seconds from the dive start and is
 always specified.
 The remaining optional sub-elements are as follows:
 .Bl -tag -width Ds
+.It Li rbt
+Remaining bottom time
+.Pq Dq RBT
+.Pq seconds
+at sampling time.
 .It Li depth
 Depth (metres) at sampling time.
 .It Li temp

@@ -102,6 +102,10 @@ sample_cb(dc_sample_type_t type, dc_sample_value_t v, void *userdata)
 		fprintf(sd->f, "\t\t\t\t"
 			"<sample time=\"%u\">\n", v.time);
 		break;
+	case DC_SAMPLE_RBT:
+		fprintf(sd->f, "\t\t\t\t\t"
+			"<rbt value=\"%u\" />\n", v.rbt);
+		break;
 	case DC_SAMPLE_DEPTH:
 		fprintf(sd->f, "\t\t\t\t\t"
 			"<depth value=\"%.2f\" />\n", v.depth);
