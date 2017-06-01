@@ -94,6 +94,8 @@ static void
 sample_cb(dc_sample_type_t type, dc_sample_value_t v, void *userdata)
 {
 	struct dcmd_samp *sd = userdata;
+	unsigned int	  i, j;
+	const unsigned char *cp;
 
 	switch (type) {
 	case DC_SAMPLE_TIME:
@@ -105,6 +107,25 @@ sample_cb(dc_sample_type_t type, dc_sample_value_t v, void *userdata)
 	case DC_SAMPLE_RBT:
 		fprintf(sd->f, "\t\t\t\t\t"
 			"<rbt value=\"%u\" />\n", v.rbt);
+		break;
+	case DC_SAMPLE_VENDOR:
+		if (0 == v.vendor.size) {
+			fprintf(sd->f, "\t\t\t\t\t"
+				"<vendor type=\"%u\" />\n", 
+				v.vendor.type);
+			break;
+		}
+		fprintf(sd->f, "\t\t\t\t\t"
+			"<vendor type=\"%u\">\n", v.vendor.type);
+		cp = v.vendor.data;
+		for (i = 0; i < v.vendor.size; ) {
+			fprintf(sd->f, "\t\t\t\t\t\t");
+			for (j = 0; i < v.vendor.size && j < 16; j++, i++)
+				fprintf(sd->f, "%02x", cp[i]);
+			fprintf(sd->f, "\n");
+		}
+		fprintf(sd->f, "\t\t\t\t\t"
+			"</vendor>\n");
 		break;
 	case DC_SAMPLE_DEPTH:
 		fprintf(sd->f, "\t\t\t\t\t"
