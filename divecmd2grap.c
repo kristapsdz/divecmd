@@ -813,9 +813,10 @@ main(int argc, char *argv[])
 		for (mode = 0; mode < MODE__MAX; mode++) {
 			rc = print_all(mode, &dq, 
 				&st, pmodetitles[mode]);
-			if (mode < MODE__MAX - 1)
+			if (rc && mode < MODE__MAX - 1)
 				puts(".bp");
 		}
+		rc = 1;
 	} else
 		rc = print_all(mode, &dq, &st, NULL);
 out:
