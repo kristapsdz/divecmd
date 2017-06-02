@@ -66,7 +66,6 @@ struct	dive {
 	time_t		     datetime; /* time or zero */
 	size_t		     num; /* number */
 	enum mode	     mode; /* dive mode */
-	size_t		     duration; /* or zero */
 	struct sampq	     samps; /* samples */
 	double		     maxdepth; /* maximum sample depth */
 	int		     hastemp; /* do we have temps? */

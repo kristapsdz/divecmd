@@ -53,9 +53,6 @@ print_all(const struct divestat *st)
 		printf("\t\t \"dives\": [\n");
 		TAILQ_FOREACH(d, &dg->dives, gentries) {
 			printf("\t\t\t{\"num\": %zu,\n", d->num);
-			if (0 != d->duration)
-				printf("\t\t\t \"duration\": %zu,\n", 
-					d->duration);
 			if (0 != d->datetime)
 				printf("\t\t\t \"datetime\": %lld,\n", 
 					(long long)d->datetime);
