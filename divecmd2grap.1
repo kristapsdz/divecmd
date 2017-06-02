@@ -69,6 +69,11 @@ modes.
 Graphing mode.
 May be one of the following:
 .Bl -tag -width Ds
+.It Ar all
+Emit all graphs on a series of pages.
+This will print the graph title, then the graph, then a new page.
+If the graph was not printed (e.g., a temperature graph when there are
+no temperature values), the graph will be omitted.
 .It Ar aggr
 Line graph connecting
 .Pq Dq aggregating
@@ -120,6 +125,10 @@ Dives on the x-axis are ordered by date; or if a
 .Fl s
 split is specified, ordered between groups by relative offset from
 respective group's first dive time.
+.It Ar vector
+With dive time on the x-axis and depth on the y-axis, draw each dive as
+a connected sequence (ordered by time) of dots.
+The connection is an line with an arrow.
 .El
 .It Fl s Ar splitmode
 Split up
