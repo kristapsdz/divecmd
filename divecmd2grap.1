@@ -88,10 +88,12 @@ Your dive computer(s) must support temperature readings.
 Impulse graph with each dive's rest time (surface interval) on the
 positive y-axis and dive time on the negative y-axis.
 The x-axis is independent.
+Needs at least two dives.
 .It Ar restscatter
 Scatter graph with points corresponding to dive time and rest time.
 A line with minimum suggested free diving interval is shown (twice the
 dive time) if any of the dives are free dives.
+Needs at least two dives.
 .It Ar rsummary
 Like
 .Ar summary ,
@@ -129,6 +131,7 @@ respective group's first dive time.
 With dive time on the x-axis and depth on the y-axis, draw each dive as
 a connected sequence (ordered by time) of dots.
 The connection is an line with an arrow.
+Needs at least two dives.
 .El
 .It Fl s Ar splitmode
 Split up

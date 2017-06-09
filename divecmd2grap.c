@@ -136,6 +136,14 @@ print_all(enum pmode mode, const struct diveq *dq,
 				return(0);
 			}
 
+	if (MODE_RESTING == mode ||
+	    MODE_RESTING_SCATTER == mode ||
+	    MODE_VECTOR == mode)
+		if (ndives < 2) {
+			warnx("multiple dives required");
+			return(0);
+		}
+
 	/* These modes require temperatures. */
 
 	if (MODE_STACK_TEMP == mode ||
