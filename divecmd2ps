@@ -1,3 +1,0 @@
-#! /bin/sh
-
-divecmd2grap $@ | groff -Gp -Tps -P-p5.8i,8.3i

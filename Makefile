@@ -6,6 +6,7 @@ include Makefile.configure
 VERSION		 = 0.0.10
 LDADD		+= -ldivecomputer -lm
 CFLAGS		+= -DVERSION="\"$(VERSION)\""
+GROFF		?= groff
 
 OBJS		 = common.o \
 		   main.o \
@@ -18,14 +19,16 @@ BINOBJS		 = divecmd2csv.o \
 		   divecmd2json.o \
 		   divecmd2term.o \
 		   parser.o
-PREBINS		 = divecmd2pdf \
-		   divecmd2ps
+PREBINS		 = divecmd2pdf.in \
+		   divecmd2ps.in
 BINS		 = divecmd \
 		   divecmd2csv \
 		   divecmd2divecmd \
 		   divecmd2grap \
 		   divecmd2json \
-		   divecmd2term
+		   divecmd2term \
+		   divecmd2pdf \
+		   divecmd2ps
 MAN1S		 = divecmd.1 \
 		   divecmd2csv.1 \
 		   divecmd2divecmd.1 \
@@ -85,12 +88,12 @@ COMPAT_OBJS	 = compat_err.o \
 		   compat_strlcpy.o \
 		   compat_strtonum.o
 
-all: $(BINS)
+all: $(BINS) 
 
 install: all
 	mkdir -p $(DESTDIR)$(BINDIR)
 	mkdir -p $(DESTDIR)$(MANDIR)/man1
-	install -m 0755 $(BINS) $(PREBINS) $(DESTDIR)$(BINDIR)
+	install -m 0755 $(BINS) $(DESTDIR)$(BINDIR)
 	install -m 0444 $(MAN1S) $(DESTDIR)$(MANDIR)/man1
 
 divecmd: $(OBJS) $(COMPAT_OBJS)
@@ -110,6 +113,12 @@ divecmd2json: divecmd2json.o parser.o $(COMPAT_OBJS)
 
 divecmd2csv: divecmd2csv.o parser.o $(COMPAT_OBJS)
 	$(CC) $(CPPFLAGS) -o $@ divecmd2csv.o parser.o $(COMPAT_OBJS) -lexpat
+
+divecmd2pdf: divecmd2pdf.in
+	sed "s!@GROFF@!$(GROFF)!g" divecmd2pdf.in >$@
+
+divecmd2ps: divecmd2pdf.in
+	sed "s!@GROFF@!$(GROFF)!g" divecmd2ps.in >$@
 
 $(OBJS): extern.h config.h
 
@@ -145,7 +154,8 @@ $(PDFS): divecmd2grap divecmd2divecmd
 
 divecmd.tar.gz:
 	mkdir -p .dist/divecmd-$(VERSION)/
-	install -m 0644 configure *.c *.h Makefile *.1 .dist/divecmd-$(VERSION)
+	install -m 0755 configure .dist/divecmd-$(VERSION)
+	install -m 0644 *.c *.h Makefile *.1 $(PREBINS) .dist/divecmd-$(VERSION)
 	( cd .dist/ && tar zcf ../$@ ./ )
 	rm -rf .dist/
 

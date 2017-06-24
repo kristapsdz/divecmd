@@ -1,0 +1,3 @@
+#! /bin/sh
+
+divecmd2grap $@ | @GROFF@ -Gp -Tpdf -P-p5.8i,8.3i
