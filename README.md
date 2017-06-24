@@ -16,6 +16,8 @@ has several programs:
   which exports to CSV (usually for [Subsurface](https://subsurface-divelog.org/)).
 
 It compiles and runs on Linux, Mac OS X, and OpenBSD.
+For Mac OS X machines with homebrew, see BSD.lv's
+[homebrew-repo](https://github.com/kristapsdz/homebrew-repo).
 
 There are also some supporting utilities:
 
