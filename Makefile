@@ -3,10 +3,10 @@
 
 include Makefile.configure
 
-PREFIX 		 = /usr/local
-VERSION		 = 0.0.9
-LDFLAGS		+= -L/usr/local/lib -ldivecomputer -lm
-CFLAGS		+= -I/usr/local/include -DVERSION="\"$(VERSION)\""
+VERSION		 = 0.0.10
+LDADD		+= -ldivecomputer -lm
+CFLAGS		+= -DVERSION="\"$(VERSION)\""
+
 OBJS		 = common.o \
 		   main.o \
 		   download.o \
@@ -87,6 +87,47 @@ COMPAT_OBJS	 = compat_err.o \
 
 all: $(BINS)
 
+install: all
+	mkdir -p $(DESTDIR)$(BINDIR)
+	mkdir -p $(DESTDIR)$(MANDIR)/man1
+	install -m 0755 $(BINS) $(PREBINS) $(DESTDIR)$(BINDIR)
+	install -m 0444 $(MAN1S) $(DESTDIR)$(MANDIR)/man1
+
+divecmd: $(OBJS) $(COMPAT_OBJS)
+	$(CC) $(CPPFLAGS) -o $@ $(OBJS) $(COMPAT_OBJS) $(LDFLAGS) $(LDADD)
+
+divecmd2divecmd: divecmd2divecmd.o parser.o $(COMPAT_OBJS)
+	$(CC) $(CPPFLAGS) -o $@ divecmd2divecmd.o parser.o $(COMPAT_OBJS) -lexpat
+
+divecmd2term: divecmd2term.o parser.o $(COMPAT_OBJS)
+	$(CC) $(CPPFLAGS) -o $@ divecmd2term.o parser.o $(COMPAT_OBJS) -lexpat -lm
+
+divecmd2grap: divecmd2grap.o parser.o $(COMPAT_OBJS)
+	$(CC) $(CPPFLAGS) -o $@ divecmd2grap.o parser.o $(COMPAT_OBJS) -lexpat
+
+divecmd2json: divecmd2json.o parser.o $(COMPAT_OBJS)
+	$(CC) $(CPPFLAGS) -o $@ divecmd2json.o parser.o $(COMPAT_OBJS) -lexpat
+
+divecmd2csv: divecmd2csv.o parser.o $(COMPAT_OBJS)
+	$(CC) $(CPPFLAGS) -o $@ divecmd2csv.o parser.o $(COMPAT_OBJS) -lexpat
+
+$(OBJS): extern.h config.h
+
+$(COMPAT_OBJS): config.h
+
+$(BINOBJS): parser.h config.h
+
+clean:
+	rm -f $(OBJS) $(COMPAT_OBJS) $(BINS) $(BINOBJS) $(HTMLS) $(PDFS) $(PNGS)
+	rm -f divecmd.tar.gz divecmd.tar.gz.sha512
+
+distclean: clean
+	rm -f Makefile.configure config.h config.log
+
+#######################################################################
+# All of these rules are used for the www target.
+#######################################################################
+
 www: $(HTMLS) $(PDFS) $(PNGS) divecmd.tar.gz divecmd.tar.gz.sha512
 
 installwww: www
@@ -98,39 +139,9 @@ installwww: www
 	install -m 0444 divecmd.tar.gz $(WWWDIR)/snapshots
 	install -m 0444 divecmd.tar.gz.sha512 $(WWWDIR)/snapshots
 
-install: all
-	mkdir -p $(DESTDIR)$(BINDIR)
-	mkdir -p $(DESTDIR)$(MANDIR)/man1
-	install -m 0755 $(BINS) $(PREBINS) $(DESTDIR)$(BINDIR)
-	install -m 0444 $(MAN1S) $(DESTDIR)$(MANDIR)/man1
-
-divecmd: $(OBJS) $(COMPAT_OBJS)
-	$(CC) -o $@ $(OBJS) $(COMPAT_OBJS) $(LDFLAGS) 
-
-divecmd2divecmd: divecmd2divecmd.o parser.o $(COMPAT_OBJS)
-	$(CC) -o $@ divecmd2divecmd.o parser.o $(COMPAT_OBJS) -lexpat
-
-divecmd2term: divecmd2term.o parser.o $(COMPAT_OBJS)
-	$(CC) -o $@ divecmd2term.o parser.o $(COMPAT_OBJS) -lexpat -lm
-
-divecmd2grap: divecmd2grap.o parser.o $(COMPAT_OBJS)
-	$(CC) -o $@ divecmd2grap.o parser.o $(COMPAT_OBJS) -lexpat
-
-divecmd2json: divecmd2json.o parser.o $(COMPAT_OBJS)
-	$(CC) -o $@ divecmd2json.o parser.o $(COMPAT_OBJS) -lexpat
-
-divecmd2csv: divecmd2csv.o parser.o $(COMPAT_OBJS)
-	$(CC) -o $@ divecmd2csv.o parser.o $(COMPAT_OBJS) -lexpat
-
 $(PNGS): $(PDFS)
 
 $(PDFS): divecmd2grap divecmd2divecmd
-
-$(OBJS): extern.h config.h
-
-$(COMPAT_OBJS): config.h
-
-$(BINOBJS): parser.h config.h
 
 divecmd.tar.gz:
 	mkdir -p .dist/divecmd-$(VERSION)/
@@ -143,13 +154,6 @@ divecmd.tar.gz.sha512: divecmd.tar.gz
 
 index.html: index.xml
 	sed "s!@VERSION@!$(VERSION)!g" index.xml >$@
-
-clean:
-	rm -f $(OBJS) $(COMPAT_OBJS) $(BINS) $(BINOBJS) $(HTMLS) $(PDFS) $(PNGS)
-	rm -f divecmd.tar.gz divecmd.tar.gz.sha512
-
-distclean: clean
-	rm -f Makefile.configure config.h config.log
 
 .1.1.html:
 	mandoc -Thtml -Ostyle=mandoc.css $< >$@
