@@ -69,6 +69,17 @@ sudo make install
 
 Or if you're on OpenBSD, use `doas` instead of `sudo`.  That's it!
 
+You'll probably need to provide paths to the third-party libdivecomputer
+installation, however.
+To do so, just add a file `configure.local` that includes the `LDFLAGS`
+and `CPPFLAGS` set to the appropriate paths.
+It will be automatically picked up when you run `configure`.
+Alternatively, you can pas the `LDFLAGS` and `CPPFLAGS` variables to the
+`configure` script.
+
+**Note**: this is a shell script, not a Makefile component, so no spaces
+around the equal sign.
+
 ## License
 
 The sources use the LGPL as printed in the [LICENSE.md](LICENSE.md)
