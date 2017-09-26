@@ -19,6 +19,7 @@
 
 #include <assert.h>
 #include <err.h>
+#include <errno.h>
 #include <fcntl.h>
 #include <stdarg.h>
 #include <stdlib.h>
@@ -59,10 +60,45 @@ logerrx(const struct parse *p, const char *fmt, ...)
 }
 
 /*
+ * Fatal error.
+ */
+static __dead void
+logfatal(const struct parse *p, const char *fmt, ...)
+{
+	va_list	 ap;
+	int	 er = errno;
+
+	fprintf(stderr, "%s:%zu:%zu: fatal: ", p->file,
+		XML_GetCurrentLineNumber(p->p),
+		XML_GetCurrentColumnNumber(p->p));
+
+	if (NULL != fmt) {
+		va_start(ap, fmt);
+		vfprintf(stderr, fmt, ap);
+		va_end(ap);
+		fprintf(stderr, ": ");
+	}
+
+	fprintf(stderr, "%s\n", strerror(er));
+	exit(EXIT_FAILURE);
+}
+
+static char *
+xstrdup(const struct parse *p, const char *cp)
+{
+	char	*pp;
+
+	if (NULL == (pp = strdup(cp)))
+		logfatal(p, "strdup");
+
+	return(pp);
+}
+
+/*
  * Generic logging function printing the current XML parse error code.
  */
 static void
-logerr(const struct parse *p)
+logerrp(const struct parse *p)
 {
 
 	logerrx(p, "%s", XML_ErrorString(XML_GetErrorCode(p->p)));
@@ -129,11 +165,8 @@ group_alloc(struct parse *p, struct dive *d, const char *date)
 
 	/* Name our group for lookup, if applicable. */
 
-	if (NULL != date) {
-		p->stat->groups[i]->name = strdup(date);
-		if (NULL == p->stat->groups[i]->name)
-			err(EXIT_FAILURE, NULL);
-	}
+	if (NULL != date)
+		p->stat->groups[i]->name = xstrdup(p, date);
 
 	TAILQ_INIT(&p->stat->groups[i]->dives);
 	p->stat->groups[i]->id = i;
@@ -193,9 +226,7 @@ parse_open(void *dat, const XML_Char *s, const XML_Char **atts)
 		for (attp = atts; NULL != *attp; attp += 2)
 			if (0 == strcmp(attp[0], "diver")) {
 				free(p->curlog->ident);
-				p->curlog->ident = strdup(attp[1]);
-				if (NULL == p->curlog->ident)
-					err(EXIT_FAILURE, NULL);
+				p->curlog->ident = xstrdup(p, attp[1]);
 			}
 		TAILQ_INSERT_TAIL(&p->stat->dlogs, p->curlog, entries);
 		if (verbose)
@@ -509,7 +540,7 @@ parse(const char *fname, XML_Parser p,
 	while ((ssz = read(fd, buf, sizeof(buf))) > 0) {
 	       rc = XML_Parse(p, buf, (int)ssz, 0 == ssz ? 1 : 0);
 	       if (XML_STATUS_OK != rc) {
-		       logerr(&pp);
+		       logerrp(&pp);
 		       break;
 	       } else if (0 == ssz)
 		       break;
