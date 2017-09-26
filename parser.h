@@ -72,7 +72,8 @@ TAILQ_HEAD(dlogq, dlog);
 
 struct	dive {
 	time_t		     datetime; /* time or zero */
-	size_t		     num; /* number */
+	size_t		     num; /* number or zero */
+	size_t		     duration; /* duration or zero */
 	enum mode	     mode; /* dive mode */
 	struct sampq	     samps; /* samples */
 	double		     maxdepth; /* maximum sample depth */

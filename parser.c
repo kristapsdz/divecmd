@@ -23,6 +23,7 @@
 #include <fcntl.h>
 #include <stdarg.h>
 #include <stdlib.h>
+#include <stdint.h>
 #include <stdio.h>
 #include <string.h>
 #include <time.h>
@@ -239,7 +240,7 @@ parse_open(void *dat, const XML_Char *s, const XML_Char **atts)
 	struct samp	 *samp;
 	struct dive	 *dive, *dp;
 	const XML_Char	**attp;
-	const char	 *date, *time;
+	const char	 *date, *time, *num, *er, *duration;
 	struct tm	  tm;
 	int		  rc;
 	struct dgroup	 *grp;
@@ -306,11 +307,13 @@ parse_open(void *dat, const XML_Char *s, const XML_Char **atts)
 		TAILQ_INIT(&dive->samps);
 		dive->log = p->curlog;
 
-		date = time = NULL;
+		date = time = num = duration = NULL;
+
 		for (attp = atts; NULL != *attp; attp += 2) {
-			/* FIXME: use strtonum. */
 			if (0 == strcmp(attp[0], "number")) {
-				dive->num = atoi(attp[1]);
+				num = attp[1];
+			} else if (0 == strcmp(attp[0], "duration")) {
+				duration = attp[1];
 			} else if (0 == strcmp(attp[0], "date")) {
 				date = attp[1];
 			} else if (0 == strcmp(attp[0], "time")) {
@@ -329,7 +332,20 @@ parse_open(void *dat, const XML_Char *s, const XML_Char **atts)
 			}
 		}
 
-		logdbg(p, "new dive: %zu", dive->num);
+		if (NULL != num) {
+			dive->num = strtonum(num, 0, SIZE_MAX, &er);
+			if (NULL != er) {
+				logwarnx(p, "dive number is %s", er);
+				logdbg(p, "new dive: <unnumbered>");
+			} else
+				logdbg(p, "new dive: %zu", dive->num);
+		}
+
+		if (NULL != duration) {
+			dive->duration = strtonum(duration, 0, SIZE_MAX, &er);
+			if (NULL != er)
+				logwarnx(p, "dive duration is %s", er);
+		}
 
 		/* Configure date and time. */
 
