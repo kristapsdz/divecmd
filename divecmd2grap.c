@@ -107,7 +107,7 @@ print_all(enum pmode mode, const struct diveq *dq,
 	struct dive	*d, *dp;
 	struct samp	*s;
 	size_t		 i = 0, j, maxtime = 0, maxrtime = 0, 
-			 ndives = 0, free = 0, rest, maxdtime;
+			 ndives = 0, free = 0, rest, maxdtime = 0;
 	time_t		 t, lastt = 0;
 	double		 maxdepth = 0.0, lastdepth, x, y, 
 			 height = 3.8, width = 5.4, x2, y2,
