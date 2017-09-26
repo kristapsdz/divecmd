@@ -42,13 +42,57 @@ struct	parse {
 	struct divestat	 *stat; /* statistics */
 };
 
-/*
- * Generic logging function printing the given varargs message.
- */
+static void
+logdbg(const struct parse *p, const char *fmt, ...)
+	__attribute__((format (printf, 2, 3)));
+
+static void
+logwarnx(const struct parse *p, const char *fmt, ...)
+	__attribute__((format (printf, 2, 3)));
+
+static void
+logerrx(const struct parse *p, const char *fmt, ...)
+	__attribute__((format (printf, 2, 3)));
+
+static __dead void
+logfatal(const struct parse *p, const char *fmt, ...)
+	__attribute__((format (printf, 2, 3)));
+
 static void
 logerrx(const struct parse *p, const char *fmt, ...)
 {
 	va_list	 ap;
+
+	fprintf(stderr, "%s:%zu:%zu: error: ", p->file,
+		XML_GetCurrentLineNumber(p->p),
+		XML_GetCurrentColumnNumber(p->p));
+	va_start(ap, fmt);
+	vfprintf(stderr, fmt, ap);
+	va_end(ap);
+	fputc('\n', stderr);
+}
+
+static void
+logwarnx(const struct parse *p, const char *fmt, ...)
+{
+	va_list	 ap;
+
+	fprintf(stderr, "%s:%zu:%zu: warning: ", p->file,
+		XML_GetCurrentLineNumber(p->p),
+		XML_GetCurrentColumnNumber(p->p));
+	va_start(ap, fmt);
+	vfprintf(stderr, fmt, ap);
+	va_end(ap);
+	fputc('\n', stderr);
+}
+
+static void
+logdbg(const struct parse *p, const char *fmt, ...)
+{
+	va_list	 ap;
+
+	if ( ! verbose)
+		return;
 
 	fprintf(stderr, "%s:%zu:%zu: ", p->file,
 		XML_GetCurrentLineNumber(p->p),
@@ -59,10 +103,7 @@ logerrx(const struct parse *p, const char *fmt, ...)
 	fputc('\n', stderr);
 }
 
-/*
- * Fatal error.
- */
-static __dead void
+static void
 logfatal(const struct parse *p, const char *fmt, ...)
 {
 	va_list	 ap;
@@ -94,9 +135,6 @@ xstrdup(const struct parse *p, const char *cp)
 	return(pp);
 }
 
-/*
- * Generic logging function printing the current XML parse error code.
- */
 static void
 logerrp(const struct parse *p)
 {
@@ -214,7 +252,7 @@ parse_open(void *dat, const XML_Char *s, const XML_Char **atts)
 		 */
 
 		if (NULL != p->curlog) {
-			logerrx(p, "recursive divelog");
+			logwarnx(p, "recursive divelog");
 			return;
 		}
 		p->curlog = calloc(1, sizeof(struct dlog));
@@ -227,10 +265,21 @@ parse_open(void *dat, const XML_Char *s, const XML_Char **atts)
 			if (0 == strcmp(attp[0], "diver")) {
 				free(p->curlog->ident);
 				p->curlog->ident = xstrdup(p, attp[1]);
+			} else if (0 == strcmp(attp[0], "vendor")) {
+				free(p->curlog->vendor);
+				p->curlog->vendor = xstrdup(p, attp[1]);
+			} else if (0 == strcmp(attp[0], "product")) {
+				free(p->curlog->product);
+				p->curlog->product = xstrdup(p, attp[1]);
+			} else if (0 == strcmp(attp[0], "model")) {
+				free(p->curlog->model);
+				p->curlog->model = xstrdup(p, attp[1]);
+			} else if (0 == strcmp(attp[0], "program")) {
+				free(p->curlog->program);
+				p->curlog->program = xstrdup(p, attp[1]);
 			}
 		TAILQ_INSERT_TAIL(&p->stat->dlogs, p->curlog, entries);
-		if (verbose)
-			fprintf(stderr, "%s: new divelog\n", p->file);
+		logdbg(p, "new divelog");
 	} else if (0 == strcmp(s, "dive")) {
 		/*
 		 * We're encountering a new dive.
@@ -240,13 +289,13 @@ parse_open(void *dat, const XML_Char *s, const XML_Char **atts)
 		 */
 
 		if (NULL != p->cursamp) {
-			logerrx(p, "dive within sample");
+			logwarnx(p, "dive within sample");
 			return;
 		} else if (NULL != p->curdive) {
-			logerrx(p, "recursive dive");
+			logwarnx(p, "recursive dive");
 			return;
 		} else if (NULL == p->curlog) {
-			logerrx(p, "missing divelog");
+			logwarnx(p, "missing divelog");
 			return;
 		}
 
@@ -276,13 +325,11 @@ parse_open(void *dat, const XML_Char *s, const XML_Char **atts)
 				else if (0 == strcmp(attp[1], "gauge"))
 					dive->mode = MODE_GAUGE;
 				else
-					logerrx(p, "unknown mode");
+					logwarnx(p, "unknown mode");
 			}
 		}
 
-		if (verbose)
-			fprintf(stderr, "%s: new dive: %zu\n",
-				p->file, dive->num);
+		logdbg(p, "new dive: %zu", dive->num);
 
 		/* Configure date and time. */
 
@@ -292,7 +339,7 @@ parse_open(void *dat, const XML_Char *s, const XML_Char **atts)
 			rc = sscanf(date, "%d-%d-%d", 
 				&tm.tm_year, &tm.tm_mon, &tm.tm_mday);
 			if (3 != rc) {
-				logerrx(p, "malformed date");
+				logwarnx(p, "malformed date");
 				TAILQ_INSERT_TAIL(p->dives, dive, entries);
 				return;
 			}
@@ -302,7 +349,7 @@ parse_open(void *dat, const XML_Char *s, const XML_Char **atts)
 			rc = sscanf(time, "%d:%d:%d", 
 				&tm.tm_hour, &tm.tm_min, &tm.tm_sec);
 			if (3 != rc) {
-				logerrx(p, "malformed time");
+				logwarnx(p, "malformed time");
 				TAILQ_INSERT_TAIL(p->dives, dive, entries);
 				return;
 			}
@@ -311,7 +358,7 @@ parse_open(void *dat, const XML_Char *s, const XML_Char **atts)
 			/* Convert raw values into epoch. */
 
 			if (-1 == (dive->datetime = mktime(&tm))) {
-				logerrx(p, "malformed date-time");
+				logwarnx(p, "malformed date-time");
 				dive->datetime = 0;
 				TAILQ_INSERT_TAIL(p->dives, dive, entries);
 				return;
@@ -335,21 +382,20 @@ parse_open(void *dat, const XML_Char *s, const XML_Char **atts)
 
 		if (GROUP_DATE == p->stat->group) {
 			if (NULL == date) {
-				logerrx(p, "group dive without date");
+				logwarnx(p, "group dive without date");
 				grp = group_lookup(p, dive, "");
 			} else
 				grp = group_lookup(p, dive, date);
 		} else if (GROUP_DIVER == p->stat->group) {
 			if (NULL == dive->log->ident) {
-				logerrx(p, "group dive without diver");
+				logwarnx(p, "group dive without diver");
 				grp = group_lookup(p, dive, "");
 			} else
 				grp = group_lookup(p, 
 					dive, dive->log->ident);
 		} else {
 			if (0 == p->stat->groupsz && verbose)
-				fprintf(stderr, "%s: new default "
-					"group\n", p->file);
+				logdbg(p, "new default group");
 			grp = (0 == p->stat->groupsz) ?
 				group_alloc(p, dive, NULL) :
 				group_add(p, 0, dive);
@@ -393,7 +439,7 @@ parse_open(void *dat, const XML_Char *s, const XML_Char **atts)
 		 * This must be connected to the current dive.
 		 */
 		if (NULL == (dive = p->curdive)) { 
-			logerrx(p, "sample outside dive");
+			logwarnx(p, "sample outside dive");
 			return;
 		}
 
@@ -403,7 +449,7 @@ parse_open(void *dat, const XML_Char *s, const XML_Char **atts)
 			if (0 == strcmp(attp[0], "time"))
 				break;
 		if (NULL == attp[0]) {
-			logerrx(p, "sample without time");
+			logwarnx(p, "sample without time");
 			return;
 		}
 
@@ -449,7 +495,7 @@ parse_open(void *dat, const XML_Char *s, const XML_Char **atts)
 			if (0 == strcmp(attp[0], "value")) 
 				break;
 		if (NULL == attp[0]) {
-			logerrx(p, "depth without value");
+			logwarnx(p, "depth without value");
 			return;
 		}
 
@@ -468,7 +514,7 @@ parse_open(void *dat, const XML_Char *s, const XML_Char **atts)
 		 * The sample must be available.
 		 */
 		if (NULL == (samp = p->cursamp)) {
-			logerrx(p, "temperature outside sample");
+			logwarnx(p, "temperature outside sample");
 			return;
 		}
 
@@ -476,7 +522,7 @@ parse_open(void *dat, const XML_Char *s, const XML_Char **atts)
 			if (0 == strcmp(attp[0], "value")) 
 				break;
 		if (NULL == attp[0]) {
-			logerrx(p, "temperature without value");
+			logwarnx(p, "temperature without value");
 			return;
 		}
 
@@ -582,6 +628,10 @@ parse_free(struct diveq *dq, struct divestat *st)
 		while ( ! TAILQ_EMPTY(&st->dlogs)) {
 			dl = TAILQ_FIRST(&st->dlogs);
 			TAILQ_REMOVE(&st->dlogs, dl, entries);
+			free(dl->product);
+			free(dl->vendor);
+			free(dl->model);
+			free(dl->program);
 			free(dl->ident);
 			free(dl);
 		}

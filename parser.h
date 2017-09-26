@@ -55,8 +55,16 @@ struct	dgroup {
 	struct diveq	  dives; /* all dives */
 };
 
+/*
+ * A self-contained divelog article.
+ * This is parsed from the <divelog> element.
+ */
 struct	dlog {
 	char		 *ident; /* diver or NULL */
+	char		 *program; /* program or NULL */
+	char		 *vendor; /* vendor or NULL */
+	char		 *product; /* product or NULL */
+	char		 *model; /* model or NULL */
 	TAILQ_ENTRY(dlog) entries;
 };
 
