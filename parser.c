@@ -45,6 +45,35 @@ struct	parse {
 	size_t		  bufsz; /* length of buf */
 };
 
+static	const char *events[EVENT__MAX] = {
+	"none", /* EVENT_none */
+	"decostop", /* EVENT_decostop */
+	"rbt", /* EVENT_rbt */
+	"ascent", /* EVENT_ascent */
+	"ceiling", /* EVENT_ceiling */
+	"workload", /* EVENT_workload */
+	"transmitter", /* EVENT_transmitter */
+	"violation", /* EVENT_violation */
+	"bookmark", /* EVENT_bookmark */
+	"surface", /* EVENT_surface */
+	"safetystop", /* EVENT_safetystop */
+	"gaschange", /* EVENT_gaschange */
+	"safetystop_voluntary", /* EVENT_safetystop_voluntary */
+	"safetystop_mandatory", /* EVENT_safetystop_mandatory */
+	"deepstop", /* EVENT_deepstop */
+	"ceiling_safetystop", /* EVENT_ceiling_safetystop */
+	"floor", /* EVENT_floor */
+	"divetime", /* EVENT_divetime */
+	"maxdepth", /* EVENT_maxdepth */
+	"olf", /* EVENT_olf */
+	"po2", /* EVENT_po2 */
+	"airtime", /* EVENT_airtime */
+	"rgbm", /* EVENT_rgbm */
+	"heading", /* EVENT_heading */
+	"tissuelevel", /* EVENT_tissuelevel */
+	"gaschange2", /* EVENT_gaschange2 */
+};
+
 static void
 logdbg(const struct parse *p, const char *fmt, ...)
 	__attribute__((format (printf, 2, 3)));
@@ -145,6 +174,23 @@ xstrdup(const struct parse *p, const char *cp)
 	if (NULL == (pp = strdup(cp)))
 		logfatal(p, "strdup");
 	return(pp);
+}
+
+static const char *
+attrq(const struct parse *p, const XML_Char **atts, 
+	const char *type, const char *key)
+{
+	const XML_Char	**attp;
+
+	for (attp = atts; NULL != attp[0]; attp += 2)
+		if (0 == strcmp(attp[0], key)) 
+			return(attp[1]);
+
+	if (NULL != p)
+		logwarnx(p, "sample %s%swithout %s", 
+			NULL != type ? type : "",
+			NULL != type ? " " : "", key);
+	return(NULL);
 }
 
 static void
@@ -264,12 +310,12 @@ parse_open(void *dat, const XML_Char *s, const XML_Char **atts)
 	struct parse	 *p = dat;
 	struct samp	 *samp;
 	struct dive	 *dive, *dp;
-	const XML_Char	**attp;
-	const char	 *date, *time, *num, *er, *dur, *mode;
+	const char	 *date, *time, *num, *er, *dur, *mode, *v;
 	char		 *ep;
 	struct tm	  tm;
 	int		  rc;
 	struct dgroup	 *grp;
+	size_t		  i;
 
 	if (0 == strcmp(s, "divelog")) {
 		/*
@@ -282,29 +328,32 @@ parse_open(void *dat, const XML_Char *s, const XML_Char **atts)
 			logwarnx(p, "recursive divelog");
 			return;
 		}
+
 		p->curlog = calloc(1, sizeof(struct dlog));
 		if (NULL == p->curlog)
 			err(EXIT_FAILURE, NULL);
 
-		/* Grok the optional diver identifier. */
+		if (NULL != (v = attrq(NULL, atts, NULL, "diver"))) {
+			free(p->curlog->ident);
+			p->curlog->ident = xstrdup(p, v);
+		}
+		if (NULL != (v = attrq(NULL, atts, NULL, "vendor"))) {
+			free(p->curlog->vendor);
+			p->curlog->vendor = xstrdup(p, v);
+		}
+		if (NULL != (v = attrq(NULL, atts, NULL, "product"))) {
+			free(p->curlog->product);
+			p->curlog->product = xstrdup(p, v);
+		}
+		if (NULL != (v = attrq(NULL, atts, NULL, "model"))) {
+			free(p->curlog->model);
+			p->curlog->model = xstrdup(p, v);
+		}
+		if (NULL != (v = attrq(NULL, atts, NULL, "program"))) {
+			free(p->curlog->program);
+			p->curlog->program = xstrdup(p, v);
+		}
 
-		for (attp = atts; NULL != *attp; attp += 2)
-			if (0 == strcmp(attp[0], "diver")) {
-				free(p->curlog->ident);
-				p->curlog->ident = xstrdup(p, attp[1]);
-			} else if (0 == strcmp(attp[0], "vendor")) {
-				free(p->curlog->vendor);
-				p->curlog->vendor = xstrdup(p, attp[1]);
-			} else if (0 == strcmp(attp[0], "product")) {
-				free(p->curlog->product);
-				p->curlog->product = xstrdup(p, attp[1]);
-			} else if (0 == strcmp(attp[0], "model")) {
-				free(p->curlog->model);
-				p->curlog->model = xstrdup(p, attp[1]);
-			} else if (0 == strcmp(attp[0], "program")) {
-				free(p->curlog->program);
-				p->curlog->program = xstrdup(p, attp[1]);
-			}
 		TAILQ_INSERT_TAIL(&p->stat->dlogs, p->curlog, entries);
 		logdbg(p, "new divelog");
 	} else if (0 == strcmp(s, "dive")) {
@@ -319,10 +368,10 @@ parse_open(void *dat, const XML_Char *s, const XML_Char **atts)
 			logwarnx(p, "dive within sample");
 			return;
 		} else if (NULL != p->curdive) {
-			logwarnx(p, "recursive dive");
+			logwarnx(p, "nested dive");
 			return;
 		} else if (NULL == p->curlog) {
-			logwarnx(p, "missing divelog");
+			logwarnx(p, "dive not within divelog");
 			return;
 		}
 
@@ -333,20 +382,11 @@ parse_open(void *dat, const XML_Char *s, const XML_Char **atts)
 		TAILQ_INIT(&dive->samps);
 		dive->log = p->curlog;
 
-		date = time = num = dur = mode = NULL;
-
-		for (attp = atts; NULL != *attp; attp += 2) {
-			if (0 == strcmp(attp[0], "number"))
-				num = attp[1];
-			else if (0 == strcmp(attp[0], "duration"))
-				dur = attp[1];
-			else if (0 == strcmp(attp[0], "date"))
-				date = attp[1];
-			else if (0 == strcmp(attp[0], "time"))
-				time = attp[1];
-			else if (0 == strcmp(attp[0], "mode"))
-				mode = attp[1];
-		}
+		num = attrq(NULL, atts, NULL, "number");
+		dur = attrq(NULL, atts, NULL, "duration");
+		date = attrq(NULL, atts, NULL, "date");
+		time = attrq(NULL, atts, NULL, "time");
+		mode = attrq(NULL, atts, NULL, "mode");
 
 		if (NULL != mode) {
 			if (0 == strcmp(mode, "freedive"))
@@ -377,8 +417,6 @@ parse_open(void *dat, const XML_Char *s, const XML_Char **atts)
 			if (NULL != er)
 				logwarnx(p, "dive duration is %s", er);
 		}
-
-		/* Configure date and time. */
 
 		if (NULL != date && NULL != time) {
 			memset(&tm, 0, sizeof(struct tm));
@@ -492,39 +530,37 @@ parse_open(void *dat, const XML_Char *s, const XML_Char **atts)
 		/*
 		 * Add a diving sample.
 		 * This must be connected to the current dive.
+		 * The sample must have a time attribute.
 		 */
+
 		if (NULL == (dive = p->curdive)) { 
 			logwarnx(p, "sample outside dive");
 			return;
 		}
 
-		/* The sample must have a time attribute. */
-
-		for (attp = atts; NULL != attp[0]; attp += 2)
-			if (0 == strcmp(attp[0], "time"))
-				break;
-		if (NULL == attp[0]) {
-			logwarnx(p, "sample without time");
+		if (NULL == (v = attrq(p, atts, NULL, "time")))
 			return;
-		}
 
-		/* Initialise current sample. */
-
-		p->cursamp = samp = 
-			calloc(1, sizeof(struct samp));
+		p->cursamp = samp = calloc(1, sizeof(struct samp));
 		if (NULL == samp)
 			err(EXIT_FAILURE, NULL);
 
-		/* XXX: the size of time_t isn't portable. */
+		/* 
+		 * XXX: the size of time_t isn't portable.
+		 * Also, if we have a bad time, make sure to free up the
+		 * current sample.
+		 */
 
-		samp->time = strtonum(attp[1], 0, LONG_MAX, &er);
-		if (NULL != er)
+		samp->time = strtonum(v, 0, LONG_MAX, &er);
+		if (NULL != er) {
 			logwarnx(p, "sample time is %s", er);
+			free(samp);
+			p->cursamp = NULL;
+			return;
+		}
 
 		TAILQ_INSERT_TAIL(&dive->samps, samp, entries);
 		dive->nsamps++;
-
-		/* Adjust dive extrema. */
 
 		if (samp->time > dive->maxtime)
 			dive->maxtime = samp->time;
@@ -535,25 +571,17 @@ parse_open(void *dat, const XML_Char *s, const XML_Char **atts)
 				dive->datetime +
 				(time_t)samp->time;
 
-		if (verbose > 1)
-			fprintf(stderr, "%s: new sample: %zu, %zu\n", 
-				p->file, dive->num, samp->time);
+		logdbg(p, "new sample: num=%zu, time=%zu",
+			dive->num, samp->time);
 	} else if (0 == strcmp(s, "depth")) {
 		if (NULL == (samp = p->cursamp))
 			return;
-		assert(NULL != p->curdive);
 
-		for (attp = atts; NULL != attp[0]; attp += 2)
-			if (0 == strcmp(attp[0], "value")) 
-				break;
-
-		if (NULL == attp[0]) {
-			logwarnx(p, "sample depth without value");
+		if (NULL == (v = attrq(p, atts, "depth", "value")))
 			return;
-		} 
 
-		samp->depth = strtod(attp[1], &ep);
-		if ( ! (ep == attp[1] || ERANGE == errno)) {
+		samp->depth = strtod(v, &ep);
+		if ( ! (ep == v || ERANGE == errno)) {
 			samp->flags |= SAMP_DEPTH;
 			if (samp->depth > p->curdive->maxdepth)
 				p->curdive->maxdepth = samp->depth;
@@ -565,37 +593,42 @@ parse_open(void *dat, const XML_Char *s, const XML_Char **atts)
 			return;
 		}
 
-		for (attp = atts; NULL != attp[0]; attp += 2)
-			if (0 == strcmp(attp[0], "value")) 
-				break;
+		if (NULL == (v = attrq(p, atts, "rbt", "value")))
+			return;
 
-		if (NULL == attp[0]) {
-			logwarnx(p, "sample rbt without value");
+		samp->rbt = strtonum(v, 0, LONG_MAX, &er);
+		if (NULL == er)
+			samp->flags |= SAMP_RBT;
+		else
+			logwarnx(p, "sample rbt is %s", er);
+	} else if (0 == strcmp(s, "event")) {
+		if (NULL == (samp = p->cursamp)) {
+			logwarnx(p, "sample event outside sample");
 			return;
 		}
 
-		samp->rbt = strtonum(attp[1], 0, LONG_MAX, &er);
-		if (NULL != er)
-			logwarnx(p, "sample rbt is %s", er);
-		else
-			samp->flags |= SAMP_RBT;
+		if (NULL == (v = attrq(p, atts, "event", "type")))
+			return;
+
+		for (i = 0; i < EVENT__MAX; i++)
+			if (0 == strcmp(v, events[i])) {
+				samp->events |= (1U << i);
+				samp->flags |= SAMP_EVENT;
+				break;
+			}
+		if (EVENT__MAX == i)
+			logwarnx(p, "sample event unknown");
 	} else if (0 == strcmp(s, "temp")) {
 		if (NULL == (samp = p->cursamp)) {
 			logwarnx(p, "sample temp outside sample");
 			return;
 		}
 
-		for (attp = atts; NULL != attp[0]; attp += 2)
-			if (0 == strcmp(attp[0], "value")) 
-				break;
-
-		if (NULL == attp[0]) {
-			logwarnx(p, "sample temp without value");
+		if (NULL == (v = attrq(p, atts, "temp", "value")))
 			return;
-		}
 
-		samp->temp = strtod(attp[1], &ep);
-		if ( ! (ep == attp[1] || ERANGE == errno)) {
+		samp->temp = strtod(v, &ep);
+		if ( ! (ep == v || ERANGE == errno)) {
 			samp->flags |= SAMP_TEMP;
 			if (0 == p->curdive->hastemp) {
 				p->curdive->maxtemp = samp->temp;

@@ -31,15 +31,52 @@ enum	group {
 	GROUP_DATE
 };
 
+enum	event {
+	EVENT_none,
+	EVENT_decostop,
+	EVENT_rbt,
+	EVENT_ascent,
+	EVENT_ceiling,
+	EVENT_workload,
+	EVENT_transmitter,
+	EVENT_violation,
+	EVENT_bookmark,
+	EVENT_surface,
+	EVENT_safetystop,
+	EVENT_gaschange,
+	EVENT_safetystop_voluntary,
+	EVENT_safetystop_mandatory,
+	EVENT_deepstop,
+	EVENT_ceiling_safetystop,
+	EVENT_floor,
+	EVENT_divetime,
+	EVENT_maxdepth,
+	EVENT_olf,
+	EVENT_po2,
+	EVENT_airtime,
+	EVENT_rgbm,
+	EVENT_heading,
+	EVENT_tissuelevel,
+	EVENT_gaschange2,
+	EVENT__MAX
+};
+
+/*
+ * A sample within a dive profile.
+ * The "flags" field (which may be zero) dictates which are the
+ * available records within the sample.
+ */
 struct	samp {
 	size_t		  time; /* seconds since start */
 	double		  depth; /* metres */
 	double		  temp; /* celsius */
 	size_t		  rbt; /* seconds */
-	unsigned int	  flags; /* sample contents */
+	unsigned int	  events; /* event bits */
+	unsigned int	  flags; /* bits of 1u << "enum event" */
 #define	SAMP_DEPTH	  0x01
 #define	SAMP_TEMP	  0x02
 #define	SAMP_RBT	  0x04
+#define	SAMP_EVENT	  0x08
 	TAILQ_ENTRY(samp) entries;
 };
 
@@ -87,8 +124,8 @@ struct	dive {
 	char		    *fprint; /* fingerprint or NULL */
 	const struct dgroup *group; /* group identifier */
 	const struct dlog   *log; /* source divelog */
-	TAILQ_ENTRY(dive)    entries;
-	TAILQ_ENTRY(dive)    gentries;
+	TAILQ_ENTRY(dive)    entries; /* in-dive entry */
+	TAILQ_ENTRY(dive)    gentries; /* in-group entry */
 };
 
 struct	divestat {
