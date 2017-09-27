@@ -681,7 +681,7 @@ parse_close(void *dat, const XML_Char *s)
 }
 
 int
-parse(const char *fname, XML_Parser p, 
+divecmd_parse(const char *fname, XML_Parser p, 
 	struct diveq *dq, struct divestat *st)
 {
 	int	 	 fd;
@@ -726,7 +726,7 @@ parse(const char *fname, XML_Parser p,
 }
 
 void
-parse_free(struct diveq *dq, struct divestat *st)
+divecmd_free(struct diveq *dq, struct divestat *st)
 {
 	struct dive	*d;
 	struct dlog	*dl;
@@ -763,7 +763,7 @@ parse_free(struct diveq *dq, struct divestat *st)
 }
 
 void
-parse_init(XML_Parser *p, struct diveq *dq, 
+divecmd_init(XML_Parser *p, struct diveq *dq, 
 	struct divestat *st, enum group group)
 {
 

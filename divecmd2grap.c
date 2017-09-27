@@ -789,7 +789,7 @@ main(int argc, char *argv[])
 	     MODE__MAX != mode))
 		warnx("-a: ignoring flag");
 
-	parse_init(&p, &dq, &st, group);
+	divecmd_init(&p, &dq, &st, group);
 
 	/* 
 	 * Handle all files or stdin.
@@ -797,10 +797,10 @@ main(int argc, char *argv[])
 	 */
 
 	if (0 == argc)
-		rc = parse("-", p, &dq, &st);
+		rc = divecmd_parse("-", p, &dq, &st);
 
 	for (i = 0; i < (size_t)argc; i++)
-		if ( ! (rc = parse(argv[i], p, &dq, &st)))
+		if ( ! (rc = divecmd_parse(argv[i], p, &dq, &st)))
 			break;
 
 #if HAVE_PLEDGE
@@ -828,7 +828,7 @@ main(int argc, char *argv[])
 	} else
 		rc = print_all(mode, &dq, &st, NULL);
 out:
-	parse_free(&dq, &st);
+	divecmd_free(&dq, &st);
 	return(rc ? EXIT_SUCCESS : EXIT_FAILURE);
 usage:
 	fprintf(stderr, "usage: %s "

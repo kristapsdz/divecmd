@@ -140,7 +140,7 @@ struct	divestat {
 
 __BEGIN_DECLS
 
-void	 parse_init(XML_Parser *, struct diveq *, 
+void	 divecmd_init(XML_Parser *, struct diveq *, 
 		struct divestat *, enum group);
 
 /*
@@ -154,9 +154,9 @@ void	 parse_init(XML_Parser *, struct diveq *,
  * dive.
  * This lets them be interleaved nicely.
  */
-int	 parse(const char *, XML_Parser, 
+int	 divecmd_parse(const char *, XML_Parser, 
 		struct diveq *dq, struct divestat *);
-void	 parse_free(struct diveq *, struct divestat *);
+void	 divecmd_free(struct diveq *, struct divestat *);
 
 extern int verbose;
 

@@ -112,13 +112,13 @@ main(int argc, char *argv[])
 	argc -= optind;
 	argv += optind;
 
-	parse_init(&p, &dq, &st, GROUP_DIVER);
+	divecmd_init(&p, &dq, &st, GROUP_DIVER);
 
 	if (0 == argc)
-		rc = parse("-", p, &dq, &st);
+		rc = divecmd_parse("-", p, &dq, &st);
 
 	for (i = 0; i < (size_t)argc; i++)
-		if ( ! (rc = parse(argv[i], p, &dq, &st)))
+		if ( ! (rc = divecmd_parse(argv[i], p, &dq, &st)))
 			break;
 
 #if HAVE_PLEDGE
@@ -137,7 +137,7 @@ main(int argc, char *argv[])
 
 	print_all(&st);
 out:
-	parse_free(&dq, &st);
+	divecmd_free(&dq, &st);
 	return(rc ? EXIT_SUCCESS : EXIT_FAILURE);
 usage:
 	fprintf(stderr, "usage: %s [-av] [file]\n", getprogname());
