@@ -6,60 +6,63 @@
 .\" modify it under the terms of the GNU Lesser General Public
 .\" License as published by the Free Software Foundation; either
 .\" version 2.1 of the License, or (at your option) any later version.
-.\" 
+.\"
 .\" This library is distributed in the hope that it will be useful,
 .\" but WITHOUT ANY WARRANTY; without even the implied warranty of
 .\" MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
 .\" Lesser General Public License for more details.
-.\" 
+.\"
 .\" You should have received a copy of the GNU Lesser General Public
 .\" License along with this library; if not, write to the Free Software
 .\" Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston,
 .\" MA 02110-1301 USA
-.\" 
+.\"
 .Dd $Mdocdate$
 .Dt DIVECMD2DIVECMD 1
 .Os
 .Sh NAME
 .Nm divecmd2divecmd
-.Nd heuristically split or join dives by sample analysis
+.Nd manipulate files produced by divecmd
 .Sh SYNOPSIS
 .Nm divecmd2divecmd
 .Op Fl jsv
-.Op Ar file
+.Op Ar
 .Sh DESCRIPTION
 The
 .Nm
-utility accepts a single dive file produced by
+utility accepts divelog files produced by
 .Xr divecmd 1
-.Pq with a single divelog entry
-and splits apart or joins its dives.
-This is useful for enforcing or undoing
+and manipulates their contents.
+.Pp
+With the
+.Fl s
+and
+.Fl j
+flag,
+.Nm
+splits apart or joins its dives, respectively.
+Splitting is useful for establishing
 .Dq canonical free dive mode ,
 wherein each dive in a sequence has its own dive profile and surface
 time is omitted.
 Many dive computers automatically produce canonical free diving mode,
 for example, the Suunto D6i.
 Others, like the HW OSTC 2C, do not.
+Joining is useful when exporting data into Subsurface, which expects a
+single dive profile.
 .Pp
-Why is splitting dives useful?
-The
-.Xr divecmd2grap 1
-utility makes significant use of canonical free diving mode.
-This utility allows non-canonical dive computers to be recognised.
-Joining dives is useful when exporting canonical mode to utilities that
-expect a single sequence of ascents and descents such as Subsurface.
-.Pp
-For now,
-.Nm
-is only able to split dives into canonical mode with
-.Fl s
-and join them with
-.Fl j .
 If dives already are split,
 .Fl s
 is a noop; same goes with
-.Fl j .
+.Fl j
+and dives already being joined.
+.Pp
+If invoked using neither
+.Fl j
+nor
+.Fl s ,
+the input is replicated on output.
+.Pp
 The only other argument is
 .Fl v ,
 which triggers verbose parsing.
@@ -70,8 +73,7 @@ produces output on standard output compatible with
 .Sh EXIT STATUS
 .Ex -std
 .Sh SEE ALSO
-.Xr divecmd2 1 ,
-.Xr divecmd2grap 1
+.Xr divecmd 1
 .Sh AUTHORS
 The
 .Nm
@@ -79,8 +81,4 @@ utility was written by
 .An Kristaps Dzonsons ,
 .Mt kristaps@bsd.lv .
 .Sh CAVEATS
-Data (e.g., non-temperature and non-depth samples) is ignored when
-making this conversion.
-It's really only meant for free diving modes, for now.
-Also, some data is omitted from the translated XML file, such as the
-make of the dive computer.
+Some data (e.g., vendor events) are ignored during conversion.
