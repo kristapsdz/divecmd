@@ -266,6 +266,7 @@ parse_open(void *dat, const XML_Char *s, const XML_Char **atts)
 	struct dive	 *dive, *dp;
 	const XML_Char	**attp;
 	const char	 *date, *time, *num, *er, *dur, *mode;
+	char		 *ep;
 	struct tm	  tm;
 	int		  rc;
 	struct dgroup	 *grp;
@@ -361,7 +362,6 @@ parse_open(void *dat, const XML_Char *s, const XML_Char **atts)
 		}
 
 		if (NULL != num) {
-			er = NULL;
 			dive->num = strtonum
 				(num, 0, LONG_MAX, &er);
 			if (NULL != er) {
@@ -372,7 +372,6 @@ parse_open(void *dat, const XML_Char *s, const XML_Char **atts)
 		}
 
 		if (NULL != dur) {
-			er = NULL;
 			dive->duration = strtonum
 				(dur, 0, LONG_MAX, &er);
 			if (NULL != er)
@@ -516,8 +515,11 @@ parse_open(void *dat, const XML_Char *s, const XML_Char **atts)
 		if (NULL == samp)
 			err(EXIT_FAILURE, NULL);
 
-		/* XXX: use strtonum. */
-		samp->time = atoi(attp[1]);
+		/* XXX: the size of time_t isn't portable. */
+
+		samp->time = strtonum(attp[1], 0, LONG_MAX, &er);
+		if (NULL != er)
+			logwarnx(p, "sample time is %s", er);
 
 		TAILQ_INSERT_TAIL(&dive->samps, samp, entries);
 		dive->nsamps++;
@@ -537,12 +539,6 @@ parse_open(void *dat, const XML_Char *s, const XML_Char **atts)
 			fprintf(stderr, "%s: new sample: %zu, %zu\n", 
 				p->file, dive->num, samp->time);
 	} else if (0 == strcmp(s, "depth")) {
-		/*
-		 * Add the depth to a current diving sample.
-		 * Obviously the sample must be available.
-		 * XXX: we might have a <depth> outside of the dive, so
-		 * don't print an error.
-		 */
 		if (NULL == (samp = p->cursamp))
 			return;
 		assert(NULL != p->curdive);
@@ -550,51 +546,69 @@ parse_open(void *dat, const XML_Char *s, const XML_Char **atts)
 		for (attp = atts; NULL != attp[0]; attp += 2)
 			if (0 == strcmp(attp[0], "value")) 
 				break;
+
 		if (NULL == attp[0]) {
-			logwarnx(p, "depth without value");
+			logwarnx(p, "sample depth without value");
 			return;
-		}
+		} 
 
-		/* FIXME: use strtonu---whatever. */
-
-		samp->depth = atof(attp[1]);
-		samp->flags |= SAMP_DEPTH;
-
-		/* Adjust extrema. */
-
-		if (samp->depth > p->curdive->maxdepth)
-			p->curdive->maxdepth = samp->depth;
-	} else if (0 == strcmp(s, "temp")) {
-		/*
-		 * Add a temperature to the current sample.
-		 * The sample must be available.
-		 */
+		samp->depth = strtod(attp[1], &ep);
+		if ( ! (ep == attp[1] || ERANGE == errno)) {
+			samp->flags |= SAMP_DEPTH;
+			if (samp->depth > p->curdive->maxdepth)
+				p->curdive->maxdepth = samp->depth;
+		} else
+			logwarnx(p, "sample depth malformed");
+	} else if (0 == strcmp(s, "rbt")) {
 		if (NULL == (samp = p->cursamp)) {
-			logwarnx(p, "temperature outside sample");
+			logwarnx(p, "sample rbt outside sample");
 			return;
 		}
 
 		for (attp = atts; NULL != attp[0]; attp += 2)
 			if (0 == strcmp(attp[0], "value")) 
 				break;
+
 		if (NULL == attp[0]) {
-			logwarnx(p, "temperature without value");
+			logwarnx(p, "sample rbt without value");
 			return;
 		}
 
-		samp->temp = atof(attp[1]);
-		samp->flags |= SAMP_TEMP;
-
-		if (0 == p->curdive->hastemp) {
-			p->curdive->maxtemp = samp->temp;
-			p->curdive->mintemp = samp->temp;
-			p->curdive->hastemp = 1;
-		} else {
-			if (samp->temp > p->curdive->maxtemp)
-				p->curdive->maxtemp = samp->temp;
-			if (samp->temp < p->curdive->mintemp)
-				p->curdive->mintemp = samp->temp;
+		samp->rbt = strtonum(attp[1], 0, LONG_MAX, &er);
+		if (NULL != er)
+			logwarnx(p, "sample rbt is %s", er);
+		else
+			samp->flags |= SAMP_RBT;
+	} else if (0 == strcmp(s, "temp")) {
+		if (NULL == (samp = p->cursamp)) {
+			logwarnx(p, "sample temp outside sample");
+			return;
 		}
+
+		for (attp = atts; NULL != attp[0]; attp += 2)
+			if (0 == strcmp(attp[0], "value")) 
+				break;
+
+		if (NULL == attp[0]) {
+			logwarnx(p, "sample temp without value");
+			return;
+		}
+
+		samp->temp = strtod(attp[1], &ep);
+		if ( ! (ep == attp[1] || ERANGE == errno)) {
+			samp->flags |= SAMP_TEMP;
+			if (0 == p->curdive->hastemp) {
+				p->curdive->maxtemp = samp->temp;
+				p->curdive->mintemp = samp->temp;
+				p->curdive->hastemp = 1;
+			} else {
+				if (samp->temp > p->curdive->maxtemp)
+					p->curdive->maxtemp = samp->temp;
+				if (samp->temp < p->curdive->mintemp)
+					p->curdive->mintemp = samp->temp;
+			}
+		} else
+			logwarnx(p, "sample temp malformed");
 	}
 }
 
@@ -621,6 +635,7 @@ parse_close(void *dat, const XML_Char *s)
 		} else
 			logwarnx(p, "fingerprint not in dive context");
 		free(p->buf);
+		p->buf = NULL;
 		p->bufsz = 0;
 	} else if (0 == strcmp(s, "divelog")) {
 		p->curlog = NULL;
@@ -682,17 +697,15 @@ parse_free(struct diveq *dq, struct divestat *st)
 {
 	struct dive	*d;
 	struct dlog	*dl;
-	struct samp	*samp;
+	struct samp	*s;
 	size_t		 i;
 
 	if (NULL != dq)
-		while ( ! TAILQ_EMPTY(dq)) {
-			d = TAILQ_FIRST(dq);
+		while (NULL != (d = TAILQ_FIRST(dq))) {
 			TAILQ_REMOVE(dq, d, entries);
-			while ( ! TAILQ_EMPTY(&d->samps)) {
-				samp = TAILQ_FIRST(&d->samps);
-				TAILQ_REMOVE(&d->samps, samp, entries);
-				free(samp);
+			while (NULL != (s = TAILQ_FIRST(&d->samps))) {
+				TAILQ_REMOVE(&d->samps, s, entries);
+				free(s);
 			}
 			free(d->fprint);
 			free(d);
@@ -704,8 +717,7 @@ parse_free(struct diveq *dq, struct divestat *st)
 			free(st->groups[i]);
 		}
 		free(st->groups);
-		while ( ! TAILQ_EMPTY(&st->dlogs)) {
-			dl = TAILQ_FIRST(&st->dlogs);
+		while (NULL != (dl = TAILQ_FIRST(&st->dlogs))) {
 			TAILQ_REMOVE(&st->dlogs, dl, entries);
 			free(dl->product);
 			free(dl->vendor);

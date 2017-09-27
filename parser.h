@@ -35,9 +35,11 @@ struct	samp {
 	size_t		  time; /* seconds since start */
 	double		  depth; /* metres */
 	double		  temp; /* celsius */
+	size_t		  rbt; /* seconds */
 	unsigned int	  flags; /* sample contents */
 #define	SAMP_DEPTH	  0x01
 #define	SAMP_TEMP	  0x02
+#define	SAMP_RBT	  0x04
 	TAILQ_ENTRY(samp) entries;
 };
 
