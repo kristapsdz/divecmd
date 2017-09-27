@@ -21,9 +21,9 @@
 #include <err.h>
 #include <errno.h>
 #include <fcntl.h>
+#include <limits.h>
 #include <stdarg.h>
 #include <stdlib.h>
-#include <stdint.h>
 #include <stdio.h>
 #include <string.h>
 #include <time.h>
@@ -41,6 +41,8 @@ struct	parse {
 	struct samp	 *cursamp; /* current sample */
 	struct diveq	 *dives; /* all dives */
 	struct divestat	 *stat; /* statistics */
+	char		 *buf; /* temporary buffer */
+	size_t		  bufsz; /* length of buf */
 };
 
 static void
@@ -126,13 +128,22 @@ logfatal(const struct parse *p, const char *fmt, ...)
 }
 
 static char *
+xstrndup(const struct parse *p, const char *cp, size_t sz)
+{
+	char	*pp;
+
+	if (NULL == (pp = strndup(cp, sz)))
+		logfatal(p, "strndup");
+	return(pp);
+}
+
+static char *
 xstrdup(const struct parse *p, const char *cp)
 {
 	char	*pp;
 
 	if (NULL == (pp = strdup(cp)))
 		logfatal(p, "strdup");
-
 	return(pp);
 }
 
@@ -234,13 +245,27 @@ group_lookup(struct parse *p, struct dive *d, const char *name)
 }
 
 static void
+parse_text(void *dat, const XML_Char *s, int len)
+{
+	struct parse	*p = dat;
+
+	if (0 == len)
+		return;
+	p->buf = realloc(p->buf, p->bufsz + len);
+	if (NULL == p->buf)
+		logfatal(p, "realloc");
+	memcpy(p->buf + p->bufsz, s, len);
+	p->bufsz += len;
+}
+
+static void
 parse_open(void *dat, const XML_Char *s, const XML_Char **atts)
 {
 	struct parse	 *p = dat;
 	struct samp	 *samp;
 	struct dive	 *dive, *dp;
 	const XML_Char	**attp;
-	const char	 *date, *time, *num, *er, *duration;
+	const char	 *date, *time, *num, *er, *dur, *mode;
 	struct tm	  tm;
 	int		  rc;
 	struct dgroup	 *grp;
@@ -307,33 +332,38 @@ parse_open(void *dat, const XML_Char *s, const XML_Char **atts)
 		TAILQ_INIT(&dive->samps);
 		dive->log = p->curlog;
 
-		date = time = num = duration = NULL;
+		date = time = num = dur = mode = NULL;
 
 		for (attp = atts; NULL != *attp; attp += 2) {
-			if (0 == strcmp(attp[0], "number")) {
+			if (0 == strcmp(attp[0], "number"))
 				num = attp[1];
-			} else if (0 == strcmp(attp[0], "duration")) {
-				duration = attp[1];
-			} else if (0 == strcmp(attp[0], "date")) {
+			else if (0 == strcmp(attp[0], "duration"))
+				dur = attp[1];
+			else if (0 == strcmp(attp[0], "date"))
 				date = attp[1];
-			} else if (0 == strcmp(attp[0], "time")) {
+			else if (0 == strcmp(attp[0], "time"))
 				time = attp[1];
-			} else if (0 == strcmp(attp[0], "mode")) {
-				if (0 == strcmp(attp[1], "freedive"))
-					dive->mode = MODE_FREEDIVE;
-				else if (0 == strcmp(attp[1], "opencircuit"))
-					dive->mode = MODE_OC;
-				else if (0 == strcmp(attp[1], "closedcircuit"))
-					dive->mode = MODE_CC;
-				else if (0 == strcmp(attp[1], "gauge"))
-					dive->mode = MODE_GAUGE;
-				else
-					logwarnx(p, "unknown mode");
-			}
+			else if (0 == strcmp(attp[0], "mode"))
+				mode = attp[1];
+		}
+
+		if (NULL != mode) {
+			if (0 == strcmp(mode, "freedive"))
+				dive->mode = MODE_FREEDIVE;
+			else if (0 == strcmp(mode, "opencircuit"))
+				dive->mode = MODE_OC;
+			else if (0 == strcmp(mode, "closedcircuit"))
+				dive->mode = MODE_CC;
+			else if (0 == strcmp(mode, "gauge"))
+				dive->mode = MODE_GAUGE;
+			else
+				logwarnx(p, "dive mode unknown");
 		}
 
 		if (NULL != num) {
-			dive->num = strtonum(num, 0, SIZE_MAX, &er);
+			er = NULL;
+			dive->num = strtonum
+				(num, 0, LONG_MAX, &er);
 			if (NULL != er) {
 				logwarnx(p, "dive number is %s", er);
 				logdbg(p, "new dive: <unnumbered>");
@@ -341,8 +371,10 @@ parse_open(void *dat, const XML_Char *s, const XML_Char **atts)
 				logdbg(p, "new dive: %zu", dive->num);
 		}
 
-		if (NULL != duration) {
-			dive->duration = strtonum(duration, 0, SIZE_MAX, &er);
+		if (NULL != dur) {
+			er = NULL;
+			dive->duration = strtonum
+				(dur, 0, LONG_MAX, &er);
 			if (NULL != er)
 				logwarnx(p, "dive duration is %s", er);
 		}
@@ -448,7 +480,15 @@ parse_open(void *dat, const XML_Char *s, const XML_Char **atts)
 			 */
 			TAILQ_INSERT_TAIL(p->dives, dive, entries);
 		}
-
+	} else if (0 == strcmp(s, "fingerprint")) {
+		/*
+		 * Start recording the fingerprint.
+		 * Don't allow us to be within a nested context.
+		 */
+		if (p->bufsz)
+			logwarnx(p, "nested fingerprint");
+		else
+			XML_SetDefaultHandler(p->p, parse_text);
 	} else if (0 == strcmp(s, "sample")) {
 		/*
 		 * Add a diving sample.
@@ -563,12 +603,33 @@ parse_close(void *dat, const XML_Char *s)
 {
 	struct parse	*p = dat;
 
-	if (0 == strcmp(s, "divelog"))
+	if (0 == strcmp(s, "fingerprint")) {
+		/*
+		 * Set the fingerprint.
+		 * An empty element unsets the fingerprint.
+		 * We must be within a dive context.
+		 */
+
+		XML_SetDefaultHandler(p->p, NULL);
+		if (NULL != p->curdive && p->bufsz) {
+			free(p->curdive->fprint);
+			p->curdive->fprint = 
+				xstrndup(p, p->buf, p->bufsz);
+		} else if (NULL != p->curdive && 0 == p->bufsz) {
+			free(p->curdive->fprint);
+			p->curdive->fprint = NULL;
+		} else
+			logwarnx(p, "fingerprint not in dive context");
+		free(p->buf);
+		p->bufsz = 0;
+	} else if (0 == strcmp(s, "divelog")) {
 		p->curlog = NULL;
-	else if (0 == strcmp(s, "dive"))
+	} else if (0 == strcmp(s, "dive")) {
 		p->curdive = NULL;
-	else if (0 == strcmp(s, "sample"))
+	} else if (0 == strcmp(s, "sample")) {
 		p->cursamp = NULL;
+	}
+
 }
 
 int
@@ -612,6 +673,7 @@ parse(const char *fname, XML_Parser p,
 		warn("%s", fname);
 
 	close(fd);
+	free(pp.buf);
 	return(0 == ssz);
 }
 
@@ -632,6 +694,7 @@ parse_free(struct diveq *dq, struct divestat *st)
 				TAILQ_REMOVE(&d->samps, samp, entries);
 				free(samp);
 			}
+			free(d->fprint);
 			free(d);
 		}
 

@@ -82,6 +82,7 @@ struct	dive {
 	double		     mintemp; /* minimum (coldest) temp */
 	size_t		     maxtime; /* maximum sample time */
 	size_t		     nsamps; /* number of samples */
+	char		    *fprint; /* fingerprint or NULL */
 	const struct dgroup *group; /* group identifier */
 	const struct dlog   *log; /* source divelog */
 	TAILQ_ENTRY(dive)    entries;
