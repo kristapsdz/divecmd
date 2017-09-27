@@ -23,16 +23,16 @@
 	</head>
 	<body>
 		<nav>
-			<a href="https://github.com/kristapsdz/divecmd">github</a>
-			<a href="snapshots/divecmd.tar.gz">source</a>
+			<span>version @VERSION@</span>
+			<a href="https://github.com/kristapsdz/divecmd">github</a>,
+			<a href="snapshots/divecmd.tar.gz">source</a>,
 			<a href="snapshots/">archive</a>
 		</nav>
 		<header>
 			<div>
 				<h1>divecmd</h1>
 				&#8212;
-				<div id="description">download and process dive computer data</div>:
-				<div id="version">@VERSION@</div>
+				<div class="description">download and process dive computer data</div>
 			</div>
 		</header>
 		<article>

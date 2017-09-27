@@ -3,13 +3,10 @@ body, html				{ margin: 0;
 					  font-family: "Alegreya sans", sans-serif;
 					  font-size: 13pt;
 					  font-weight: 300;
-					  line-height: 18pt;
 					  height: 100%; }
 body > header				{ position: relative; 
 					  height: 700px;
-					  margin: 1em 0.5em;
 					  font-weight: 400;
-					  border-radius: 1em;
 					  background-image: 
 						linear-gradient(rgba(0, 0, 0, 0.0), rgba(0, 0, 0, 0.4)), 
 						url('https://res.cloudinary.com/kristapsdz/image/upload/q_auto,f_auto/divelog/article033/DSCN1201.jpg'); 
@@ -27,8 +24,7 @@ h2 span					{ font-weight: 500;
 					  color: #000; }
 .nm					{ font-style: italic; }
 a					{ color: blue; 
-					  text-decoration: none;
-					  border-bottom: thin solid blue; }
+					  text-decoration: none; }
 a.img					{ border-bottom: none; }
 body > header > div			{ position: absolute;
 				  	  left: 50%;
@@ -38,29 +34,32 @@ body > header > div			{ position: absolute;
 					  color: #fff;
 					  transform: translate(-50%, -50%);
 					  -webkit-transform: translate(-50%, -50%); }
-body > header > div > *			{ display: inline-block; 
+body > header h1,
+body > header .description		{ display: inline-block; 
 					  text-shadow: 0 0 1px #000;
 					  font-size: 20pt; }
 body > nav				{ text-align: center;
-					  color: #fff;
+					  color: #aaa;
 					  font-size: 16pt;
-					  padding-top: 12pt;
+					  padding: 2em 0;
 					  font-variant: small-caps; }
-body > nav a				{ color: inherit; 
-					  margin: 0 12pt;
-					  display: inline-block;
-					  border-bottom: thin solid #fff; }
+body > nav span				{ border-right: thin solid #aaa; 
+					  margin-right: 4pt; 
+					  padding-right: 4pt; }
+body > nav a				{ color: #eee; 
+					  display: inline-block; }
+body > nav a:hover			{ color: #fff; }
 blockquote > code			{ display: block; }
 body > article				{ padding: 1em 20%;
-					  margin: 2em 0.5em;
+					  margin: 0.5em;
 					  background-color: #fff;
-					  border-radius: 0.5em; }
+					  border-radius: 0.25em; }
+body > article a			{ text-decoration: underline; }
 body > footer				{ text-align: center;
-					  font-size: smaller;
-					  margin: 1em 0;
-					  color: #3ea9f5; }
-body > footer a				{ color: inherit; 
-					  border-bottom: thin solid #3ea9f5; }
+					  padding: 2em 0;
+					  color: rgba(255, 255, 255, 0.5); }
+body > footer a				{ color: rgba(255, 255, 255, 0.8); }
+body > footer a:hover			{ color: rgba(255, 255, 255, 1.0); }
 section.figures figure > *		{ display: inline-block;
 					  vertical-align: top;
 					  font-size: 13pt;
@@ -95,3 +94,9 @@ section.figures > div 			{ float: left; }
 #divecmd2grap-figures >section 		{ width: 1200%; }
 #divecmd2term-figures >section >div	{ width: 50%; }
 #divecmd2term-figures >section 		{ width: 200%; }
+
+@media only screen and (max-width: 768px), only screen and (max-device-width: 768px) {
+body > header h1,
+body > header .description		{ font-size: 18pt; }
+body > article				{ padding: 1em 2%; }
+}
