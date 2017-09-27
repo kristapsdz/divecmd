@@ -26,6 +26,7 @@
 .Sh SYNOPSIS
 .Nm divecmd2divecmd
 .Op Fl jsv
+.Op Fl o Ar dir
 .Op Ar
 .Sh DESCRIPTION
 The
@@ -63,9 +64,12 @@ nor
 .Fl s ,
 the input is replicated on output.
 .Pp
-The only other argument is
+The only other arguments are
 .Fl v ,
-which triggers verbose parsing.
+which triggers verbose parsing, and
+.Fl o Ar dir ,
+which outputs dive files (one dive per file) into
+.Ar dir .
 .Pp
 .Nm
 produces output on standard output compatible with
