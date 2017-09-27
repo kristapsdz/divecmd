@@ -38,22 +38,27 @@ int verbose = 0;
 
 /*
  * Print the heading for a particular dive.
- * The mode can be NULL.
  */
 static void
-print_dive_open(time_t t, size_t num, const char *mode)
+print_dive_open(time_t t, size_t num, enum mode mode)
 {
 	struct tm	*tm = localtime(&t);
 
 	printf("\t\t<dive number=\"%zu\" "
 		"date=\"%04d-%02d-%02d\" "
 		"time=\"%02d:%02d:%02d\"",
-		num++, tm->tm_year + 1900, 
+		++num, tm->tm_year + 1900, 
 		tm->tm_mon + 1, tm->tm_mday, 
 		tm->tm_hour, tm->tm_min, tm->tm_sec);
 
-	if (NULL != mode)
-		printf(" mode=\"%s\"", mode);
+	if (MODE_FREEDIVE == mode)
+		printf(" mode=\"freedive\"");
+	else if (MODE_GAUGE == mode)
+		printf(" mode=\"gauge\"");
+	else if (MODE_OC == mode)
+		printf(" mode=\"opencircuit\"");
+	else if (MODE_CC == mode)
+		printf(" mode=\"closedcircuit\"");
 
 	puts(">");
 	puts("\t\t\t<samples>");
@@ -119,7 +124,7 @@ print_join(const struct dive *d, time_t *last, time_t first)
  * We then ignore samples until the next dive is >1 metre.
  */
 static void
-print_split(const struct dive *d, size_t *num, const char *mode)
+print_split(const struct dive *d, size_t *num, enum mode mode)
 {
 	time_t	 start;
 	double	 lastdepth = 100.0;
@@ -196,7 +201,6 @@ print_all(enum pmode pmode, const struct dlog *dl,
 {
 	const struct dive *d;
 	size_t		 num = 0;
-	const char	*modestr;
 	time_t		 last, first;
 	enum mode	 mode;
 	
@@ -217,44 +221,28 @@ print_all(enum pmode pmode, const struct dlog *dl,
 
 	if (NULL != dl->ident)
 		printf(" diver=\"%s\"", dl->ident);
+	if (NULL != dl->product)
+		printf(" product=\"%s\"", dl->product);
+	if (NULL != dl->vendor)
+		printf(" vendor=\"%s\"", dl->vendor);
+	if (NULL != dl->model)
+		printf(" model=\"%s\"", dl->model);
 
 	puts(">\n\t<dives>");
 
 	if (PMODE_SPLIT == pmode) {
-		TAILQ_FOREACH(d, dq, entries) {
-			if (MODE_FREEDIVE == d->mode)
-				modestr = "freedive";
-			else if (MODE_GAUGE == d->mode)
-				modestr = "gauge";
-			else if (MODE_OC == d->mode)
-				modestr = "opencircuit";
-			else if (MODE_CC == d->mode)
-				modestr = "closedcircuit";
-			else
-				modestr = NULL;
-			print_split(d, &num, modestr);
-		}
+		TAILQ_FOREACH(d, dq, entries)
+			print_split(d, &num, d->mode);
 	} else {
 		d = TAILQ_FIRST(dq);
 		assert (NULL != d);
 		mode = d->mode;
-		if (MODE_FREEDIVE == d->mode)
-			modestr = "freedive";
-		else if (MODE_GAUGE == d->mode)
-			modestr = "gauge";
-		else if (MODE_OC == d->mode)
-			modestr = "opencircuit";
-		else if (MODE_CC == d->mode)
-			modestr = "closedcircuit";
-		else
-			modestr = NULL;
-		print_dive_open(d->datetime, 1, modestr);
+		print_dive_open(d->datetime, 1, mode);
 		first = d->datetime;
 		last = 0;
 		TAILQ_FOREACH(d, dq, entries) {
 			if (d->mode != mode)
-				warnx("mode mismatch: not "
-					"%s", modestr);
+				warnx("mode mismatch");
 			print_join(d, &last, first);
 		}
 		puts("\t\t\t</samples>");
