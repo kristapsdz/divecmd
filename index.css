@@ -1,8 +1,8 @@
 body, html				{ margin: 0; 
 					  background-color: #002c5b;
 					  font-family: "Alegreya sans", sans-serif;
-					  font-size: 13pt;
-					  font-weight: 300;
+					  font-size: 14pt;
+					  font-weight: 400;
 					  height: 100%; }
 body > header				{ position: relative; 
 					  height: 700px;
@@ -18,7 +18,7 @@ h1					{ font-weight: 500; }
 b, strong, h3, h4			{ font-weight: 500; }
 h2					{ text-align: center; 
 					  color: #444;
-					  margin-top: 2em;
+					  margin-top: 3em;
 					  font-weight: 400; }
 h2 span					{ font-weight: 500; 
 					  color: #000; }
@@ -94,6 +94,10 @@ section.figures > div 			{ float: left; }
 #divecmd2grap-figures >section 		{ width: 1200%; }
 #divecmd2term-figures >section >div	{ width: 50%; }
 #divecmd2term-figures >section 		{ width: 200%; }
+nav[data-sblg-nav] ul			{ margin: 0; 
+					  padding: 0;
+					  list-style-type: none; }
+nav[data-sblg-nav] article		{ color: #666; }
 
 @media only screen and (max-width: 768px), only screen and (max-device-width: 768px) {
 body > header h1,

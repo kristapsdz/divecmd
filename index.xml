@@ -2,11 +2,11 @@
 <html>
 	<head>
 		<meta name="viewport" content="initial-scale=1.0, user-scalable=no" />
-		<meta charset='utf-8' /> 
-		<title>divecmd &#8212; download and process dive computer data</title>
-		<link href="https://maxcdn.bootstrapcdn.com/font-awesome/4.2.0/css/font-awesome.min.css" rel="stylesheet" />
-		<link href="index.css" rel="stylesheet" />
-		<link href="https://fonts.googleapis.com/css?family=Alegreya+Sans:300,300italic,400,500" rel="stylesheet" />
+		<meta charset="utf-8" /> 
+		<title>divecmd | download and process dive computer data</title>
+		<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.2.0/css/font-awesome.min.css" />
+		<link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Alegreya+Sans:400,400italic,500,700" />
+		<link rel="stylesheet" href="index.css" />
 		<script src="slider.js"></script>
 		<script>
 			window.addEventListener('load', function() {
@@ -345,9 +345,23 @@
 				As much as I use <a href="divecmd2grap.1.html">divecmd2grap(1)</a> and friends for my needs, others prefer using
 				tools like <a href="https://subsurface-divelog.org">Subsurface</a> 
 			</p>
+			<h2>
+				Version notes
+			</h2>
+			<nav data-sblg-nav="1" data-sblg-navcontent="1">
+				<section>
+					<header>${sblg-date}: Version ${sblg-titletext}</header>
+					<article>${sblg-aside}</article>
+				</section>
+			</nav>
 		</article>
 		<footer>
-			Copyright &#169; 2017, <a rel="author" href="https://kristaps.bsd.lv">Kristaps Dzonsons</a>
+			<div>
+				Built with <a href="https://kristaps.bsd.lv/sblg">sblg</a> on <a href="https://www.openbsd.org">OpenBSD</a>.
+			</div>
+			<div>
+				Copyright &#169; 2017&#8211;2018, <a rel="author" href="https://github.com/kristapsdz">Kristaps Dzonsons</a>
+			</div>
 		</footer>
 	</body>
 </html>

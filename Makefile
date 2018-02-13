@@ -157,7 +157,8 @@ divecmd.tar.gz.sha512: divecmd.tar.gz
 	sha512 divecmd.tar.gz >$@
 
 index.html: index.xml
-	sed "s!@VERSION@!$(VERSION)!g" index.xml >$@
+	sblg -t index.xml -o- versions.xml | \
+		sed "s!@VERSION@!$(VERSION)!g" >$@
 
 .1.1.html:
 	mandoc -Thtml -Ostyle=mandoc.css $< >$@
