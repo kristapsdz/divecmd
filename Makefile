@@ -4,7 +4,7 @@
 include Makefile.configure
 
 VERSION		 = 0.0.11
-LDADD		+= -ldivecomputer -lm
+LDADD		+= -ldivecomputer
 CFLAGS		+= -DVERSION="\"$(VERSION)\""
 GROFF		?= groff
 
@@ -81,12 +81,6 @@ XMLS		 = daily.xml \
 BUILT		 = screenshot1.png \
 		   screenshot2.png \
 		   slider.js
-COMPAT_OBJS	 = compat_err.o \
-		   compat_progname.o \
-		   compat_reallocarray.o \
-		   compat_strlcat.o \
-		   compat_strlcpy.o \
-		   compat_strtonum.o
 
 all: $(BINS) 
 
@@ -96,23 +90,23 @@ install: all
 	install -m 0755 $(BINS) $(DESTDIR)$(BINDIR)
 	install -m 0444 $(MAN1S) $(DESTDIR)$(MANDIR)/man1
 
-divecmd: $(OBJS) $(COMPAT_OBJS)
-	$(CC) $(CPPFLAGS) -o $@ $(OBJS) $(COMPAT_OBJS) $(LDFLAGS) $(LDADD)
+divecmd: $(OBJS) compats.o
+	$(CC) $(CPPFLAGS) -o $@ $(OBJS) compats.o $(LDFLAGS) $(LDADD)
 
-divecmd2divecmd: divecmd2divecmd.o parser.o $(COMPAT_OBJS)
-	$(CC) $(CPPFLAGS) -o $@ divecmd2divecmd.o parser.o $(COMPAT_OBJS) -lexpat
+divecmd2divecmd: divecmd2divecmd.o parser.o compats.o
+	$(CC) $(CPPFLAGS) -o $@ divecmd2divecmd.o parser.o compats.o -lexpat
 
-divecmd2term: divecmd2term.o parser.o $(COMPAT_OBJS)
-	$(CC) $(CPPFLAGS) -o $@ divecmd2term.o parser.o $(COMPAT_OBJS) -lexpat -lm
+divecmd2term: divecmd2term.o parser.o compats.o
+	$(CC) $(CPPFLAGS) -o $@ divecmd2term.o parser.o compats.o -lexpat -lm
 
-divecmd2grap: divecmd2grap.o parser.o $(COMPAT_OBJS)
-	$(CC) $(CPPFLAGS) -o $@ divecmd2grap.o parser.o $(COMPAT_OBJS) -lexpat
+divecmd2grap: divecmd2grap.o parser.o compats.o
+	$(CC) $(CPPFLAGS) -o $@ divecmd2grap.o parser.o compats.o -lexpat
 
-divecmd2json: divecmd2json.o parser.o $(COMPAT_OBJS)
-	$(CC) $(CPPFLAGS) -o $@ divecmd2json.o parser.o $(COMPAT_OBJS) -lexpat
+divecmd2json: divecmd2json.o parser.o compats.o
+	$(CC) $(CPPFLAGS) -o $@ divecmd2json.o parser.o compats.o -lexpat
 
-divecmd2csv: divecmd2csv.o parser.o $(COMPAT_OBJS)
-	$(CC) $(CPPFLAGS) -o $@ divecmd2csv.o parser.o $(COMPAT_OBJS) -lexpat
+divecmd2csv: divecmd2csv.o parser.o compats.o
+	$(CC) $(CPPFLAGS) -o $@ divecmd2csv.o parser.o compats.o -lexpat
 
 divecmd2pdf: divecmd2pdf.in
 	sed "s!@GROFF@!$(GROFF)!g" divecmd2pdf.in >$@
@@ -122,12 +116,12 @@ divecmd2ps: divecmd2pdf.in
 
 $(OBJS): extern.h config.h
 
-$(COMPAT_OBJS): config.h
+compats.o: config.h
 
 $(BINOBJS): parser.h config.h
 
 clean:
-	rm -f $(OBJS) $(COMPAT_OBJS) $(BINS) $(BINOBJS) $(HTMLS) $(PDFS) $(PNGS)
+	rm -f $(OBJS) compats.o $(BINS) $(BINOBJS) $(HTMLS) $(PDFS) $(PNGS)
 	rm -f divecmd.tar.gz divecmd.tar.gz.sha512
 
 distclean: clean

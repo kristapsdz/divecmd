@@ -15,10 +15,13 @@
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  */
 #include "config.h"
+
 #include <sys/queue.h>
 
 #include <assert.h>
-#include <err.h>
+#if HAVE_ERR
+# include <err.h>
+#endif
 #include <limits.h>
 #include <stdlib.h>
 #include <stdio.h>

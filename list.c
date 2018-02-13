@@ -18,7 +18,11 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston,
  * MA 02110-1301 USA
  */
-#include <err.h>
+#include "config.h"
+
+#if HAVE_ERR
+# include <err.h>
+#endif
 #include <stdlib.h>
 #include <string.h>
 #include <stdio.h>

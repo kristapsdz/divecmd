@@ -24,7 +24,9 @@
 
 #include <assert.h>
 #include <ctype.h>
-#include <err.h>
+#if HAVE_ERR
+# include <err.h>
+#endif
 #include <errno.h>
 #include <fcntl.h>
 #include <limits.h>

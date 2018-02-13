@@ -21,7 +21,9 @@
 #include "config.h"
 
 #include <assert.h>
-#include <err.h>
+#if HAVE_ERR
+# include <err.h>
+#endif
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>

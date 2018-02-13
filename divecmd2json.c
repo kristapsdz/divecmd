@@ -19,7 +19,9 @@
 #include <sys/queue.h>
 
 #include <assert.h>
-#include <err.h>
+#if HAVE_ERR
+# include <err.h>
+#endif
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
