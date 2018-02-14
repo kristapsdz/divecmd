@@ -1,6 +1,6 @@
 /*	$Id$ */
 /*
- * Copyright (c) 2017 Kristaps Dzonsons <kristaps@bsd.lv>
+ * Copyright (c) 2017--2018 Kristaps Dzonsons <kristaps@bsd.lv>
  *
  * Permission to use, copy, modify, and distribute this software for any
  * purpose with or without fee is hereby granted, provided that the above
@@ -50,11 +50,10 @@ file_open(const struct dive *d, const char *out)
 	snprintf(path, sizeof(path), 
 		"%s/dive-%lld.xml", out, d->datetime);
 
-	if (NULL != (f = fopen(path, "w")))
-		return(f);
+	if (NULL == (f = fopen(path, "w")))
+		err(EXIT_FAILURE, "%s", path);
 
-	warn("%s", path);
-	return(NULL);
+	return(f);
 }
 
 /*
@@ -87,16 +86,6 @@ print_dive_open(FILE *f, time_t t, size_t num, enum mode mode)
 
 	divecmd_print_dive_open(f, &dive);
 	divecmd_print_dive_sampleq_open(f);
-}
-
-static void
-print_dive(FILE *f, const struct dive *d)
-{
-
-	divecmd_print_dive_open(f, d);
-	divecmd_print_dive_fingerprint(f, d);
-	divecmd_print_dive_sampleq(f, &d->samps);
-	divecmd_print_dive_close(f);
 }
 
 /*
@@ -177,8 +166,7 @@ again:
 
 		if (0 == dopen) {
 			if (NULL != out) {
-				if (NULL == (f = file_open(d, out)))
-					return;
+				f = file_open(d, out);
 				divecmd_print_open(f, d->log);
 				divecmd_print_diveq_open(f);
 			}
@@ -239,37 +227,140 @@ again:
 	}
 }
 
+static uint32_t 
+jhash(const char *key)
+{
+	size_t 	 i = 0, length = strlen(key);
+	uint32_t hash = 0;
+
+	while (i != length) {
+		hash += key[i++];
+		hash += hash << 10;
+		hash ^= hash >> 6;
+	}
+	hash += hash << 3;
+	hash ^= hash >> 11;
+	hash += hash << 15;
+	return hash;
+}
+
+static int
+stringeq(const char *p1, const char *p2)
+{
+
+	if ((NULL == p1 && NULL != p2) ||
+	    (NULL != p1 && NULL == p2))
+		return(0);
+	if (NULL == p1 && NULL == p2)
+		return(1);
+	return(0 == strcmp(p1, p2));
+}
+
+static int
+dlogeq(const struct dlog *d1, const struct dlog *d2)
+{
+
+	return(stringeq(d1->vendor, d2->vendor) &&
+	       stringeq(d1->product, d2->product) &&
+	       stringeq(d1->model, d2->model));
+}
+
 /*
  * Take a single input file and either split or join it.
  */
 static int
-print_all(enum pmode pmode, const char *out, const struct diveq *dq)
+print_all(enum pmode pmode, 
+	const char *out, const struct diveq *dq)
 {
-	const struct dive *d;
-	size_t		 num = 1;
-	time_t		 last, first;
-	enum mode	 mode;
-	FILE		*f = stdout;
+	const struct dive   *d;
+	const struct dlog   *dl;
+	size_t		     idx, i, num = 1;
+	time_t		     last, first;
+	FILE		    *f = stdout;
+	const struct dive ***htab = NULL;
+	const size_t 	     htabsz = 4096;
 	
 	TAILQ_FOREACH(d, dq, entries)
 		if (0 == d->datetime) {
-			warnx("no dive timestamp"); 
+			warnx("%s:%zu: no <dive> timestamp",
+				d->log->file, d->line);
 			return(0);
 		}
 
+	/*
+	 * If we don't have a mode specified, simply print out each dive
+	 * into its own file (if "out" is specified) or print them back
+	 * to stdout as one big standalone file.
+	 * They must be from the same divelog (i.e., dive computer),
+	 * however, and the fingerprints must also be unique.
+	 */
+
 	if (PMODE_NONE == pmode) {
+		htab = calloc(htabsz, sizeof(struct dive **));
+		if (NULL == htab)
+			err(EXIT_FAILURE, NULL);
 		if (NULL == out) {
 			divecmd_print_open(f, TAILQ_FIRST(dq)->log);
 			divecmd_print_diveq_open(f);
 		}
+		assert(NULL != TAILQ_FIRST(dq));
+		dl = TAILQ_FIRST(dq)->log;
 		TAILQ_FOREACH(d, dq, entries) {
+			if ( ! dlogeq(dl, d->log)) {
+				warnx("%s:%zu: dive has mismatched "
+					"computer (from %s:%zu)",
+					d->log->file, d->line, 
+					dl->file, dl->line);
+				continue;
+			} 
+
+			/* Look up in hashtable. */
+
+			if (NULL == d->fprint) {
+				warnx("%s:%zu: no <fingerprint>",
+					d->log->file, d->line);
+				continue;
+			}
+
+			idx = jhash(d->fprint) % htabsz;
+			if (NULL == htab[idx]) {
+				htab[idx] = calloc
+					(1, sizeof(struct dive *));
+				if (NULL == htab[idx])
+					err(EXIT_FAILURE, NULL);
+			} 
+
+			for (i = 0; NULL != htab[idx][i]; i++)
+				if (0 == strcmp
+				    (htab[idx][i]->fprint, d->fprint))
+					break;
+
+			if (NULL != htab[idx][i]) {
+				warnx("%s:%zu: duplicate dive from "
+					"%s:%zu", d->log->file, 
+					d->line, 
+					htab[idx][i]->log->file,
+					htab[idx][i]->line);
+				continue;
+			} 
+
+			/* Add to hash line. */
+
+			htab[idx] = reallocarray
+				(htab[idx], i + 2, sizeof(struct dive *));
+			if (NULL == htab[idx])
+				err(EXIT_FAILURE, NULL);
+			htab[idx][i] = d;
+			htab[idx][i + 1] = NULL;
+
+			/* Print dive. */
+
 			if (NULL != out) {
-				if (NULL == (f = file_open(d, out)))
-					return(0);
+				f = file_open(d, out);
 				divecmd_print_open(f, d->log);
 				divecmd_print_diveq_open(f);
 			}
-			print_dive(f, d);
+			divecmd_print_dive(f, d);
 			if (NULL != out) {
 				divecmd_print_diveq_close(f);
 				divecmd_print_close(f);
@@ -281,6 +372,9 @@ print_all(enum pmode pmode, const char *out, const struct diveq *dq)
 			divecmd_print_diveq_close(f);
 			divecmd_print_close(f);
 		}
+		for (i = 0; i < htabsz; i++)
+			free(htab[i]);
+		free(htab);
 		return(1);
 	}
 
@@ -297,18 +391,23 @@ print_all(enum pmode pmode, const char *out, const struct diveq *dq)
 		}
 	} else {
 		d = TAILQ_FIRST(dq);
+		assert(NULL != d);
+		dl = d->log;
 		if (NULL != out) 
-			if (NULL == (f = file_open(d, out)))
-				return(0);
-		divecmd_print_open(f, d->log);
+			f = file_open(d, out);
+		divecmd_print_open(f, dl);
 		divecmd_print_diveq_open(f);
-		mode = d->mode;
-		print_dive_open(f, d->datetime, 1, mode);
+		print_dive_open(f, d->datetime, 1, d->mode);
 		first = d->datetime;
 		last = 0;
 		TAILQ_FOREACH(d, dq, entries) {
-			if (d->mode != mode)
-				warnx("mode mismatch");
+			if ( ! dlogeq(dl, d->log)) {
+				warnx("%s:%zu: dive has mismatched "
+					"computer (from %s:%zu)",
+					d->log->file, d->line, 
+					dl->file, dl->line);
+				continue;
+			} 
 			print_join(f, d, &last, first);
 		}
 		print_dive_close(f);
@@ -378,9 +477,7 @@ main(int argc, char *argv[])
 			err(EXIT_FAILURE, "pledge");
 	}
 #endif
-
 	XML_ParserFree(p);
-
 	if ( ! rc)
 		goto out;
 
