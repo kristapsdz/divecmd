@@ -692,7 +692,7 @@ parse_open(void *dat, const XML_Char *s, const XML_Char **atts)
 			else
 				logattr(p, "event", *ap);
 
-		if (NULL == v || NULL == dur) {
+		if (NULL == v) {
 			logerrx(p, "<event> missing attributes");
 			return;
 		}
@@ -707,7 +707,9 @@ parse_open(void *dat, const XML_Char *s, const XML_Char **atts)
 			return;
 		}
 
-		i = strtonum(dur, 0, LONG_MAX, &er);
+		er = NULL;
+		i = NULL == dur ? 0 :
+			strtonum(dur, 0, LONG_MAX, &er);
 		if (NULL != er) {
 			logerrx(p, "malformed <event> duration: %s", er);
 			return;
@@ -861,6 +863,17 @@ parse_close(void *dat, const XML_Char *s)
 
 }
 
+/*
+ * Parse a set of dives, accumulating the dives into "dq" and into the
+ * group dives.
+ * Dives in "dq" are ordered, by default, by date.
+ * If a split is specified, however, they're ordered by relative date
+ * from the first dive of the given group.
+ * So for example, if you have GROUP_DATE and two days, the dives will
+ * be ordered by the relative from the beginning of each day's first
+ * dive.
+ * This lets them be interleaved nicely.
+ */
 int
 divecmd_parse(const char *fname, XML_Parser p, 
 	struct diveq *dq, struct divestat *st)

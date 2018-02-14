@@ -176,21 +176,9 @@ __BEGIN_DECLS
 
 void	 divecmd_init(XML_Parser *, struct diveq *, 
 		struct divestat *, enum group);
-
-/*
- * Parse a set of dives, accumulating the dives into "dq" and into the
- * group dives.
- * Dives in "dq" are ordered, by default, by date.
- * If a split is specified, however, they're ordered by relative date
- * from the first dive of the given group.
- * So for example, if you have GROUP_DATE and two days, the dives will
- * be ordered by the relative from the beginning of each day's first
- * dive.
- * This lets them be interleaved nicely.
- */
+void	 divecmd_free(struct diveq *, struct divestat *);
 int	 divecmd_parse(const char *, XML_Parser, 
 		struct diveq *dq, struct divestat *);
-void	 divecmd_free(struct diveq *, struct divestat *);
 
 void	 divecmd_print_diveq_close(FILE *);
 void	 divecmd_print_diveq_open(FILE *);
