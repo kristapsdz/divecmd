@@ -93,7 +93,7 @@ logwarnx(const struct parse *p, const char *fmt, ...)
 	__attribute__((format (printf, 2, 3)));
 
 static void
-logerrx(const struct parse *p, const char *fmt, ...)
+logerrx(struct parse *p, const char *fmt, ...)
 	__attribute__((format (printf, 2, 3)));
 
 static __dead void
@@ -101,7 +101,7 @@ logfatal(const struct parse *p, const char *fmt, ...)
 	__attribute__((format (printf, 2, 3)));
 
 static void
-logerrx(const struct parse *p, const char *fmt, ...)
+logerrx(struct parse *p, const char *fmt, ...)
 {
 	va_list	 ap;
 
@@ -112,6 +112,7 @@ logerrx(const struct parse *p, const char *fmt, ...)
 	vfprintf(stderr, fmt, ap);
 	va_end(ap);
 	fputc('\n', stderr);
+	XML_StopParser(p->p, 0);
 }
 
 static void
@@ -213,7 +214,7 @@ xstrdup(const struct parse *p, const char *cp)
 }
 
 static void
-logerrp(const struct parse *p)
+logerrp(struct parse *p)
 {
 
 	logerrx(p, "%s", XML_ErrorString(XML_GetErrorCode(p->p)));
