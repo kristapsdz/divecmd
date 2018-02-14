@@ -310,6 +310,7 @@ parse_text(void *dat, const XML_Char *s, int len)
 static void
 parse_open(void *dat, const XML_Char *s, const XML_Char **atts)
 {
+	const XML_Char	**ap;
 	struct parse	 *p = dat;
 	struct samp	 *samp;
 	struct dive	 *dive, *dp;
@@ -336,26 +337,25 @@ parse_open(void *dat, const XML_Char *s, const XML_Char **atts)
 		if (NULL == p->curlog)
 			err(EXIT_FAILURE, NULL);
 
-		if (NULL != (v = attrq(NULL, atts, NULL, "diver"))) {
-			free(p->curlog->ident);
-			p->curlog->ident = xstrdup(p, v);
-		}
-		if (NULL != (v = attrq(NULL, atts, NULL, "vendor"))) {
-			free(p->curlog->vendor);
-			p->curlog->vendor = xstrdup(p, v);
-		}
-		if (NULL != (v = attrq(NULL, atts, NULL, "product"))) {
-			free(p->curlog->product);
-			p->curlog->product = xstrdup(p, v);
-		}
-		if (NULL != (v = attrq(NULL, atts, NULL, "model"))) {
-			free(p->curlog->model);
-			p->curlog->model = xstrdup(p, v);
-		}
-		if (NULL != (v = attrq(NULL, atts, NULL, "program"))) {
-			free(p->curlog->program);
-			p->curlog->program = xstrdup(p, v);
-		}
+		for (ap = atts; NULL != ap[0]; ap += 2)
+			if (0 == strcmp(*ap, "diver")) {
+				free(p->curlog->ident);
+				p->curlog->ident = xstrdup(p, ap[1]);
+			} else if (0 == strcmp(*ap, "vendor")) {
+				free(p->curlog->vendor);
+				p->curlog->vendor = xstrdup(p, ap[1]);
+			} else if (0 == strcmp(*ap, "product")) {
+				free(p->curlog->product);
+				p->curlog->product = xstrdup(p, ap[1]);
+			} else if (0 == strcmp(*ap, "model")) {
+				free(p->curlog->model);
+				p->curlog->model = xstrdup(p, ap[1]);
+			} else if (0 == strcmp(*ap, "program")) {
+				free(p->curlog->program);
+				p->curlog->program = xstrdup(p, ap[1]);
+			} else if (0 != strcmp(*ap, "version"))
+				logwarnx(p, "%s: unknown "
+					"<divelog> attribute", *ap);
 
 		TAILQ_INSERT_TAIL(&p->stat->dlogs, p->curlog, entries);
 		logdbg(p, "new divelog");
@@ -385,11 +385,20 @@ parse_open(void *dat, const XML_Char *s, const XML_Char **atts)
 		TAILQ_INIT(&dive->samps);
 		dive->log = p->curlog;
 
-		num = attrq(NULL, atts, NULL, "number");
-		dur = attrq(NULL, atts, NULL, "duration");
-		date = attrq(NULL, atts, NULL, "date");
-		time = attrq(NULL, atts, NULL, "time");
-		mode = attrq(NULL, atts, NULL, "mode");
+		for (ap = atts; NULL != ap[0]; ap += 2)
+			if (0 == strcmp(*ap, "number")) {
+				num = ap[1];
+			} else if (0 == strcmp(*ap, "duration")) {
+				dur = ap[1];
+			} else if (0 == strcmp(*ap, "date")) {
+				date = ap[1];
+			} else if (0 == strcmp(*ap, "time")) {
+				time = ap[1];
+			} else if (0 == strcmp(*ap, "mode")) {
+				mode = ap[1];
+			} else 
+				logwarnx(p, "%s: unknown "
+					"<dive> attribute", *ap);
 
 		if (NULL != mode) {
 			if (0 == strcmp(mode, "freedive"))
