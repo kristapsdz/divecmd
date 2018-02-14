@@ -48,6 +48,13 @@ struct	parse {
 	size_t		  bufsz; /* length of buf */
 };
 
+static	const char *decos[DECO__MAX] = {
+	"ndl", /* DECO_ndl */
+	"safetystop", /* DECO_safetystop */
+	"decostop", /* DECO_decostop */
+	"deepstop", /* DECO_deepstop */
+};
+
 static	const char *events[EVENT__MAX] = {
 	"none", /* EVENT_none */
 	"decostop", /* EVENT_decostop */
@@ -179,23 +186,6 @@ xstrdup(const struct parse *p, const char *cp)
 	return(pp);
 }
 
-static const char *
-attrq(const struct parse *p, const XML_Char **atts, 
-	const char *type, const char *key)
-{
-	const XML_Char	**attp;
-
-	for (attp = atts; NULL != attp[0]; attp += 2)
-		if (0 == strcmp(attp[0], key)) 
-			return(attp[1]);
-
-	if (NULL != p)
-		logwarnx(p, "sample %s%swithout %s", 
-			NULL != type ? type : "",
-			NULL != type ? " " : "", key);
-	return(NULL);
-}
-
 static void
 logerrp(const struct parse *p)
 {
@@ -320,6 +310,7 @@ parse_open(void *dat, const XML_Char *s, const XML_Char **atts)
 	int		  rc;
 	struct dgroup	 *grp;
 	size_t		  i;
+	unsigned int	  bits;
 
 	if (0 == strcmp(s, "divelog")) {
 		if (NULL != p->curlog) {
@@ -371,18 +362,19 @@ parse_open(void *dat, const XML_Char *s, const XML_Char **atts)
 		TAILQ_INIT(&d->samps);
 		d->log = p->curlog;
 
+		num = dur = date = time = mode = NULL;
 		for (ap = atts; NULL != ap[0]; ap += 2)
-			if (0 == strcmp(*ap, "number")) {
+			if (0 == strcmp(*ap, "number"))
 				num = ap[1];
-			} else if (0 == strcmp(*ap, "duration")) {
+			else if (0 == strcmp(*ap, "duration"))
 				dur = ap[1];
-			} else if (0 == strcmp(*ap, "date")) {
+			else if (0 == strcmp(*ap, "date"))
 				date = ap[1];
-			} else if (0 == strcmp(*ap, "time")) {
+			else if (0 == strcmp(*ap, "time"))
 				time = ap[1];
-			} else if (0 == strcmp(*ap, "mode")) {
+			else if (0 == strcmp(*ap, "mode"))
 				mode = ap[1];
-			} else 
+			else 
 				logwarnx(p, "%s: unknown "
 					"<dive> attribute", *ap);
 
@@ -529,40 +521,37 @@ parse_open(void *dat, const XML_Char *s, const XML_Char **atts)
 		else
 			XML_SetDefaultHandler(p->p, parse_text);
 	} else if (0 == strcmp(s, "sample")) {
-		/*
-		 * Add a diving sample.
-		 * This must be connected to the current dive.
-		 * The sample must have a time attribute.
-		 */
-
 		if (NULL == (d = p->curdive)) { 
 			logwarnx(p, "<sample> not in <dive>");
 			return;
 		}
 
-		if (NULL == (v = attrq(p, atts, NULL, "time")))
+		v = NULL;
+		for (ap = atts; NULL != ap[0]; ap += 2)
+			if (0 == strcmp(*ap, "time"))
+				v = ap[1];
+			else
+				logwarnx(p, "%s: unknown "
+					"<sample> attribute", *ap);
+
+		if (NULL == v) {
+			logwarnx(p, "<sample> missing attributes");
 			return;
+		}
+
+		i = strtonum(v, 0, LONG_MAX, &er);
+		if (NULL != er) {
+			logwarnx(p, "malformed <sample> time: %s", er);
+			return;
+		}
 
 		p->cursamp = samp = calloc(1, sizeof(struct samp));
 		if (NULL == samp)
 			err(EXIT_FAILURE, NULL);
-
-		/* 
-		 * XXX: the size of time_t isn't portable.
-		 * Also, if we have a bad time, make sure to free up the
-		 * current sample.
-		 */
-
-		samp->time = strtonum(v, 0, LONG_MAX, &er);
-		if (NULL != er) {
-			logwarnx(p, "malformed <sample> time: %s", er);
-			free(samp);
-			p->cursamp = NULL;
-			return;
-		}
-
 		TAILQ_INSERT_TAIL(&d->samps, samp, entries);
 		d->nsamps++;
+
+		samp->time = i;
 
 		if (samp->time > d->maxtime)
 			d->maxtime = samp->time;
@@ -579,71 +568,183 @@ parse_open(void *dat, const XML_Char *s, const XML_Char **atts)
 		if (NULL == (samp = p->cursamp))
 			return;
 
-		if (NULL == (v = attrq(p, atts, "depth", "value")))
+		v = NULL;
+		for (ap = atts; NULL != ap[0]; ap += 2)
+			if (0 == strcmp(*ap, "value"))
+				v = ap[1];
+			else
+				logwarnx(p, "%s: unknown "
+					"<depth> attribute", *ap);
+
+		if (NULL == v) {
+			logwarnx(p, "<depth> missing attributes");
 			return;
+		}
 
 		samp->depth = strtod(v, &ep);
-		if ( ! (ep == v || ERANGE == errno)) {
-			samp->flags |= SAMP_DEPTH;
-			if (samp->depth > p->curdive->maxdepth)
-				p->curdive->maxdepth = samp->depth;
-		} else
+		if (ep == v || ERANGE == errno) {
 			logwarnx(p, "malformed <depth> value: %s", v);
+			return;
+		}
+
+		if (samp->depth > p->curdive->maxdepth)
+			p->curdive->maxdepth = samp->depth;
+		samp->flags |= SAMP_DEPTH;
 	} else if (0 == strcmp(s, "rbt")) {
 		if (NULL == (samp = p->cursamp)) {
 			logwarnx(p, "sample rbt outside sample");
 			return;
 		}
 
-		if (NULL == (v = attrq(p, atts, "rbt", "value")))
-			return;
+		v = NULL;
+		for (ap = atts; NULL != ap[0]; ap += 2)
+			if (0 == strcmp(*ap, "value"))
+				v = ap[1];
+			else
+				logwarnx(p, "%s: unknown "
+					"<rbt> attribute", *ap);
 
-		samp->rbt = strtonum(v, 0, LONG_MAX, &er);
-		if (NULL == er)
-			samp->flags |= SAMP_RBT;
-		else
-			logwarnx(p, "malformed <rbt> value: %s", v);
-	} else if (0 == strcmp(s, "event")) {
-		if (NULL == (samp = p->cursamp)) {
-			logwarnx(p, "sample event outside sample");
+		if (NULL == v) {
+			logwarnx(p, "<rbt> missing attributes");
 			return;
 		}
 
-		if (NULL == (v = attrq(p, atts, "event", "type")))
+		samp->rbt = strtonum(v, 0, LONG_MAX, &er);
+		if (NULL != er) {
+			logwarnx(p, "malformed <rbt> value: %s", v);
 			return;
+		}
+		samp->flags |= SAMP_RBT;
+	} else if (0 == strcmp(s, "event")) {
+		if (NULL == (samp = p->cursamp)) {
+			logwarnx(p, "<event> not in <sample>");
+			return;
+		}
 
-		for (i = 0; i < EVENT__MAX; i++)
+		v = dur = NULL;
+		for (ap = atts; NULL != ap[0]; ap += 2)
+			if (0 == strcmp(*ap, "type"))
+				v = ap[1];
+			else if (0 == strcmp(*ap, "duration"))
+				dur = ap[1];
+			else
+				logwarnx(p, "%s: unknown "
+					"<event> attribute", *ap);
+
+		if (NULL == v || NULL == dur) {
+			logwarnx(p, "<event> missing attributes");
+			return;
+		}
+
+		for (bits = 0, i = 0; i < EVENT__MAX; i++)
 			if (0 == strcmp(v, events[i])) {
-				samp->events |= (1U << i);
-				samp->flags |= SAMP_EVENT;
+				bits = (1U << i);
 				break;
 			}
-		if (EVENT__MAX == i)
+		if (EVENT__MAX == i) {
 			logwarnx(p, "malformed <event> type: %s", v);
+			return;
+		}
+
+		i = strtonum(dur, 0, LONG_MAX, &er);
+		if (NULL != er) {
+			logwarnx(p, "malformed <event> duration: %s", er);
+			return;
+		}
+
+		samp->events = reallocarray
+			(samp->events, 
+			 samp->eventsz + 1,
+			 sizeof(struct sampevent));
+		if (NULL == samp->events)
+			err(EXIT_FAILURE, NULL);
+		memset(&samp->events[samp->eventsz], 0,
+			sizeof(struct sampevent));
+		samp->events[samp->eventsz].bits = bits;
+		samp->events[samp->eventsz].duration = i;
+		samp->eventsz++;
+		samp->flags |= SAMP_EVENT;
+	} else if (0 == strcmp(s, "deco")) {
+		if (NULL == (samp = p->cursamp)) {
+			logwarnx(p, "<deco> not in <sample>");
+			return;
+		}
+
+		v = mode = dur = NULL;
+		for (ap = atts; NULL != ap[0]; ap += 2) 
+			if (0 == strcmp(*ap, "depth"))
+				v = ap[1];
+			else if (0 == strcmp(*ap, "type"))
+				mode = ap[1];
+			else if (0 == strcmp(*ap, "duration"))
+				dur = ap[1];
+			else
+				logwarnx(p, "%s: unknown "
+					"<deco> attribute", *ap);
+
+		if (NULL == v || NULL == mode || NULL == dur) {
+			logwarnx(p, "<deco> missing attributes");
+			return;
+		}
+
+		for (samp->deco.type = 0; 
+		     samp->deco.type < DECO__MAX; 
+		     samp->deco.type++)
+			if (0 == strcmp(decos[samp->deco.type], mode))
+				break;
+		if (DECO__MAX == samp->deco.type) {
+			logwarnx(p, "unknown <deco> type: %s", mode);
+			return;
+		}
+
+		samp->deco.depth = strtod(v, &ep);
+		if (ep == v || ERANGE == errno) {
+			logwarnx(p, "malformed <deco> value: %s", v);
+			return;
+		}
+
+		samp->deco.duration = strtonum(dur, 0, LONG_MAX, &er);
+		if (NULL != er) {
+			logwarnx(p, "malformed <deco> duration: %s", dur);
+			return;
+		}
+
+		samp->flags |= SAMP_DECO;
 	} else if (0 == strcmp(s, "temp")) {
 		if (NULL == (samp = p->cursamp)) {
 			logwarnx(p, "<temp> not in <sample>");
 			return;
 		}
 
-		if (NULL == (v = attrq(p, atts, "temp", "value")))
+		v = NULL;
+		for (ap = atts; NULL != ap[0]; ap += 2)
+			if (0 == strcmp(*ap, "value"))
+				v = ap[1];
+			else
+				logwarnx(p, "%s: unknown "
+					"<temp> attribute", *ap);
+		if (NULL == v) {
+			logwarnx(p, "<temp> missing attributes");
 			return;
+		}
 
 		samp->temp = strtod(v, &ep);
-		if ( ! (ep == v || ERANGE == errno)) {
-			samp->flags |= SAMP_TEMP;
-			if (0 == p->curdive->hastemp) {
+		if (ep == v || ERANGE == errno) {
+			logwarnx(p, "malformed <temp> value: %s", v);
+			return;
+		}
+
+		if (0 == p->curdive->hastemp) {
+			p->curdive->maxtemp = samp->temp;
+			p->curdive->mintemp = samp->temp;
+			p->curdive->hastemp = 1;
+		} else {
+			if (samp->temp > p->curdive->maxtemp)
 				p->curdive->maxtemp = samp->temp;
+			if (samp->temp < p->curdive->mintemp)
 				p->curdive->mintemp = samp->temp;
-				p->curdive->hastemp = 1;
-			} else {
-				if (samp->temp > p->curdive->maxtemp)
-					p->curdive->maxtemp = samp->temp;
-				if (samp->temp < p->curdive->mintemp)
-					p->curdive->mintemp = samp->temp;
-			}
-		} else
-			logwarnx(p, "malformed <tmp> value: %s", v);
+		}
+		samp->flags |= SAMP_TEMP;
 	} else if (0 == strcmp(s, "dives")) {
 		if (NULL == p->curlog)
 			logwarnx(p, "<dives> not in <divelog>");
@@ -755,6 +856,7 @@ divecmd_free(struct diveq *dq, struct divestat *st)
 			TAILQ_REMOVE(dq, d, entries);
 			while (NULL != (s = TAILQ_FIRST(&d->samps))) {
 				TAILQ_REMOVE(&d->samps, s, entries);
+				free(s->events);
 				free(s);
 			}
 			free(d->fprint);
@@ -838,7 +940,7 @@ divecmd_print_dive_sampleq(FILE *f, const struct sampq *q)
 void
 divecmd_print_dive_sample(FILE *f, const struct samp *s)
 {
-	size_t	 i;
+	size_t	 i, j;
 
 	fprintf(f, "\t\t\t\t<sample time=\"%zu\">\n", s->time);
 
@@ -851,15 +953,17 @@ divecmd_print_dive_sample(FILE *f, const struct samp *s)
 	if (SAMP_RBT & s->flags)
 		fprintf(f, "\t\t\t\t\t"
 		        "<rbt value=\"%zu\" />\n", s->rbt);
-	if (SAMP_EVENT & s->flags) {
+	for (j = 0; j < s->eventsz; j++)
 		for (i = 0; i < EVENT__MAX; i++) {
-			if ( ! ((1U << i) & s->events))
+			if ( ! ((1U << i) & s->events[j].bits))
 				continue;
 			fprintf(f, "\t\t\t\t\t"
-			           "<event type=\"%s\" />\n", 
-				   events[i]);
+			           "<event type=\"%s\""
+			           " duration=\"%zu\" />\n", 
+				   events[i],
+				   s->events[j].duration);
+			break;
 		}
-	}
 	fputs("\t\t\t\t</sample>\n", f);
 }
 

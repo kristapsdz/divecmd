@@ -61,6 +61,25 @@ enum	event {
 	EVENT__MAX
 };
 
+enum	deco {
+	DECO_ndl,
+	DECO_safetystop,
+	DECO_decostop,
+	DECO_deepstop,
+	DECO__MAX
+};
+
+struct	sampevent {
+	size_t	  	 duration;
+	unsigned int	 bits;
+};
+
+struct	sampdeco {
+	double	  	 depth;
+	enum deco 	 type;
+	size_t	  	 duration;
+};
+
 /*
  * A sample within a dive profile.
  * The "flags" field (which may be zero) dictates which are the
@@ -71,12 +90,15 @@ struct	samp {
 	double		  depth; /* metres */
 	double		  temp; /* celsius */
 	size_t		  rbt; /* seconds */
-	unsigned int	  events; /* event bits */
+	struct sampevent *events;
+	size_t		  eventsz;
 	unsigned int	  flags; /* bits of 1u << "enum event" */
+	struct sampdeco	  deco;
 #define	SAMP_DEPTH	  0x01
 #define	SAMP_TEMP	  0x02
 #define	SAMP_RBT	  0x04
 #define	SAMP_EVENT	  0x08
+#define	SAMP_DECO	  0x10
 	TAILQ_ENTRY(samp) entries;
 };
 
