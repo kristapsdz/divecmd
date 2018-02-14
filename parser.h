@@ -158,6 +158,18 @@ int	 divecmd_parse(const char *, XML_Parser,
 		struct diveq *dq, struct divestat *);
 void	 divecmd_free(struct diveq *, struct divestat *);
 
+void	 divecmd_print_diveq_close(FILE *);
+void	 divecmd_print_diveq_open(FILE *);
+void	 divecmd_print_dive_close(FILE *);
+void	 divecmd_print_dive_fingerprint(FILE *, const struct dive *);
+void	 divecmd_print_dive_open(FILE *, const struct dive *);
+void	 divecmd_print_dive_sampleq(FILE *, const struct sampq *);
+void	 divecmd_print_dive_sampleq_close(FILE *);
+void	 divecmd_print_dive_sampleq_open(FILE *);
+void	 divecmd_print_dive_sample(FILE *, const struct samp *);
+void	 divecmd_print_close(FILE *);
+void	 divecmd_print_open(FILE *, const struct dlog *);
+
 extern int verbose;
 
 __END_DECLS

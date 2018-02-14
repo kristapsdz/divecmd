@@ -778,3 +778,160 @@ divecmd_init(XML_Parser *p, struct diveq *dq,
 	st->group = group;
 	TAILQ_INIT(&st->dlogs);
 }
+
+/*
+ * If not NULL, prints the dive fingerprint.
+ */
+void
+divecmd_print_dive_fingerprint(FILE *f, const struct dive *d)
+{
+
+	if (NULL == d->fprint)
+		return;
+	fprintf(f, "\t\t\t<fingerprint>%s</fingerprint>\n", d->fprint);
+}
+
+void
+divecmd_print_dive_sampleq_close(FILE *f)
+{
+
+	fputs("\t\t\t</samples>\n", f);
+}
+
+void
+divecmd_print_dive_sampleq_open(FILE *f)
+{
+
+	fputs("\t\t\t<samples>\n", f);
+}
+
+void
+divecmd_print_dive_sampleq(FILE *f, const struct sampq *q)
+{
+	const struct samp *s;
+
+	divecmd_print_dive_sampleq_open(f);
+	TAILQ_FOREACH(s, q, entries)
+		divecmd_print_dive_sample(f, s);
+	divecmd_print_dive_sampleq_close(f);
+}
+
+/*
+ * Print the dive sample.
+ * FIXME: print all attributes of the dive!
+ * This only does depth, temperature, rbt, and events.
+ */
+void
+divecmd_print_dive_sample(FILE *f, const struct samp *s)
+{
+	size_t	 i;
+
+	fprintf(f, "\t\t\t\t<sample time=\"%zu\">\n", s->time);
+
+	if (SAMP_DEPTH & s->flags)
+		fprintf(f, "\t\t\t\t\t"
+			"<depth value=\"%g\" />\n", s->depth);
+	if (SAMP_TEMP & s->flags)
+		fprintf(f, "\t\t\t\t\t"
+		        "<temp value=\"%g\" />\n", s->temp);
+	if (SAMP_RBT & s->flags)
+		fprintf(f, "\t\t\t\t\t"
+		        "<rbt value=\"%zu\" />\n", s->rbt);
+	if (SAMP_EVENT & s->flags) {
+		for (i = 0; i < EVENT__MAX; i++) {
+			if ( ! ((1U << i) & s->events))
+				continue;
+			fprintf(f, "\t\t\t\t\t"
+			           "<event type=\"%s\" />\n", 
+				   events[i]);
+		}
+	}
+	fputs("\t\t\t\t</sample>\n", f);
+}
+
+void
+divecmd_print_dive_close(FILE *f)
+{
+
+	fputs("\t\t</dive>\n", f);
+}
+
+void
+divecmd_print_diveq_close(FILE *f)
+{
+
+	fputs("\t</dives>\n", f);
+}
+
+void
+divecmd_print_diveq_open(FILE *f)
+{
+
+	fputs("\t<dives>\n", f);
+}
+
+void
+divecmd_print_close(FILE *f)
+{
+
+	fputs("</divelog>\n", f);
+}
+
+/*
+ * Print the <divelog> opening.
+ * This must be followed by divecmd_print_dlog_close().
+ */
+void
+divecmd_print_open(FILE *f, const struct dlog *dl)
+{
+	fprintf(f, 
+		"<?xml version=\"1.0\" encoding=\"UTF-8\" ?>\n"
+		"<divelog program=\"divecmd2divecmd\" "
+	         "version=\"" VERSION "\"");
+
+	if (NULL != dl->ident)
+		fprintf(f, " diver=\"%s\"", dl->ident);
+	if (NULL != dl->product)
+		fprintf(f, " product=\"%s\"", dl->product);
+	if (NULL != dl->vendor)
+		fprintf(f, " vendor=\"%s\"", dl->vendor);
+	if (NULL != dl->model)
+		fprintf(f, " model=\"%s\"", dl->model);
+
+	fputs(">\n", f);
+}
+
+/*
+ * Only prints number, date, time (datetime), mode.
+ * Must be followed with divecmd_print_dive_close().
+ */
+void
+divecmd_print_dive_open(FILE *f, const struct dive *d)
+{
+	struct tm	*tm;
+
+	fputs("\t\t<dive", f);
+
+	if (d->num)
+		fprintf(f, " number=\"%zu\"", d->num);
+
+	if (d->datetime) {
+		tm = localtime(&d->datetime);
+		fprintf(f, " date=\"%04d-%02d-%02d\""
+		           " time=\"%02d:%02d:%02d\"",
+			tm->tm_year + 1900, 
+			tm->tm_mon + 1, tm->tm_mday, 
+			tm->tm_hour, tm->tm_min, tm->tm_sec);
+	}
+
+	if (MODE_FREEDIVE == d->mode)
+		fprintf(f, " mode=\"freedive\"");
+	else if (MODE_GAUGE == d->mode)
+		fprintf(f, " mode=\"gauge\"");
+	else if (MODE_OC == d->mode)
+		fprintf(f, " mode=\"opencircuit\"");
+	else if (MODE_CC == d->mode)
+		fprintf(f, " mode=\"closedcircuit\"");
+
+	fputs(">\n", f);
+}

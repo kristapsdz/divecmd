@@ -39,47 +39,7 @@ enum	pmode {
 	PMODE_NONE
 };
 
-static	const char *events[EVENT__MAX] = {
-	"none", /* EVENT_none */
-	"decostop", /* EVENT_decostop */
-	"rbt", /* EVENT_rbt */
-	"ascent", /* EVENT_ascent */
-	"ceiling", /* EVENT_ceiling */
-	"workload", /* EVENT_workload */
-	"transmitter", /* EVENT_transmitter */
-	"violation", /* EVENT_violation */
-	"bookmark", /* EVENT_bookmark */
-	"surface", /* EVENT_surface */
-	"safetystop", /* EVENT_safetystop */
-	"gaschange", /* EVENT_gaschange */
-	"safetystop_voluntary", /* EVENT_safetystop_voluntary */
-	"safetystop_mandatory", /* EVENT_safetystop_mandatory */
-	"deepstop", /* EVENT_deepstop */
-	"ceiling_safetystop", /* EVENT_ceiling_safetystop */
-	"floor", /* EVENT_floor */
-	"divetime", /* EVENT_divetime */
-	"maxdepth", /* EVENT_maxdepth */
-	"olf", /* EVENT_olf */
-	"po2", /* EVENT_po2 */
-	"airtime", /* EVENT_airtime */
-	"rgbm", /* EVENT_rgbm */
-	"heading", /* EVENT_heading */
-	"tissuelevel", /* EVENT_tissuelevel */
-	"gaschange2", /* EVENT_gaschange2 */
-};
-
 int verbose = 0;
-
-/*
- * Close a divelog entry.
- * Symmetrised by print_dlog_open().
- */
-static void
-print_dlog_close(FILE *f)
-{
-
-	fputs("\t</dives>\n</divelog>\n", f);
-}
 
 static FILE *
 file_open(const struct dive *d, const char *out)
@@ -98,69 +58,14 @@ file_open(const struct dive *d, const char *out)
 }
 
 /*
- * Open a divelog entry.
- * Prints all information, but overrides the version and program.
- * Symmetrised by print_dlog_close().
- */
-static void
-print_dlog_open(FILE *f, const struct dlog *dl)
-{
-
-	fprintf(f, "<?xml version=\"1.0\" "
-	 	    "encoding=\"UTF-8\" ?>\n"
-	           "<divelog program=\"divecmd2divecmd\" "
-	            "version=\"" VERSION "\"");
-
-	if (NULL != dl->ident)
-		fprintf(f, " diver=\"%s\"", dl->ident);
-	if (NULL != dl->product)
-		fprintf(f, " product=\"%s\"", dl->product);
-	if (NULL != dl->vendor)
-		fprintf(f, " vendor=\"%s\"", dl->vendor);
-	if (NULL != dl->model)
-		fprintf(f, " model=\"%s\"", dl->model);
-
-	fputs(">\n\t<dives>\n", f);
-}
-
-static void
-print_sample(FILE *f, const struct samp *s, size_t t)
-{
-	size_t	 i;
-
-	t = 0 == t ? s->time : t;
-
-	fprintf(f, "\t\t\t\t<sample time=\"%zu\">\n", t);
-	if (SAMP_DEPTH & s->flags)
-		fprintf(f, "\t\t\t\t\t"
-		           "<depth value=\"%g\" />\n", s->depth);
-	if (SAMP_TEMP & s->flags)
-		fprintf(f, "\t\t\t\t\t"
-		           "<temp value=\"%g\" />\n", s->temp);
-	if (SAMP_RBT & s->flags)
-		fprintf(f, "\t\t\t\t\t"
-		           "<rbt value=\"%zu\" />\n", s->rbt);
-	if (SAMP_EVENT & s->flags) {
-		for (i = 0; i < EVENT__MAX; i++) {
-			if ( ! ((1U << i) & s->events))
-				continue;
-			fprintf(f, "\t\t\t\t\t"
-			           "<event type=\"%s\" />\n", 
-				   events[i]);
-		}
-	}
-	fputs("\t\t\t\t</sample>\n", f);
-}
-
-/*
  * See print_dive_open().
  */
 static void
 print_dive_close(FILE *f)
 {
 
-	fputs("\t\t\t</samples>\n"
-	      "\t\t</dive>\n", f);
+	divecmd_print_dive_sampleq_close(f);
+	divecmd_print_dive_close(f);
 }
 
 /*
@@ -173,70 +78,25 @@ print_dive_close(FILE *f)
 static void
 print_dive_open(FILE *f, time_t t, size_t num, enum mode mode)
 {
-	struct tm	*tm = localtime(&t);
+	struct dive	 dive;
 
-	fprintf(f, "\t\t<dive number=\"%zu\" "
-		   "date=\"%04d-%02d-%02d\" "
-		   "time=\"%02d:%02d:%02d\"",
-		   num, tm->tm_year + 1900, 
-		   tm->tm_mon + 1, tm->tm_mday, 
-		   tm->tm_hour, tm->tm_min, tm->tm_sec);
+	memset(&dive, 0, sizeof(struct dive));
+	dive.datetime = t;
+	dive.num = num;
+	dive.mode = mode;
 
-	if (MODE_FREEDIVE == mode)
-		fprintf(f, " mode=\"freedive\"");
-	else if (MODE_GAUGE == mode)
-		fprintf(f, " mode=\"gauge\"");
-	else if (MODE_OC == mode)
-		fprintf(f, " mode=\"opencircuit\"");
-	else if (MODE_CC == mode)
-		fprintf(f, " mode=\"closedcircuit\"");
-
-	fputs(">\n"
-	      "\t\t\t<samples>\n", f);
+	divecmd_print_dive_open(f, &dive);
+	divecmd_print_dive_sampleq_open(f);
 }
 
 static void
 print_dive(FILE *f, const struct dive *d)
 {
-	struct tm	  *tm;
-	const struct samp *s;
 
-	fputs("\t\t<dive", f);
-
-	if (d->num)
-		fprintf(f, " number=\"%zu\"", d->num);
-
-	if (d->datetime) {
-		tm = localtime(&d->datetime);
-		fprintf(f, " date=\"%04d-%02d-%02d\""
-		           " time=\"%02d:%02d:%02d\"",
-			tm->tm_year + 1900, 
-			tm->tm_mon + 1, tm->tm_mday, 
-			tm->tm_hour, tm->tm_min, tm->tm_sec);
-	}
-
-	if (MODE_FREEDIVE == d->mode)
-		fprintf(f, " mode=\"freedive\"");
-	else if (MODE_GAUGE == d->mode)
-		fprintf(f, " mode=\"gauge\"");
-	else if (MODE_OC == d->mode)
-		fprintf(f, " mode=\"opencircuit\"");
-	else if (MODE_CC == d->mode)
-		fprintf(f, " mode=\"closedcircuit\"");
-
-	fputs(">\n", f);
-
-	if (NULL != d->fprint)
-		fprintf(f, "\t\t\t<fingerprint>%s"
-			   "</fingerprint>\n", d->fprint);
-
-	fputs("\t\t\t<samples>\n", f);
-
-	TAILQ_FOREACH(s, &d->samps, entries)
-		print_sample(f, s, 0);
-
-	fputs("\t\t\t</samples>\n"
-	      "\t\t</dive>\n", f);
+	divecmd_print_dive_open(f, d);
+	divecmd_print_dive_fingerprint(f, d);
+	divecmd_print_dive_sampleq(f, &d->samps);
+	divecmd_print_dive_close(f);
 }
 
 /*
@@ -273,7 +133,8 @@ print_join(FILE *f, const struct dive *d, time_t *last, time_t first)
 		memset(&tmp, 0, sizeof(struct samp));
 		tmp.flags |= SAMP_DEPTH;
 		do {
-			print_sample(f, &tmp, *last - first);
+			tmp.time = *last - first;
+			divecmd_print_dive_sample(f, &tmp);
 			*last += span;
 		} while (*last < d->datetime);
 	}
@@ -281,7 +142,9 @@ print_join(FILE *f, const struct dive *d, time_t *last, time_t first)
 	/* Now print the samples. */
 
 	TAILQ_FOREACH(s, &d->samps, entries) {
-		print_sample(f, s, ((s->time + d->datetime) - first));
+		tmp = *s;
+		tmp.time = (s->time + d->datetime) - first;
+		divecmd_print_dive_sample(f, &tmp);
 		*last = s->time + d->datetime;
 	}
 }
@@ -295,11 +158,12 @@ static void
 print_split(const struct dive *d, 
 	const char *out, size_t *num, enum mode mode)
 {
-	time_t	 start;
-	double	 lastdepth = 100.0;
+	time_t		 start;
+	double		 lastdepth = 100.0;
 	const struct samp *s;
-	int	 dopen = 0;
-	FILE	*f = stdout;
+	struct samp	 tmp;
+	int	 	 dopen = 0;
+	FILE		*f = stdout;
 
 	start = d->datetime;
 	s = TAILQ_FIRST(&d->samps);
@@ -315,7 +179,8 @@ again:
 			if (NULL != out) {
 				if (NULL == (f = file_open(d, out)))
 					return;
-				print_dlog_open(f, d->log);
+				divecmd_print_open(f, d->log);
+				divecmd_print_diveq_open(f);
 			}
 			print_dive_open(f, start, (*num)++, mode);
 			dopen = 1;
@@ -323,7 +188,9 @@ again:
 
 		/* Print sample data. */
 
-		print_sample(f, s, ((s->time + d->datetime) - start));
+		tmp = *s;
+		tmp.time = (s->time + d->datetime) - start;
+		divecmd_print_dive_sample(f, &tmp);
 
 		/* Are we still "at depth"? */
 
@@ -338,7 +205,8 @@ again:
 		print_dive_close(f);
 
 		if (NULL != out) {
-			print_dlog_close(f);
+			divecmd_print_diveq_close(f);
+			divecmd_print_close(f);
 			fclose(f);
 			f = stdout;
 		}
@@ -363,7 +231,8 @@ again:
 	if (dopen) {
 		print_dive_close(f);
 		if (NULL != out) {
-			print_dlog_close(f);
+			divecmd_print_diveq_close(f);
+			divecmd_print_close(f);
 			fclose(f);
 			f = stdout;
 		}
@@ -389,39 +258,50 @@ print_all(enum pmode pmode, const char *out, const struct diveq *dq)
 		}
 
 	if (PMODE_NONE == pmode) {
-		if (NULL == out)
-			print_dlog_open(f, TAILQ_FIRST(dq)->log);
+		if (NULL == out) {
+			divecmd_print_open(f, TAILQ_FIRST(dq)->log);
+			divecmd_print_diveq_open(f);
+		}
 		TAILQ_FOREACH(d, dq, entries) {
 			if (NULL != out) {
 				if (NULL == (f = file_open(d, out)))
 					return(0);
-				print_dlog_open(f, d->log);
+				divecmd_print_open(f, d->log);
+				divecmd_print_diveq_open(f);
 			}
 			print_dive(f, d);
 			if (NULL != out) {
-				print_dlog_close(f);
+				divecmd_print_diveq_close(f);
+				divecmd_print_close(f);
 				fclose(f);
 				f = stdout;
 			}
 		}
-		if (NULL == out)
-			print_dlog_close(f);
+		if (NULL == out) {
+			divecmd_print_diveq_close(f);
+			divecmd_print_close(f);
+		}
 		return(1);
 	}
 
 	if (PMODE_SPLIT == pmode) {
-		if (NULL == out)
-			print_dlog_open(f, TAILQ_FIRST(dq)->log);
+		if (NULL == out) {
+			divecmd_print_open(f, TAILQ_FIRST(dq)->log);
+			divecmd_print_diveq_open(f);
+		}
 		TAILQ_FOREACH(d, dq, entries)
 			print_split(d, out, &num, d->mode);
-		if (NULL == out)
-			print_dlog_close(f);
+		if (NULL == out) {
+			divecmd_print_diveq_close(f);
+			divecmd_print_close(f);
+		}
 	} else {
 		d = TAILQ_FIRST(dq);
 		if (NULL != out) 
 			if (NULL == (f = file_open(d, out)))
 				return(0);
-		print_dlog_open(f, d->log);
+		divecmd_print_open(f, d->log);
+		divecmd_print_diveq_open(f);
 		mode = d->mode;
 		print_dive_open(f, d->datetime, 1, mode);
 		first = d->datetime;
@@ -432,7 +312,8 @@ print_all(enum pmode pmode, const char *out, const struct diveq *dq)
 			print_join(f, d, &last, first);
 		}
 		print_dive_close(f);
-		print_dlog_close(f);
+		divecmd_print_diveq_close(f);
+		divecmd_print_close(f);
 		if (NULL != out) {
 			fclose(f);
 			f = stdout;
