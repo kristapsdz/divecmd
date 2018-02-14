@@ -121,6 +121,8 @@ struct	dgroup {
  * This is parsed from the <divelog> element.
  */
 struct	dlog {
+	char		 *file; /* file or <stdin> */
+	size_t		  line; /* parse line */
 	char		 *ident; /* diver or NULL */
 	char		 *program; /* program or NULL */
 	char		 *vendor; /* vendor or NULL */
@@ -139,6 +141,7 @@ struct	divegas {
 };
 
 struct	dive {
+	size_t		     line; /* parse line */
 	time_t		     datetime; /* time or zero */
 	size_t		     num; /* number or zero */
 	size_t		     duration; /* duration or zero */

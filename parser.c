@@ -340,8 +340,9 @@ parse_open(void *dat, const XML_Char *s, const XML_Char **atts)
 			logerrx(p, "nested <divelog>");
 			return;
 		}
-
 		p->curlog = xcalloc(p, 1, sizeof(struct dlog));
+		p->curlog->file = xstrdup(p, p->file);
+		p->curlog->line = XML_GetCurrentLineNumber(p->p);
 		for (ap = atts; NULL != ap[0]; ap += 2)
 			if (0 == strcmp(*ap, "diver")) {
 				free(p->curlog->ident);
@@ -376,6 +377,7 @@ parse_open(void *dat, const XML_Char *s, const XML_Char **atts)
 		}
 
 		p->curdive = d = xcalloc(p, 1, sizeof(struct dive));
+		p->curdive->line = XML_GetCurrentLineNumber(p->p);
 		TAILQ_INIT(&d->samps);
 		d->log = p->curlog;
 
@@ -933,6 +935,7 @@ divecmd_free(struct diveq *dq, struct divestat *st)
 		free(st->groups);
 		while (NULL != (dl = TAILQ_FIRST(&st->dlogs))) {
 			TAILQ_REMOVE(&st->dlogs, dl, entries);
+			free(dl->file);
 			free(dl->product);
 			free(dl->vendor);
 			free(dl->model);
