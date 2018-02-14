@@ -313,7 +313,7 @@ parse_open(void *dat, const XML_Char *s, const XML_Char **atts)
 	const XML_Char	**ap;
 	struct parse	 *p = dat;
 	struct samp	 *samp;
-	struct dive	 *dive, *dp;
+	struct dive	 *d, *dp;
 	const char	 *date, *time, *num, *er, *dur, *mode, *v;
 	char		 *ep;
 	struct tm	  tm;
@@ -322,14 +322,8 @@ parse_open(void *dat, const XML_Char *s, const XML_Char **atts)
 	size_t		  i;
 
 	if (0 == strcmp(s, "divelog")) {
-		/*
-		 * Top-level node of a dive.
-		 * This contains (optional) information pertaining to
-		 * the dive computer that recorded the dives.
-		 */
-
 		if (NULL != p->curlog) {
-			logwarnx(p, "recursive divelog");
+			logwarnx(p, "nested <divelog>");
 			return;
 		}
 
@@ -360,30 +354,22 @@ parse_open(void *dat, const XML_Char *s, const XML_Char **atts)
 		TAILQ_INSERT_TAIL(&p->stat->dlogs, p->curlog, entries);
 		logdbg(p, "new divelog");
 	} else if (0 == strcmp(s, "dive")) {
-		/*
-		 * We're encountering a new dive.
-		 * Allocate it and zero all values.
-		 * Then walk through the attributes to grab everything
-		 * that's important to us.
-		 */
-
 		if (NULL != p->cursamp) {
-			logwarnx(p, "dive within sample");
+			logwarnx(p, "<dive> within <sample>");
 			return;
 		} else if (NULL != p->curdive) {
-			logwarnx(p, "nested dive");
+			logwarnx(p, "nested <dive>");
 			return;
 		} else if (NULL == p->curlog) {
-			logwarnx(p, "dive not within divelog");
+			logwarnx(p, "<dive> not in <divelog>");
 			return;
 		}
 
-		p->curdive = dive = 
-			calloc(1, sizeof(struct dive));
-		if (NULL == dive)
+		p->curdive = d = calloc(1, sizeof(struct dive));
+		if (NULL == d)
 			err(EXIT_FAILURE, NULL);
-		TAILQ_INIT(&dive->samps);
-		dive->log = p->curlog;
+		TAILQ_INIT(&d->samps);
+		d->log = p->curlog;
 
 		for (ap = atts; NULL != ap[0]; ap += 2)
 			if (0 == strcmp(*ap, "number")) {
@@ -402,42 +388,42 @@ parse_open(void *dat, const XML_Char *s, const XML_Char **atts)
 
 		if (NULL != mode) {
 			if (0 == strcmp(mode, "freedive"))
-				dive->mode = MODE_FREEDIVE;
+				d->mode = MODE_FREEDIVE;
 			else if (0 == strcmp(mode, "opencircuit"))
-				dive->mode = MODE_OC;
+				d->mode = MODE_OC;
 			else if (0 == strcmp(mode, "closedcircuit"))
-				dive->mode = MODE_CC;
+				d->mode = MODE_CC;
 			else if (0 == strcmp(mode, "gauge"))
-				dive->mode = MODE_GAUGE;
+				d->mode = MODE_GAUGE;
 			else
-				logwarnx(p, "dive mode unknown");
+				logwarnx(p, "%s: unknown "
+					"<dive> mode", mode);
 		}
 
 		if (NULL != num) {
-			dive->num = strtonum
-				(num, 0, LONG_MAX, &er);
+			d->num = strtonum(num, 0, LONG_MAX, &er);
 			if (NULL != er) {
-				logwarnx(p, "dive number is %s", er);
+				logwarnx(p, "malformed "
+					"<dive> number: %s", er);
 				logdbg(p, "new dive: <unnumbered>");
 			} else
-				logdbg(p, "new dive: %zu", dive->num);
+				logdbg(p, "new dive: %zu", d->num);
 		}
 
 		if (NULL != dur) {
-			dive->duration = strtonum
-				(dur, 0, LONG_MAX, &er);
+			d->duration = strtonum(dur, 0, LONG_MAX, &er);
 			if (NULL != er)
-				logwarnx(p, "dive duration is %s", er);
+				logwarnx(p, "dive duration: %s", er);
 		}
 
 		if (NULL != date && NULL != time) {
 			memset(&tm, 0, sizeof(struct tm));
-
 			rc = sscanf(date, "%d-%d-%d", 
 				&tm.tm_year, &tm.tm_mon, &tm.tm_mday);
 			if (3 != rc) {
-				logwarnx(p, "malformed date");
-				TAILQ_INSERT_TAIL(p->dives, dive, entries);
+				logwarnx(p, "malformed "
+					"<dive> date: %s", date);
+				TAILQ_INSERT_TAIL(p->dives, d, entries);
 				return;
 			}
 			tm.tm_year -= 1900;
@@ -446,29 +432,31 @@ parse_open(void *dat, const XML_Char *s, const XML_Char **atts)
 			rc = sscanf(time, "%d:%d:%d", 
 				&tm.tm_hour, &tm.tm_min, &tm.tm_sec);
 			if (3 != rc) {
-				logwarnx(p, "malformed time");
-				TAILQ_INSERT_TAIL(p->dives, dive, entries);
+				logwarnx(p, "malformed "
+					"<dive> time: %s", time);
+				TAILQ_INSERT_TAIL(p->dives, d, entries);
 				return;
 			}
 			tm.tm_isdst = -1;
 
 			/* Convert raw values into epoch. */
 
-			if (-1 == (dive->datetime = mktime(&tm))) {
-				logwarnx(p, "malformed date-time");
-				dive->datetime = 0;
-				TAILQ_INSERT_TAIL(p->dives, dive, entries);
+			if (-1 == (d->datetime = mktime(&tm))) {
+				logwarnx(p, "malformed <dive> "
+					"datetime: %s-%s", date, time);
+				d->datetime = 0;
+				TAILQ_INSERT_TAIL(p->dives, d, entries);
 				return;
 			}
 
 			/* Check against our global extrema. */
 
 			if (0 == p->stat->timestamp_min ||
-			    dive->datetime < p->stat->timestamp_min)
-				p->stat->timestamp_min = dive->datetime;
+			    d->datetime < p->stat->timestamp_min)
+				p->stat->timestamp_min = d->datetime;
 			if (0 == p->stat->timestamp_max ||
-			    dive->datetime > p->stat->timestamp_max)
-				p->stat->timestamp_max = dive->datetime;
+			    d->datetime > p->stat->timestamp_max)
+				p->stat->timestamp_max = d->datetime;
 		} 
 
 		/*
@@ -479,28 +467,30 @@ parse_open(void *dat, const XML_Char *s, const XML_Char **atts)
 
 		if (GROUP_DATE == p->stat->group) {
 			if (NULL == date) {
-				logwarnx(p, "group dive without date");
-				grp = group_lookup(p, dive, "");
+				logwarnx(p, "group "
+					"<dive> without date");
+				grp = group_lookup(p, d, "");
 			} else
-				grp = group_lookup(p, dive, date);
+				grp = group_lookup(p, d, date);
 		} else if (GROUP_DIVER == p->stat->group) {
-			if (NULL == dive->log->ident) {
-				logwarnx(p, "group dive without diver");
-				grp = group_lookup(p, dive, "");
+			if (NULL == d->log->ident) {
+				logwarnx(p, "group "
+					"<dive> without diver");
+				grp = group_lookup(p, d, "");
 			} else
 				grp = group_lookup(p, 
-					dive, dive->log->ident);
+					d, d->log->ident);
 		} else {
 			if (0 == p->stat->groupsz && verbose)
 				logdbg(p, "new default group");
 			grp = (0 == p->stat->groupsz) ?
-				group_alloc(p, dive, NULL) :
-				group_add(p, 0, dive);
+				group_alloc(p, d, NULL) :
+				group_add(p, 0, d);
 		}
 
 		if (NULL != date && 
-		    (0 == grp->mintime || dive->datetime < grp->mintime))
-			grp->mintime = dive->datetime;
+		    (0 == grp->mintime || d->datetime < grp->mintime))
+			grp->mintime = d->datetime;
 
 		/* 
 		 * Now register the dive with the dive queue.
@@ -517,17 +507,17 @@ parse_open(void *dat, const XML_Char *s, const XML_Char **atts)
 			TAILQ_FOREACH(dp, p->dives, entries)
 				if (dp->datetime - dp->group->mintime &&
 				    dp->datetime - dp->group->mintime > 
-				    dive->datetime - dive->group->mintime)
+				    d->datetime - d->group->mintime)
 					break;
 			if (NULL == dp)
-				TAILQ_INSERT_TAIL(p->dives, dive, entries);
+				TAILQ_INSERT_TAIL(p->dives, d, entries);
 			else
-				TAILQ_INSERT_BEFORE(dp, dive, entries);
+				TAILQ_INSERT_BEFORE(dp, d, entries);
 		} else {
 			/*
 			 * Un-timedated dive goes wherever.
 			 */
-			TAILQ_INSERT_TAIL(p->dives, dive, entries);
+			TAILQ_INSERT_TAIL(p->dives, d, entries);
 		}
 	} else if (0 == strcmp(s, "fingerprint")) {
 		/*
@@ -535,7 +525,7 @@ parse_open(void *dat, const XML_Char *s, const XML_Char **atts)
 		 * Don't allow us to be within a nested context.
 		 */
 		if (p->bufsz)
-			logwarnx(p, "nested fingerprint");
+			logwarnx(p, "nested <fingerprint>");
 		else
 			XML_SetDefaultHandler(p->p, parse_text);
 	} else if (0 == strcmp(s, "sample")) {
@@ -545,8 +535,8 @@ parse_open(void *dat, const XML_Char *s, const XML_Char **atts)
 		 * The sample must have a time attribute.
 		 */
 
-		if (NULL == (dive = p->curdive)) { 
-			logwarnx(p, "sample outside dive");
+		if (NULL == (d = p->curdive)) { 
+			logwarnx(p, "<sample> not in <dive>");
 			return;
 		}
 
@@ -565,26 +555,26 @@ parse_open(void *dat, const XML_Char *s, const XML_Char **atts)
 
 		samp->time = strtonum(v, 0, LONG_MAX, &er);
 		if (NULL != er) {
-			logwarnx(p, "sample time is %s", er);
+			logwarnx(p, "malformed <sample> time: %s", er);
 			free(samp);
 			p->cursamp = NULL;
 			return;
 		}
 
-		TAILQ_INSERT_TAIL(&dive->samps, samp, entries);
-		dive->nsamps++;
+		TAILQ_INSERT_TAIL(&d->samps, samp, entries);
+		d->nsamps++;
 
-		if (samp->time > dive->maxtime)
-			dive->maxtime = samp->time;
-		if (dive->datetime &&
-		    dive->datetime + (time_t)samp->time > 
+		if (samp->time > d->maxtime)
+			d->maxtime = samp->time;
+		if (d->datetime &&
+		    d->datetime + (time_t)samp->time > 
 		    p->stat->timestamp_max)
 			p->stat->timestamp_max =
-				dive->datetime +
+				d->datetime +
 				(time_t)samp->time;
 
 		logdbg(p, "new sample: num=%zu, time=%zu",
-			dive->num, samp->time);
+			d->num, samp->time);
 	} else if (0 == strcmp(s, "depth")) {
 		if (NULL == (samp = p->cursamp))
 			return;
@@ -598,7 +588,7 @@ parse_open(void *dat, const XML_Char *s, const XML_Char **atts)
 			if (samp->depth > p->curdive->maxdepth)
 				p->curdive->maxdepth = samp->depth;
 		} else
-			logwarnx(p, "sample depth malformed");
+			logwarnx(p, "malformed <depth> value: %s", v);
 	} else if (0 == strcmp(s, "rbt")) {
 		if (NULL == (samp = p->cursamp)) {
 			logwarnx(p, "sample rbt outside sample");
@@ -612,7 +602,7 @@ parse_open(void *dat, const XML_Char *s, const XML_Char **atts)
 		if (NULL == er)
 			samp->flags |= SAMP_RBT;
 		else
-			logwarnx(p, "sample rbt is %s", er);
+			logwarnx(p, "malformed <rbt> value: %s", v);
 	} else if (0 == strcmp(s, "event")) {
 		if (NULL == (samp = p->cursamp)) {
 			logwarnx(p, "sample event outside sample");
@@ -629,10 +619,10 @@ parse_open(void *dat, const XML_Char *s, const XML_Char **atts)
 				break;
 			}
 		if (EVENT__MAX == i)
-			logwarnx(p, "sample event unknown");
+			logwarnx(p, "malformed <event> type: %s", v);
 	} else if (0 == strcmp(s, "temp")) {
 		if (NULL == (samp = p->cursamp)) {
-			logwarnx(p, "sample temp outside sample");
+			logwarnx(p, "<temp> not in <sample>");
 			return;
 		}
 
@@ -653,7 +643,22 @@ parse_open(void *dat, const XML_Char *s, const XML_Char **atts)
 					p->curdive->mintemp = samp->temp;
 			}
 		} else
-			logwarnx(p, "sample temp malformed");
+			logwarnx(p, "malformed <tmp> value: %s", v);
+	} else if (0 == strcmp(s, "dives")) {
+		if (NULL == p->curlog)
+			logwarnx(p, "<dives> not in <divelog>");
+	} else if (0 == strcmp(s, "samples")) {
+		if (NULL == p->curdive)
+			logwarnx(p, "<samples> not in <dive>");
+		if (NULL != p->cursamp)
+			logwarnx(p, "<samples> in <sample>");
+	} else {
+		if (NULL != p->cursamp)
+			logwarnx(p, "%s: unknown <sample> child", s);
+		else if (NULL != p->curdive)
+			logwarnx(p, "%s: unknown <dive> child", s);
+		else if (NULL != p->curlog)
+			logwarnx(p, "%s: unknown <divelog> child", s);
 	}
 }
 
