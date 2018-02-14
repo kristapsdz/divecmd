@@ -1,6 +1,6 @@
 /*	$Id$ */
 /*
- * Copyright (c) 2016--2017 Kristaps Dzonsons <kristaps@bsd.lv>,
+ * Copyright (c) 2016--2018 Kristaps Dzonsons <kristaps@bsd.lv>
  *
  * Permission to use, copy, modify, and distribute this software for any
  * purpose with or without fee is hereby granted, provided that the above
@@ -131,12 +131,21 @@ struct	dlog {
 
 TAILQ_HEAD(dlogq, dlog);
 
+struct	divegas {
+	double		 o2; /* O2 or 0 if unset */
+	double		 n2; /* N2 or 0 if unset */
+	double		 he; /* He or 0 if unset */
+	size_t		 num;
+};
+
 struct	dive {
 	time_t		     datetime; /* time or zero */
 	size_t		     num; /* number or zero */
 	size_t		     duration; /* duration or zero */
 	enum mode	     mode; /* dive mode */
 	struct sampq	     samps; /* samples */
+	struct divegas	    *gas;
+	size_t		     gassz;
 	double		     maxdepth; /* maximum sample depth */
 	int		     hastemp; /* do we have temps? */
 	double		     maxtemp; /* maximum (hottest) temp */
@@ -182,6 +191,7 @@ void	 divecmd_free(struct diveq *, struct divestat *);
 
 void	 divecmd_print_diveq_close(FILE *);
 void	 divecmd_print_diveq_open(FILE *);
+void	 divecmd_print_dive(FILE *, const struct dive *);
 void	 divecmd_print_dive_close(FILE *);
 void	 divecmd_print_dive_fingerprint(FILE *, const struct dive *);
 void	 divecmd_print_dive_open(FILE *, const struct dive *);

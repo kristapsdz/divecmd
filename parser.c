@@ -1,6 +1,6 @@
 /*	$Id$ */
 /*
- * Copyright (c) 2016--2017 Kristaps Dzonsons <kristaps@bsd.lv>,
+ * Copyright (c) 2016--2018 Kristaps Dzonsons <kristaps@bsd.lv>
  *
  * Permission to use, copy, modify, and distribute this software for any
  * purpose with or without fee is hereby granted, provided that the above
@@ -115,6 +115,13 @@ logerrx(const struct parse *p, const char *fmt, ...)
 }
 
 static void
+logattr(const struct parse *p, const char *tag, const char *attr)
+{
+
+	logwarnx(p, "%s: unknown <%s> attribute", attr, tag);
+}
+
+static void
 logwarnx(const struct parse *p, const char *fmt, ...)
 {
 	va_list	 ap;
@@ -173,6 +180,25 @@ xstrndup(const struct parse *p, const char *cp, size_t sz)
 
 	if (NULL == (pp = strndup(cp, sz)))
 		logfatal(p, "strndup");
+	return(pp);
+}
+
+static void *
+xreallocarray(const struct parse *p, void *ptr, size_t nm, size_t sz)
+{
+
+	if (NULL == (ptr = reallocarray(ptr, nm, sz)))
+		logfatal(p, "reallocarray");
+	return(ptr);
+}
+
+static void *
+xcalloc(const struct parse *p, size_t nm, size_t sz)
+{
+	char	*pp;
+
+	if (NULL == (pp = calloc(nm, sz)))
+		logfatal(p, "calloc");
 	return(pp);
 }
 
@@ -240,17 +266,12 @@ group_alloc(struct parse *p, struct dive *d, const char *date)
 	size_t	 i = p->stat->groupsz;
 
 	p->stat->groupsz++;
-	p->stat->groups = reallocarray
-		(p->stat->groups, 
+	p->stat->groups = xreallocarray
+		(p, p->stat->groups, 
 		 p->stat->groupsz, 
 		 sizeof(struct dgroup *));
-	if (NULL == p->stat->groups)
-		err(EXIT_FAILURE, NULL);
-
-	p->stat->groups[i] = calloc
-		(1, sizeof(struct dgroup));
-	if (NULL == p->stat->groups[i])
-		err(EXIT_FAILURE, NULL);
+	p->stat->groups[i] = xcalloc
+		(p, 1, sizeof(struct dgroup));
 
 	/* Name our group for lookup, if applicable. */
 
@@ -304,7 +325,8 @@ parse_open(void *dat, const XML_Char *s, const XML_Char **atts)
 	struct parse	 *p = dat;
 	struct samp	 *samp;
 	struct dive	 *d, *dp;
-	const char	 *date, *time, *num, *er, *dur, *mode, *v;
+	const char	 *date, *time, *num, *er, *dur, *mode, *v,
+	       	  	 *mixes[3];
 	char		 *ep;
 	struct tm	  tm;
 	int		  rc;
@@ -314,14 +336,11 @@ parse_open(void *dat, const XML_Char *s, const XML_Char **atts)
 
 	if (0 == strcmp(s, "divelog")) {
 		if (NULL != p->curlog) {
-			logwarnx(p, "nested <divelog>");
+			logerrx(p, "nested <divelog>");
 			return;
 		}
 
-		p->curlog = calloc(1, sizeof(struct dlog));
-		if (NULL == p->curlog)
-			err(EXIT_FAILURE, NULL);
-
+		p->curlog = xcalloc(p, 1, sizeof(struct dlog));
 		for (ap = atts; NULL != ap[0]; ap += 2)
 			if (0 == strcmp(*ap, "diver")) {
 				free(p->curlog->ident);
@@ -339,26 +358,23 @@ parse_open(void *dat, const XML_Char *s, const XML_Char **atts)
 				free(p->curlog->program);
 				p->curlog->program = xstrdup(p, ap[1]);
 			} else if (0 != strcmp(*ap, "version"))
-				logwarnx(p, "%s: unknown "
-					"<divelog> attribute", *ap);
+				logattr(p, "divelog", *ap);
 
 		TAILQ_INSERT_TAIL(&p->stat->dlogs, p->curlog, entries);
 		logdbg(p, "new divelog");
 	} else if (0 == strcmp(s, "dive")) {
 		if (NULL != p->cursamp) {
-			logwarnx(p, "<dive> within <sample>");
+			logerrx(p, "<dive> within <sample>");
 			return;
 		} else if (NULL != p->curdive) {
-			logwarnx(p, "nested <dive>");
+			logerrx(p, "nested <dive>");
 			return;
 		} else if (NULL == p->curlog) {
-			logwarnx(p, "<dive> not in <divelog>");
+			logerrx(p, "<dive> not in <divelog>");
 			return;
 		}
 
-		p->curdive = d = calloc(1, sizeof(struct dive));
-		if (NULL == d)
-			err(EXIT_FAILURE, NULL);
+		p->curdive = d = xcalloc(p, 1, sizeof(struct dive));
 		TAILQ_INIT(&d->samps);
 		d->log = p->curlog;
 
@@ -375,8 +391,7 @@ parse_open(void *dat, const XML_Char *s, const XML_Char **atts)
 			else if (0 == strcmp(*ap, "mode"))
 				mode = ap[1];
 			else 
-				logwarnx(p, "%s: unknown "
-					"<dive> attribute", *ap);
+				logattr(p, "dive", *ap);
 
 		if (NULL != mode) {
 			if (0 == strcmp(mode, "freedive"))
@@ -493,9 +508,7 @@ parse_open(void *dat, const XML_Char *s, const XML_Char **atts)
 		 */
 
 		if (NULL != date && NULL != time) {
-			/* 
-			 * Insert is in reverse order. 
-			 */
+			/* Insert is in reverse order. */
 			TAILQ_FOREACH(dp, p->dives, entries)
 				if (dp->datetime - dp->group->mintime &&
 				    dp->datetime - dp->group->mintime > 
@@ -506,23 +519,74 @@ parse_open(void *dat, const XML_Char *s, const XML_Char **atts)
 			else
 				TAILQ_INSERT_BEFORE(dp, d, entries);
 		} else {
-			/*
-			 * Un-timedated dive goes wherever.
-			 */
+			/* Un-timedated dive goes wherever. */
 			TAILQ_INSERT_TAIL(p->dives, d, entries);
 		}
 	} else if (0 == strcmp(s, "fingerprint")) {
-		/*
-		 * Start recording the fingerprint.
-		 * Don't allow us to be within a nested context.
-		 */
 		if (p->bufsz)
-			logwarnx(p, "nested <fingerprint>");
+			logerrx(p, "nested <fingerprint>");
 		else
 			XML_SetDefaultHandler(p->p, parse_text);
+	} else if (0 == strcmp(s, "gasmix")) {
+		if (NULL == (d = p->curdive)) { 
+			logerrx(p, "<gasmix> not in <dive>");
+			return;
+		}
+
+		v = mixes[0] = mixes[1] = mixes[2] = NULL;
+		for (ap = atts; NULL != ap[0]; ap += 2)
+			if (0 == strcmp(*ap, "num"))
+				v = ap[1];
+			else if (0 == strcmp(*ap, "o2"))
+				mixes[0] = ap[1];
+			else if (0 == strcmp(*ap, "n2"))
+				mixes[1] = ap[1];
+			else if (0 == strcmp(*ap, "he"))
+				mixes[2] = ap[1];
+			else
+				logattr(p, "gasmix", *ap);
+		if (NULL == v) {
+			logerrx(p, "<gasmix> missing attributes");
+			return;
+		}
+
+		i = strtonum(v, 0, LONG_MAX, &er);
+		if (NULL != er) {
+			logerrx(p, "malformed <gasmix> num: %s", v);
+			return;
+		}
+
+		d->gas = xreallocarray(p, d->gas, 
+			d->gassz + 1, sizeof(struct divegas));
+		d->gas[d->gassz].num = i;
+		if (NULL != mixes[0]) {
+			d->gas[d->gassz].o2 = strtod(mixes[0], &ep);
+			if (ep == v || ERANGE == errno) {
+				d->gas[d->gassz].o2 = 0.0;
+				logwarnx(p, "malformed <o2> "
+					"value: %s", mixes[0]);
+			}
+		}
+		if (NULL != mixes[1]) {
+			d->gas[d->gassz].n2 = strtod(mixes[1], &ep);
+			if (ep == v || ERANGE == errno) {
+				d->gas[d->gassz].n2 = 0.0;
+				logwarnx(p, "malformed <n2> "
+					"value: %s", mixes[1]);
+			}
+		}
+		if (NULL != mixes[2]) {
+			d->gas[d->gassz].he = strtod(mixes[2], &ep);
+			if (ep == v || ERANGE == errno) {
+				d->gas[d->gassz].he = 0.0;
+				logwarnx(p, "malformed <he> "
+					"value: %s", mixes[2]);
+			}
+		}
+		d->gassz++;
 	} else if (0 == strcmp(s, "sample")) {
 		if (NULL == (d = p->curdive)) { 
-			logwarnx(p, "<sample> not in <dive>");
+			logerrx(p, "<sample> not in <dive>");
 			return;
 		}
 
@@ -531,23 +595,20 @@ parse_open(void *dat, const XML_Char *s, const XML_Char **atts)
 			if (0 == strcmp(*ap, "time"))
 				v = ap[1];
 			else
-				logwarnx(p, "%s: unknown "
-					"<sample> attribute", *ap);
+				logattr(p, "sample", *ap);
 
 		if (NULL == v) {
-			logwarnx(p, "<sample> missing attributes");
+			logerrx(p, "<sample> missing attributes");
 			return;
 		}
 
 		i = strtonum(v, 0, LONG_MAX, &er);
 		if (NULL != er) {
-			logwarnx(p, "malformed <sample> time: %s", er);
+			logerrx(p, "malformed <sample> time: %s", er);
 			return;
 		}
 
-		p->cursamp = samp = calloc(1, sizeof(struct samp));
-		if (NULL == samp)
-			err(EXIT_FAILURE, NULL);
+		p->cursamp = samp = xcalloc(p, 1, sizeof(struct samp));
 		TAILQ_INSERT_TAIL(&d->samps, samp, entries);
 		d->nsamps++;
 
@@ -573,17 +634,16 @@ parse_open(void *dat, const XML_Char *s, const XML_Char **atts)
 			if (0 == strcmp(*ap, "value"))
 				v = ap[1];
 			else
-				logwarnx(p, "%s: unknown "
-					"<depth> attribute", *ap);
+				logattr(p, "depth", *ap);
 
 		if (NULL == v) {
-			logwarnx(p, "<depth> missing attributes");
+			logerrx(p, "<depth> missing attributes");
 			return;
 		}
 
 		samp->depth = strtod(v, &ep);
 		if (ep == v || ERANGE == errno) {
-			logwarnx(p, "malformed <depth> value: %s", v);
+			logerrx(p, "malformed <depth> value: %s", v);
 			return;
 		}
 
@@ -592,7 +652,7 @@ parse_open(void *dat, const XML_Char *s, const XML_Char **atts)
 		samp->flags |= SAMP_DEPTH;
 	} else if (0 == strcmp(s, "rbt")) {
 		if (NULL == (samp = p->cursamp)) {
-			logwarnx(p, "sample rbt outside sample");
+			logerrx(p, "sample rbt outside sample");
 			return;
 		}
 
@@ -601,23 +661,22 @@ parse_open(void *dat, const XML_Char *s, const XML_Char **atts)
 			if (0 == strcmp(*ap, "value"))
 				v = ap[1];
 			else
-				logwarnx(p, "%s: unknown "
-					"<rbt> attribute", *ap);
+				logattr(p, "rbt", *ap);
 
 		if (NULL == v) {
-			logwarnx(p, "<rbt> missing attributes");
+			logerrx(p, "<rbt> missing attributes");
 			return;
 		}
 
 		samp->rbt = strtonum(v, 0, LONG_MAX, &er);
 		if (NULL != er) {
-			logwarnx(p, "malformed <rbt> value: %s", v);
+			logerrx(p, "malformed <rbt> value: %s", v);
 			return;
 		}
 		samp->flags |= SAMP_RBT;
 	} else if (0 == strcmp(s, "event")) {
 		if (NULL == (samp = p->cursamp)) {
-			logwarnx(p, "<event> not in <sample>");
+			logerrx(p, "<event> not in <sample>");
 			return;
 		}
 
@@ -628,11 +687,10 @@ parse_open(void *dat, const XML_Char *s, const XML_Char **atts)
 			else if (0 == strcmp(*ap, "duration"))
 				dur = ap[1];
 			else
-				logwarnx(p, "%s: unknown "
-					"<event> attribute", *ap);
+				logattr(p, "event", *ap);
 
 		if (NULL == v || NULL == dur) {
-			logwarnx(p, "<event> missing attributes");
+			logerrx(p, "<event> missing attributes");
 			return;
 		}
 
@@ -642,22 +700,20 @@ parse_open(void *dat, const XML_Char *s, const XML_Char **atts)
 				break;
 			}
 		if (EVENT__MAX == i) {
-			logwarnx(p, "malformed <event> type: %s", v);
+			logerrx(p, "malformed <event> type: %s", v);
 			return;
 		}
 
 		i = strtonum(dur, 0, LONG_MAX, &er);
 		if (NULL != er) {
-			logwarnx(p, "malformed <event> duration: %s", er);
+			logerrx(p, "malformed <event> duration: %s", er);
 			return;
 		}
 
-		samp->events = reallocarray
-			(samp->events, 
+		samp->events = xreallocarray
+			(p, samp->events, 
 			 samp->eventsz + 1,
 			 sizeof(struct sampevent));
-		if (NULL == samp->events)
-			err(EXIT_FAILURE, NULL);
 		memset(&samp->events[samp->eventsz], 0,
 			sizeof(struct sampevent));
 		samp->events[samp->eventsz].bits = bits;
@@ -666,7 +722,7 @@ parse_open(void *dat, const XML_Char *s, const XML_Char **atts)
 		samp->flags |= SAMP_EVENT;
 	} else if (0 == strcmp(s, "deco")) {
 		if (NULL == (samp = p->cursamp)) {
-			logwarnx(p, "<deco> not in <sample>");
+			logerrx(p, "<deco> not in <sample>");
 			return;
 		}
 
@@ -679,11 +735,10 @@ parse_open(void *dat, const XML_Char *s, const XML_Char **atts)
 			else if (0 == strcmp(*ap, "duration"))
 				dur = ap[1];
 			else
-				logwarnx(p, "%s: unknown "
-					"<deco> attribute", *ap);
+				logattr(p, "deco", *ap);
 
 		if (NULL == v || NULL == mode || NULL == dur) {
-			logwarnx(p, "<deco> missing attributes");
+			logerrx(p, "<deco> missing attributes");
 			return;
 		}
 
@@ -693,26 +748,26 @@ parse_open(void *dat, const XML_Char *s, const XML_Char **atts)
 			if (0 == strcmp(decos[samp->deco.type], mode))
 				break;
 		if (DECO__MAX == samp->deco.type) {
-			logwarnx(p, "unknown <deco> type: %s", mode);
+			logerrx(p, "unknown <deco> type: %s", mode);
 			return;
 		}
 
 		samp->deco.depth = strtod(v, &ep);
 		if (ep == v || ERANGE == errno) {
-			logwarnx(p, "malformed <deco> value: %s", v);
+			logerrx(p, "malformed <deco> value: %s", v);
 			return;
 		}
 
 		samp->deco.duration = strtonum(dur, 0, LONG_MAX, &er);
 		if (NULL != er) {
-			logwarnx(p, "malformed <deco> duration: %s", dur);
+			logerrx(p, "malformed <deco> duration: %s", dur);
 			return;
 		}
 
 		samp->flags |= SAMP_DECO;
 	} else if (0 == strcmp(s, "temp")) {
 		if (NULL == (samp = p->cursamp)) {
-			logwarnx(p, "<temp> not in <sample>");
+			logerrx(p, "<temp> not in <sample>");
 			return;
 		}
 
@@ -721,16 +776,16 @@ parse_open(void *dat, const XML_Char *s, const XML_Char **atts)
 			if (0 == strcmp(*ap, "value"))
 				v = ap[1];
 			else
-				logwarnx(p, "%s: unknown "
-					"<temp> attribute", *ap);
+				logattr(p, "temp", *ap);
+
 		if (NULL == v) {
-			logwarnx(p, "<temp> missing attributes");
+			logerrx(p, "<temp> missing attributes");
 			return;
 		}
 
 		samp->temp = strtod(v, &ep);
 		if (ep == v || ERANGE == errno) {
-			logwarnx(p, "malformed <temp> value: %s", v);
+			logerrx(p, "malformed <temp> value: %s", v);
 			return;
 		}
 
@@ -748,6 +803,11 @@ parse_open(void *dat, const XML_Char *s, const XML_Char **atts)
 	} else if (0 == strcmp(s, "dives")) {
 		if (NULL == p->curlog)
 			logwarnx(p, "<dives> not in <divelog>");
+	} else if (0 == strcmp(s, "gasmixes")) {
+		if (NULL == p->curdive)
+			logwarnx(p, "<gasmix> not in <dive>");
+		if (NULL != p->cursamp)
+			logwarnx(p, "<gasmix> in <sample>");
 	} else if (0 == strcmp(s, "samples")) {
 		if (NULL == p->curdive)
 			logwarnx(p, "<samples> not in <dive>");
@@ -859,6 +919,7 @@ divecmd_free(struct diveq *dq, struct divestat *st)
 				free(s->events);
 				free(s);
 			}
+			free(d->gas);
 			free(d->fprint);
 			free(d);
 		}
@@ -934,8 +995,6 @@ divecmd_print_dive_sampleq(FILE *f, const struct sampq *q)
 
 /*
  * Print the dive sample.
- * FIXME: print all attributes of the dive!
- * This only does depth, temperature, rbt, and events.
  */
 void
 divecmd_print_dive_sample(FILE *f, const struct samp *s)
@@ -1017,6 +1076,16 @@ divecmd_print_open(FILE *f, const struct dlog *dl)
 		fprintf(f, " model=\"%s\"", dl->model);
 
 	fputs(">\n", f);
+}
+
+void
+divecmd_print_dive(FILE *f, const struct dive *d)
+{
+
+	divecmd_print_dive_open(f, d);
+	divecmd_print_dive_fingerprint(f, d);
+	divecmd_print_dive_sampleq(f, &d->samps);
+	divecmd_print_dive_close(f);
 }
 
 /*
