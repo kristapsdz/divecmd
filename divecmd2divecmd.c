@@ -19,6 +19,7 @@
 #include <sys/queue.h>
 
 #include <assert.h>
+#include <ctype.h>
 #if HAVE_ERR
 # include <err.h>
 #endif
@@ -39,7 +40,67 @@ enum	pmode {
 	PMODE_NONE
 };
 
+enum	limit {
+	LIMIT_DATE_AFTER,
+	LIMIT_DATE_BEFORE,
+	LIMIT_DATE_EQ,
+	LIMIT_DATETIME_AFTER,
+	LIMIT_DATETIME_BEFORE,
+	LIMIT_MODE_EQ
+};
+
+TAILQ_HEAD(limitq, limits);
+
+/*
+ * Limits constrain which dives we show.
+ * There are many possible limits to choose from.
+ */
+struct	limits {
+	enum limit	 type; /* type of constraint */
+	time_t		 date; /* date/time, if applicable */
+	enum mode	 mode; /* mode, if applicable */
+	TAILQ_ENTRY(limits) entries;
+};
+
 int verbose = 0;
+
+static int
+limit_match(const struct dive *d, const struct limitq *lq)
+{
+	const struct limits *l;
+
+	TAILQ_FOREACH(l, lq, entries) {
+		switch (l->type) {
+		case LIMIT_DATE_EQ:
+			if (0 == d->datetime)
+				return(0);
+			if (d->datetime < l->date ||
+			    d->datetime > l->date + 60 * 60 * 24)
+				return(0);
+			break;
+		case LIMIT_DATE_BEFORE:
+		case LIMIT_DATETIME_BEFORE:
+			if (0 == d->datetime)
+				return(0);
+			if (d->datetime > l->date)
+				return(0);
+			break;
+		case LIMIT_DATE_AFTER:
+		case LIMIT_DATETIME_AFTER:
+			if (0 == d->datetime)
+				return(0);
+			if (d->datetime < l->date)
+				return(0);
+			break;
+		case LIMIT_MODE_EQ:
+			if (l->mode != d->mode)
+				return(0);
+			break;
+		}
+	}
+
+	return(1);
+}
 
 static FILE *
 file_open(const struct dive *d, const char *out)
@@ -252,8 +313,8 @@ dlogeq(const struct dlog *d1, const struct dlog *d2)
  * Take a single input file and either split or join it.
  */
 static int
-print_all(enum pmode pmode, 
-	const char *out, const struct diveq *dq)
+print_all(enum pmode pmode, const char *out, 
+	const struct limitq *lq, const struct diveq *dq)
 {
 	const struct dive   *d;
 	struct dive	     tmp;
@@ -297,7 +358,8 @@ print_all(enum pmode pmode,
 					d->log->file, d->line, 
 					dl->file, dl->line);
 				continue;
-			} 
+			} else if ( ! limit_match(d, lq))
+				continue;
 
 			/* Look up in hashtable. */
 
@@ -377,7 +439,7 @@ print_all(enum pmode pmode,
 					"computer (from %s:%zu)",
 					d->log->file, d->line, 
 					dl->file, dl->line);
-			else
+			else if (limit_match(d, lq))
 				print_split(d, out, &num);
 		}
 		if (NULL == out) {
@@ -409,7 +471,7 @@ print_all(enum pmode pmode,
 					"computer (from %s:%zu)",
 					d->log->file, d->line, 
 					dl->file, dl->line);
-			else
+			else if (limit_match(d, lq))
 				print_join(f, d, &last, first);
 		divecmd_print_dive_sampleq_close(f);
 		divecmd_print_dive_close(f);
@@ -427,6 +489,86 @@ print_all(enum pmode pmode,
 	return(1);
 }
 
+static int
+limit_parse(const char *arg, struct limits *l)
+{
+	const char 	*obj;
+	struct tm	 tm;
+
+	memset(l, 0, sizeof(struct limits));
+
+	if (0 == strncmp("dafter=", optarg, 7)) {
+		l->type = LIMIT_DATE_AFTER;
+		obj = optarg + 7;
+	} else if (0 == strncmp("dbefore=", optarg, 8)) {
+		l->type = LIMIT_DATE_BEFORE;
+		obj = optarg + 8;
+	} else if (0 == strncmp("dtafter=", optarg, 8)) {
+		l->type = LIMIT_DATETIME_AFTER;
+		obj = optarg + 8;
+	} else if (0 == strncmp("dtbefore=", optarg, 9)) {
+		l->type = LIMIT_DATETIME_BEFORE;
+		obj = optarg + 9;
+	} else if (0 == strncmp("date=", optarg, 5)) {
+		l->type = LIMIT_DATE_EQ;
+		obj = optarg + 5;
+	} else if (0 == strncmp("mode=", optarg, 5)) {
+		l->type = LIMIT_MODE_EQ;
+		obj = optarg + 5;
+	} else {
+		warnx("-l: unknown predicate: %s", optarg);
+		return(0);
+	}
+
+	while (isspace((unsigned char)*obj))
+		obj++;
+
+	if ('\0' == *obj) {
+		warnx("-l: empty predicate: %s", optarg);
+		return(0);
+	}
+
+	switch (l->type) {
+	case LIMIT_DATETIME_AFTER:
+	case LIMIT_DATETIME_BEFORE:
+		memset(&tm, 0, sizeof(struct tm));
+		if (strptime(obj, "%Y-%m-%dT%R", &tm)) {
+			l->date = mktime(&tm);
+			break;
+		}
+		warnx("-l: bad datetime: %s", obj);
+		return(0);
+	case LIMIT_DATE_AFTER:
+	case LIMIT_DATE_BEFORE:
+	case LIMIT_DATE_EQ:
+		memset(&tm, 0, sizeof(struct tm));
+		if (strptime(obj, "%Y-%m-%d", &tm)) {
+			l->date = mktime(&tm);
+			break;
+		}
+		warnx("-l: bad date: %s", obj);
+		return(0);
+	case LIMIT_MODE_EQ:
+		if (0 == strcasecmp(obj, "open")) {
+			l->mode = MODE_OC;
+			break;
+		} else if (0 == strcasecmp(obj, "closed")) {
+			l->mode = MODE_CC;
+			break;
+		} else if (0 == strcasecmp(obj, "gauge")) {
+			l->mode = MODE_GAUGE;
+			break;
+		} else if (0 == strcasecmp(obj, "free")) {
+			l->mode = MODE_FREEDIVE;
+			break;
+		} 
+		warnx("-l: bad mode: %s", obj);
+		return(0);
+	}
+
+	return(1);
+}
+
 int
 main(int argc, char *argv[])
 {
@@ -437,14 +579,27 @@ main(int argc, char *argv[])
 	struct diveq	 dq;
 	struct divestat	 st;
 	const char	*out = NULL;
+	struct limitq	 limits;
+	struct limits	*l, tmp;
+
+	TAILQ_INIT(&limits);
 
 #if HAVE_PLEDGE
 	if (-1 == pledge("stdio rpath wpath cpath", NULL))
 		err(EXIT_FAILURE, "pledge");
 #endif
 
-	while (-1 != (c = getopt(argc, argv, "o:jsv")))
+	while (-1 != (c = getopt(argc, argv, "jl:o:sv")))
 		switch (c) {
+		case ('l'):
+			if ( ! limit_parse(optarg, &tmp))
+				goto usage;
+			l = calloc(1, sizeof(struct limits));
+			if (NULL == l)
+				err(EXIT_FAILURE, NULL);
+			*l = tmp;
+			TAILQ_INSERT_TAIL(&limits, l, entries);
+			break;
 		case ('j'):
 			mode = PMODE_JOIN;
 			break;
@@ -464,7 +619,8 @@ main(int argc, char *argv[])
 	argc -= optind;
 	argv += optind;
 
-	divecmd_init(&p, &dq, &st, GROUP_NONE, GROUPSORT_DATETIME);
+	divecmd_init(&p, &dq, &st, 
+		GROUP_NONE, GROUPSORT_DATETIME);
 
 	if (0 == argc)
 		rc = divecmd_parse("-", p, &dq, &st);
@@ -491,13 +647,22 @@ main(int argc, char *argv[])
 		goto out;
 	}
 
-	rc = print_all(mode, out, &dq);
+	rc = print_all(mode, out, &limits, &dq);
 out:
+	while (NULL != (l = TAILQ_FIRST(&limits))) {
+		TAILQ_REMOVE(&limits, l, entries);
+		free(l);
+	}
 	divecmd_free(&dq, &st);
 	return(rc ? EXIT_SUCCESS : EXIT_FAILURE);
 usage:
+	while (NULL != (l = TAILQ_FIRST(&limits))) {
+		TAILQ_REMOVE(&limits, l, entries);
+		free(l);
+	}
 	fprintf(stderr, "usage: %s "
 		"[-jsv] "
+		"[-l limits] "
 		"[-o out] "
 		"[file ...]\n", getprogname());
 	return(EXIT_FAILURE);
