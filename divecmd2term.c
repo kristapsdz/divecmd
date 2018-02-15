@@ -536,11 +536,13 @@ main(int argc, char *argv[])
 	struct winsize	 ws;
 
 	setlocale(LC_ALL, "");
+	memset(&ws, 0, sizeof(struct winsize));
 
-	if (-1 == ioctl(0, TIOCGWINSZ, &ws)) {
-		warnx("TIOCGWINSZ");
-		ws.ws_row = 25;
-		ws.ws_col = 80;
+	if (-1 == ioctl(STDOUT_FILENO, TIOCGWINSZ, &ws)) {
+		if (NULL != getenv("LINES"))
+			ws.ws_row = atoi(getenv("LINES"));
+		if (NULL != getenv("COLUMNS"))
+			ws.ws_col = atoi(getenv("COLUMNS"));
 	}
 
 	/* Pledge us early: only reading files. */
