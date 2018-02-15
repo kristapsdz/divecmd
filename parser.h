@@ -195,6 +195,7 @@ void	 divecmd_print_diveq_open(FILE *);
 void	 divecmd_print_dive(FILE *, const struct dive *);
 void	 divecmd_print_dive_close(FILE *);
 void	 divecmd_print_dive_fingerprint(FILE *, const struct dive *);
+void	 divecmd_print_dive_gasmixes(FILE *, const struct dive *);
 void	 divecmd_print_dive_open(FILE *, const struct dive *);
 void	 divecmd_print_dive_sampleq(FILE *, const struct sampq *);
 void	 divecmd_print_dive_sampleq_close(FILE *);

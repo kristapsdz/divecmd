@@ -1095,6 +1095,24 @@ divecmd_init(XML_Parser *p, struct diveq *dq,
 	TAILQ_INIT(&st->dlogs);
 }
 
+void
+divecmd_print_dive_gasmixes(FILE *f, const struct dive *d)
+{
+	size_t	 i;
+
+	if (0 == d->gassz)
+		return;
+
+	fputs("\t\t\t<gasmixes>\n", f);
+	for (i = 0; i < d->gassz; i++) {
+		printf("\t\t\t\t<gasmix num=\"%zu\" "
+			"o2=\"%g\" n2=\"%g\" he=\"%g\" />\n",
+			d->gas[i].num, d->gas[i].o2,
+			d->gas[i].n2, d->gas[i].he);
+	}
+	fputs("\t\t\t</gasmixes>\n", f);
+}
+
 /*
  * If not NULL, prints the dive fingerprint.
  */
@@ -1223,6 +1241,7 @@ divecmd_print_dive(FILE *f, const struct dive *d)
 
 	divecmd_print_dive_open(f, d);
 	divecmd_print_dive_fingerprint(f, d);
+	divecmd_print_dive_gasmixes(f, d);
 	divecmd_print_dive_sampleq(f, &d->samps);
 	divecmd_print_dive_close(f);
 }

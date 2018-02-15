@@ -149,6 +149,7 @@ again:
 			if (rc < 0)
 				err(EXIT_FAILURE, NULL);
 			divecmd_print_dive_fingerprint(f, &dive);
+			divecmd_print_dive_gasmixes(f, d);
 			free(dive.fprint);
 			divecmd_print_dive_sampleq_open(f);
 			dopen = 1;
@@ -255,6 +256,7 @@ print_all(enum pmode pmode,
 	const char *out, const struct diveq *dq)
 {
 	const struct dive   *d;
+	struct dive	     tmp;
 	const struct dlog   *dl;
 	size_t		     idx, i, num = 1;
 	time_t		     last, first;
@@ -392,7 +394,12 @@ print_all(enum pmode pmode,
 		divecmd_print_open(f, dl);
 		divecmd_print_diveq_open(f);
 		divecmd_print_dive_open(f, d);
-		/*divecmd_print_dive_fingerprint(f, d);*/
+		tmp = *d;
+		if (asprintf(&tmp.fprint, "%s-join", d->fprint) < 0)
+			err(EXIT_FAILURE, NULL);
+		divecmd_print_dive_fingerprint(f, &tmp);
+		free(tmp.fprint);
+		divecmd_print_dive_gasmixes(f, d);
 		divecmd_print_dive_sampleq_open(f);
 		first = d->datetime;
 		last = 0;
