@@ -221,33 +221,84 @@ logerrp(struct parse *p)
 }
 
 /*
+ * Some group sortings need to be sorted /after/ the whole dive has been
+ * processed---for example, when sorting by maximum depth that can only
+ * be ascertained after all samples have been read.
+ * This should be called when closing out a dive.
+ */
+static void
+group_readd(struct parse *p, struct dive *d)
+{
+	struct dive	*dp;
+
+	assert(NULL != d->group);
+
+	/* Date-time is a pre-processing thing, so nothing to do. */
+
+	if (GROUPSORT_DATETIME == p->stat->groupsort)
+		return;
+
+	/* Start by removing, then we'll re-add. */
+
+	TAILQ_REMOVE(&d->group->dives, d, gentries);
+
+	if (GROUPSORT_MAXTIME == p->stat->groupsort) {
+		TAILQ_FOREACH(dp, &d->group->dives, gentries)
+			if (dp->maxtime &&
+			    dp->maxtime > d->maxtime)
+				break;
+	} else if (GROUPSORT_RMAXTIME == p->stat->groupsort) {
+		TAILQ_FOREACH(dp, &d->group->dives, gentries)
+			if (dp->maxtime &&
+			    dp->maxtime < d->maxtime)
+				break;
+	} else if (GROUPSORT_RMAXDEPTH == p->stat->groupsort) {
+		TAILQ_FOREACH(dp, &d->group->dives, gentries)
+			if (dp->maxdepth &&
+			    dp->maxdepth < d->maxdepth)
+				break;
+	} else {
+		TAILQ_FOREACH(dp, &d->group->dives, gentries)
+			if (dp->maxdepth &&
+			    dp->maxdepth > d->maxdepth)
+				break;
+	}
+
+	if (NULL == dp)
+		TAILQ_INSERT_TAIL(&d->group->dives, d, gentries);
+	else
+		TAILQ_INSERT_BEFORE(dp, d, gentries);
+}
+
+/*
  * Add the dive "d" to the group "i" (which must exist) indexing in the
  * array of groups.
  * Returns the group (never NULL).
  * This inserts the groups in sorted error, if applicable.
+ * Be sure to group_readd after closing out the dive, because some
+ * sorting criteria are post-processed (e.g., maximum depth).
  */
 static struct dgroup *
 group_add(struct parse *p, size_t i, struct dive *d)
 {
-	struct dive	*dp;
+	struct dive	*dp = NULL;
 	struct dgroup	*dg = p->stat->groups[i];
 
 	d->group = dg;
 	dg->ndives++;
 
-	/* If we have no date-time, just append. */
+	/* All other sorting types need group_readd(). */
 
-	if (0 == d->datetime) {
-		TAILQ_INSERT_TAIL(&dg->dives, d, gentries);
-		return(dg);
+	if (GROUPSORT_DATETIME == p->stat->groupsort) {
+		if (0 == d->datetime) {
+			TAILQ_INSERT_TAIL(&dg->dives, d, gentries);
+			return(dg);
+		}
+		TAILQ_FOREACH(dp, &dg->dives, gentries)
+			if (dp->datetime &&
+			    dp->datetime > d->datetime)
+				break;
 	}
-
-	/* Otherwise, insert in date-sorted order. */
-
-	TAILQ_FOREACH(dp, &dg->dives, gentries)
-		if (dp->datetime &&
-		    dp->datetime > d->datetime)
-			break;
 
 	if (NULL == dp)
 		TAILQ_INSERT_TAIL(&dg->dives, d, gentries);
@@ -258,7 +309,8 @@ group_add(struct parse *p, size_t i, struct dive *d)
 }
 
 /*
- * Add a new group, optionally with date "date", to the set of groups.
+ * Add a new group, optionally with date "date" (NULL is ok), to the set
+ * of groups.
  * This always returns.
  */
 static struct dgroup *
@@ -290,7 +342,7 @@ group_alloc(struct parse *p, struct dive *d, const char *date)
  * Returns the created or augmented group.
  */
 static struct dgroup *
-group_lookup(struct parse *p, struct dive *d, const char *name)
+group_lookup_name(struct parse *p, struct dive *d, const char *name)
 {
 	size_t	 i;
 
@@ -303,6 +355,70 @@ group_lookup(struct parse *p, struct dive *d, const char *name)
 	return((i == p->stat->groupsz) ?
 		group_alloc(p, d, name) :
 		group_add(p, i, d));
+}
+
+/*
+ * Look for a group registered with the same divelog.
+ * It must be identical: diver, vendor, product, etc.
+ * Return a pointer to the group or NULL.
+ */
+static struct dgroup *
+group_lookup_divelog(struct parse *p, struct dive *d)
+{
+	struct dgroup 		*dg;
+	const struct dlog	*dl;
+	size_t			 i;
+
+	for (i = 0; i < p->stat->groupsz; i++) {
+		dg = p->stat->groups[i];
+		assert(dg->ndives);
+		assert(NULL != TAILQ_FIRST(&dg->dives));
+		dl = TAILQ_FIRST(&dg->dives)->log;
+
+		if (NULL == dl->vendor && NULL != d->log->vendor)
+			continue;
+		if (NULL != dl->vendor && NULL == d->log->vendor)
+			continue;
+		if (NULL != dl->vendor &&
+	 	    strcmp(dl->vendor, d->log->vendor))
+			continue;
+		if (NULL == dl->model && NULL != d->log->model)
+			continue;
+		if (NULL != dl->model && NULL == d->log->model)
+			continue;
+		if (NULL != dl->model &&
+	 	    strcmp(dl->model, d->log->model))
+			continue;
+		if (NULL == dl->product && NULL != d->log->product)
+			continue;
+		if (NULL != dl->product && NULL == d->log->product)
+			continue;
+		if (NULL != dl->product &&
+	 	    strcmp(dl->product, d->log->product))
+			continue;
+		if (NULL == dl->ident && NULL != d->log->ident)
+			continue;
+		if (NULL != dl->ident && NULL == d->log->ident)
+			continue;
+		if (NULL != dl->ident &&
+	 	    strcmp(dl->ident, d->log->ident))
+			continue;
+		return(group_add(p, i, d));
+	}
+
+	if (verbose)
+		fprintf(stderr, "%s: new group: %s, %s, %s, %s\n", 
+			p->file, 
+			NULL == d->log->ident ?
+			"(no diver ident)" : d->log->ident,
+			NULL == d->log->vendor ?
+			"(no vendor)" : d->log->vendor,
+			NULL == d->log->product ?
+			"(no product)" : d->log->product,
+			NULL == d->log->model ?
+			"(no model)" : d->log->model);
+
+	return(group_alloc(p, d, NULL));
 }
 
 static void
@@ -479,17 +595,21 @@ parse_open(void *dat, const XML_Char *s, const XML_Char **atts)
 			if (NULL == date) {
 				logwarnx(p, "group "
 					"<dive> without date");
-				grp = group_lookup(p, d, "");
+				grp = group_lookup_name(p, d, "");
 			} else
-				grp = group_lookup(p, d, date);
+				grp = group_lookup_name(p, d, date);
 		} else if (GROUP_DIVER == p->stat->group) {
 			if (NULL == d->log->ident) {
 				logwarnx(p, "group "
 					"<dive> without diver");
-				grp = group_lookup(p, d, "");
+				grp = group_lookup_name(p, d, "");
 			} else
-				grp = group_lookup(p, 
+				grp = group_lookup_name(p, 
 					d, d->log->ident);
+		} else if (GROUP_DIVELOG == p->stat->group) {
+			assert(NULL != d->log);
+			grp = group_lookup_divelog(p, d);
+			assert(NULL != grp);
 		} else {
 			if (0 == p->stat->groupsz && verbose)
 				logdbg(p, "new default group");
@@ -856,6 +976,7 @@ parse_close(void *dat, const XML_Char *s)
 	} else if (0 == strcmp(s, "divelog")) {
 		p->curlog = NULL;
 	} else if (0 == strcmp(s, "dive")) {
+		group_readd(p, p->curdive);
 		p->curdive = NULL;
 	} else if (0 == strcmp(s, "sample")) {
 		p->cursamp = NULL;
@@ -961,7 +1082,7 @@ divecmd_free(struct diveq *dq, struct divestat *st)
 
 void
 divecmd_init(XML_Parser *p, struct diveq *dq, 
-	struct divestat *st, enum group group)
+	struct divestat *st, enum group group, enum groupsort sort)
 {
 
 	if (NULL == (*p = XML_ParserCreate(NULL)))
@@ -970,6 +1091,7 @@ divecmd_init(XML_Parser *p, struct diveq *dq,
 	TAILQ_INIT(dq);
 	memset(st, 0, sizeof(struct divestat));
 	st->group = group;
+	st->groupsort = sort;
 	TAILQ_INIT(&st->dlogs);
 }
 

@@ -28,7 +28,16 @@ enum	mode {
 enum	group {
 	GROUP_NONE,
 	GROUP_DIVER,
-	GROUP_DATE
+	GROUP_DATE,
+	GROUP_DIVELOG
+};
+
+enum	groupsort {
+	GROUPSORT_DATETIME,
+	GROUPSORT_MAXDEPTH,
+	GROUPSORT_MAXTIME,
+	GROUPSORT_RMAXDEPTH,
+	GROUPSORT_RMAXTIME
 };
 
 enum	event {
@@ -156,7 +165,7 @@ struct	dive {
 	size_t		     maxtime; /* maximum sample time */
 	size_t		     nsamps; /* number of samples */
 	char		    *fprint; /* fingerprint or NULL */
-	const struct dgroup *group; /* group identifier */
+	struct dgroup 	    *group; /* group identifier */
 	const struct dlog   *log; /* source divelog */
 	TAILQ_ENTRY(dive)    entries; /* in-dive entry */
 	TAILQ_ENTRY(dive)    gentries; /* in-group entry */
@@ -167,6 +176,7 @@ struct	divestat {
 	time_t		  timestamp_min; /* minimum timestamp */
 	time_t		  timestamp_max; /* maximum timestamp */
 	enum group	  group; /* how we're grouping dives */
+	enum groupsort	  groupsort; /* how we're sorting dives */
 	struct dgroup	**groups; /* all groups */
 	size_t		  groupsz; /* size of "groups" */
 	struct dlogq	  dlogs; /* all divelog nodes */
@@ -175,7 +185,7 @@ struct	divestat {
 __BEGIN_DECLS
 
 void	 divecmd_init(XML_Parser *, struct diveq *, 
-		struct divestat *, enum group);
+		struct divestat *, enum group, enum groupsort);
 void	 divecmd_free(struct diveq *, struct divestat *);
 int	 divecmd_parse(const char *, XML_Parser, 
 		struct diveq *dq, struct divestat *);

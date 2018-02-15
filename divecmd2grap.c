@@ -792,7 +792,7 @@ main(int argc, char *argv[])
 	     MODE__MAX != mode))
 		warnx("-a: ignoring flag");
 
-	divecmd_init(&p, &dq, &st, group);
+	divecmd_init(&p, &dq, &st, group, GROUPSORT_DATETIME);
 
 	/* 
 	 * Handle all files or stdin.

@@ -400,16 +400,14 @@ print_all(enum pmode pmode,
 		print_dive_open(f, d->datetime, 1, d->mode);
 		first = d->datetime;
 		last = 0;
-		TAILQ_FOREACH(d, dq, entries) {
-			if ( ! dlogeq(dl, d->log)) {
+		TAILQ_FOREACH(d, dq, entries)
+			if ( ! dlogeq(dl, d->log))
 				warnx("%s:%zu: dive has mismatched "
 					"computer (from %s:%zu)",
 					d->log->file, d->line, 
 					dl->file, dl->line);
-				continue;
-			} 
-			print_join(f, d, &last, first);
-		}
+			else
+				print_join(f, d, &last, first);
 		print_dive_close(f);
 		divecmd_print_diveq_close(f);
 		divecmd_print_close(f);
@@ -459,7 +457,7 @@ main(int argc, char *argv[])
 	argc -= optind;
 	argv += optind;
 
-	divecmd_init(&p, &dq, &st, GROUP_NONE);
+	divecmd_init(&p, &dq, &st, GROUP_NONE, GROUPSORT_DATETIME);
 
 	if (0 == argc)
 		rc = divecmd_parse("-", p, &dq, &st);

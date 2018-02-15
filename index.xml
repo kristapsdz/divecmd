@@ -85,7 +85,7 @@
 				needing to parse the file yourself.
 			</p>
 			<h2>
-				<span>divecmd2grap</span> &#8212; printable graphs
+				printable graphs
 			</h2>
 			<p>
 				The <a href="divecmd2grap.1.html">divecmd2grap(1)</a> utility converts from XML into the <a
@@ -282,7 +282,7 @@
 				</section>
 			</div>
 			<h2>
-				<span>divecmd2term</span> &#8212; terminal graphs
+				terminal graphs
 			</h2>
 			<p>
 				The <span class="nm">divecmd</span> suite also has
@@ -328,25 +328,38 @@
 				</section>
 			</div>
 			<h2>
-				<span>divecmd2json</span> &#8212; export to the dynamic web
+				other utilities
 			</h2>
 			<p>
 				The arguably most-used output mode is also the simplest: <a href="divecmd2json.1.html">divecmd2json(1)</a>,
-				which converts graphs to JSON.
-				I use it constantly for <a href="https://divelog.blue">divelog.blue</a>, specifically to show the <a
-					href="https://divelog.blue/article040.html">dive profiles</a>.
-				Technically, I could simply bundle the native <a href="divecmd.1.html">divecmd(1)</a> output directly and use an
-				XML-to-JSON formatter in the client, but this is easier.
+				which converts graphs to JSON.  I use it constantly for <a href="https://divelog.blue">divelog.blue</a>,
+				specifically to show the <a href="https://divelog.blue/article040.html">dive profiles</a>.  Technically, I could
+				simply bundle the native <a href="divecmd.1.html">divecmd(1)</a> output directly and use an XML-to-JSON
+				formatter in the client, but this is easier.
 			</p>
-			<h2>
-				<span>divecmd2csv</span> &#8212; export to a comma-separated value file
-			</h2>
 			<p>
 				As much as I use <a href="divecmd2grap.1.html">divecmd2grap(1)</a> and friends for my needs, others prefer using
-				tools like <a href="https://subsurface-divelog.org">Subsurface</a> 
+				tools like <a href="https://subsurface-divelog.org">Subsurface</a> To do so, one needs to be able to export into
+				a format used by Subsurface.  The <span class="nm">divecmd</span> suite has <a
+					href="divecmd2csv.1.html">divecmd2csv(1)</a>, which exports a (for the time being minimal) set of
+				information in CSV format.  This can then be imported into Subsurface using the import utility.
+			</p>
+			<p>
+				If you have lots of dive files and want to consolidate, you can use the 
+				<a href="divecmd2divecmd.1.html">divecmd2divecmd(1)</a> utility, which is able to pull together a lot of files,
+				de-duplicate entries, and print them out again.
+				This tool is also able to split and join dive sequences for analysis in different ways: some dive computers
+				export free dives as a single dive including surface time, while others don't.
+				Sometimes you may want a single sequence (for example, when analysing with Subsurface), other times (like with
+				the <a href="divecmd2grap.1.html">divecmd2grap(1)</a> graphing tool) you want them separated.
+			</p>
+			<p>
+				Lastly, the <a href="divecmd2list.1.html">divecmd2list(1)</a> tool accepts a set of files, groups them by dive
+				computer and diver, and lists their contents.
+				This makes browsing through a lot of dives much easier!
 			</p>
 			<h2>
-				Version notes
+				version notes
 			</h2>
 			<nav data-sblg-nav="1" data-sblg-navcontent="1">
 				<section>

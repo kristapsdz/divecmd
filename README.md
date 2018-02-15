@@ -11,9 +11,13 @@ has several programs:
 - [divecmd2grap(1)](https://kristaps.bsd.lv/divecmd/divecmd2grap.1.html),
   which graphs using *grap(1)*; 
 - [divecmd2json(1)](https://kristaps.bsd.lv/divecmd/divecmd2json.1.html),
-  which exports dive profiles to the JSON format; and
+  which exports dive profiles to the JSON format;
 - [divecmd2csv(1)](https://kristaps.bsd.lv/divecmd/divecmd2csv.1.html),
   which exports to CSV (usually for [Subsurface](https://subsurface-divelog.org/)).
+- [divecmd2divecmd(1)](https://kristaps.bsd.lv/divecmd/divecmd2divecmd.1.html),
+  which reflows or reformulates profiles; and
+- [divecmd2list(1)](https://kristaps.bsd.lv/divecmd/divecmd2list.1.html),
+  which lists dive profiles.
 
 It compiles and runs on Linux, Mac OS X, and OpenBSD.
 For Mac OS X machines with homebrew, see BSD.lv's
@@ -26,16 +30,13 @@ There are also some supporting utilities:
 - [divecmd2ps(1)](https://kristaps.bsd.lv/divecmd/divecmd2ps.1.html), which
   does the same but for PS (Mac OS X's *groff(1)* doesn't have PDF support);
   and
-- [divecmd2divecmd(1)](https://kristaps.bsd.lv/divecmd/divecmd2divecmd.1.html),
-  which converts some dive computers' output into a form allowing for better
-  free dive analysis.
 
 I forked [libdivecomputer](http://www.libdivecomputer.org)'s *dctool* to
 write [divecmd(1)](https://kristaps.bsd.lv/divecmd/divecmd.1.html) ---
 originally to provide output like
 [Subsurface](https://subsurface-divelog.org/)'s XML format, but later to
 significantly simplify the code, to add sandboxing via
-[pledge(2)](http://man.openbsd.org/pledge.2), and to provide multiple
+[pledge(2)](https://man.openbsd.org/pledge.2), and to provide multiple
 front-ends.
 
 If you have a feature in mind, I'm very happy to be encouraged to

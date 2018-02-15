@@ -5,12 +5,19 @@
 		<header>
 			<h1>0.0.12</h1>
 			<address>Kristaps Dzonsons</address>
-			<time datetime="2018-01-23">ongoing</time>
+			<time datetime="2018-02-15">2018-02-15</time>
 		</header>
 		<aside>
 			<p>
-				Start using <a href="https://github.com/kristapsdz/oconfigure">oconfigure</a> for portability glue.
-				This is more consistent with other <a href="https://bsd.lv">BSD.lv</a> projects.
+				Start using <a
+					href="https://github.com/kristapsdz/oconfigure">oconfigure</a>
+				for portability glue.
+				This is more consistent with other <a
+					href="https://bsd.lv">BSD.lv</a> projects.
+				Also add <a href="divecmd2list.1.html">divecmd2list(1)</a> and make
+				<a href="divecmd2divecmd.1.html">divecmd2divecmd(1)</a> much easier
+				to use.
+				Both of these are made possible by simplifying the backend parser.
 			</p>
 		</aside>
 	</article>

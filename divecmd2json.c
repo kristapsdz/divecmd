@@ -114,7 +114,7 @@ main(int argc, char *argv[])
 	argc -= optind;
 	argv += optind;
 
-	divecmd_init(&p, &dq, &st, GROUP_DIVER);
+	divecmd_init(&p, &dq, &st, GROUP_DIVER, GROUPSORT_DATETIME);
 
 	if (0 == argc)
 		rc = divecmd_parse("-", p, &dq, &st);

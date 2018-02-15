@@ -561,7 +561,7 @@ main(int argc, char *argv[])
 	argc -= optind;
 	argv += optind;
 
-	divecmd_init(&p, &dq, &st, GROUP_NONE);
+	divecmd_init(&p, &dq, &st, GROUP_NONE, GROUPSORT_DATETIME);
 
 	/* 
 	 * Handle all files or stdin.
