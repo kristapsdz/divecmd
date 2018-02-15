@@ -57,38 +57,6 @@ file_open(const struct dive *d, const char *out)
 }
 
 /*
- * See print_dive_open().
- */
-static void
-print_dive_close(FILE *f)
-{
-
-	divecmd_print_dive_sampleq_close(f);
-	divecmd_print_dive_close(f);
-}
-
-/*
- * Print the heading for a particular dive.
- * Set the start date at "t", being dive "num", in mode "mode".
- * Don't print any other attributes of the dive.
- * (These are the critical ones.)
- * Follow with print_dive_close().
- */
-static void
-print_dive_open(FILE *f, time_t t, size_t num, enum mode mode)
-{
-	struct dive	 dive;
-
-	memset(&dive, 0, sizeof(struct dive));
-	dive.datetime = t;
-	dive.num = num;
-	dive.mode = mode;
-
-	divecmd_print_dive_open(f, &dive);
-	divecmd_print_dive_sampleq_open(f);
-}
-
-/*
  * Put all dive samples into the same dive profile.
  * We insert "top-side" dives during the surface interval between dive
  * sets.
@@ -144,20 +112,20 @@ print_join(FILE *f, const struct dive *d, time_t *last, time_t first)
  * We then ignore samples until the next dive is >1 metre.
  */
 static void
-print_split(const struct dive *d, 
-	const char *out, size_t *num, enum mode mode)
+print_split(const struct dive *d, const char *out, size_t *num)
 {
 	time_t		 start;
 	double		 lastdepth = 100.0;
+	struct dive	 dive;
 	const struct samp *s;
 	struct samp	 tmp;
-	int	 	 dopen = 0;
+	int	 	 rc, dopen = 0;
 	FILE		*f = stdout;
 
+	assert(NULL != d->fprint);
 	start = d->datetime;
 	s = TAILQ_FIRST(&d->samps);
 	assert(NULL != s);
-
 again:
 	for ( ; NULL != s; s = TAILQ_NEXT(s, entries)) {
 		if ( ! (SAMP_DEPTH & s->flags) &&
@@ -170,7 +138,19 @@ again:
 				divecmd_print_open(f, d->log);
 				divecmd_print_diveq_open(f);
 			}
-			print_dive_open(f, start, (*num)++, mode);
+			memset(&dive, 0, sizeof(struct dive));
+			dive.datetime = start;
+			dive.num = (*num)++;
+			dive.mode = d->mode;
+			/* Create a fake fingerprint. */
+			divecmd_print_dive_open(f, &dive);
+			rc = asprintf(&dive.fprint, 
+				"%s-%.10zu", d->fprint, dive.num);
+			if (rc < 0)
+				err(EXIT_FAILURE, NULL);
+			divecmd_print_dive_fingerprint(f, &dive);
+			free(dive.fprint);
+			divecmd_print_dive_sampleq_open(f);
 			dopen = 1;
 		}
 
@@ -190,7 +170,8 @@ again:
 			continue;
 		}
 
-		print_dive_close(f);
+		divecmd_print_dive_sampleq_close(f);
+		divecmd_print_dive_close(f);
 
 		if (NULL != out) {
 			divecmd_print_diveq_close(f);
@@ -217,7 +198,8 @@ again:
 	}
 
 	if (dopen) {
-		print_dive_close(f);
+		divecmd_print_dive_sampleq_close(f);
+		divecmd_print_dive_close(f);
 		if (NULL != out) {
 			divecmd_print_diveq_close(f);
 			divecmd_print_close(f);
@@ -295,7 +277,8 @@ print_all(enum pmode pmode,
 	 * however, and the fingerprints must also be unique.
 	 */
 
-	if (PMODE_NONE == pmode) {
+	switch (pmode) {
+	case PMODE_NONE:
 		htab = calloc(htabsz, sizeof(struct dive **));
 		if (NULL == htab)
 			err(EXIT_FAILURE, NULL);
@@ -375,21 +358,32 @@ print_all(enum pmode pmode,
 		for (i = 0; i < htabsz; i++)
 			free(htab[i]);
 		free(htab);
-		return(1);
-	}
-
-	if (PMODE_SPLIT == pmode) {
+		break;
+	case PMODE_SPLIT:
+		assert(NULL != TAILQ_FIRST(dq));
+		dl = TAILQ_FIRST(dq)->log;
 		if (NULL == out) {
-			divecmd_print_open(f, TAILQ_FIRST(dq)->log);
+			divecmd_print_open(f, dl);
 			divecmd_print_diveq_open(f);
 		}
-		TAILQ_FOREACH(d, dq, entries)
-			print_split(d, out, &num, d->mode);
+		TAILQ_FOREACH(d, dq, entries) {
+			if (NULL == d->fprint)
+				warnx("%s:%zu: missing fingerprint",
+					d->log->file, d->line);
+			else if ( ! dlogeq(dl, d->log))
+				warnx("%s:%zu: dive has mismatched "
+					"computer (from %s:%zu)",
+					d->log->file, d->line, 
+					dl->file, dl->line);
+			else
+				print_split(d, out, &num);
+		}
 		if (NULL == out) {
 			divecmd_print_diveq_close(f);
 			divecmd_print_close(f);
 		}
-	} else {
+		break;
+	case PMODE_JOIN:
 		d = TAILQ_FIRST(dq);
 		assert(NULL != d);
 		dl = d->log;
@@ -397,7 +391,9 @@ print_all(enum pmode pmode,
 			f = file_open(d, out);
 		divecmd_print_open(f, dl);
 		divecmd_print_diveq_open(f);
-		print_dive_open(f, d->datetime, 1, d->mode);
+		divecmd_print_dive_open(f, d);
+		/*divecmd_print_dive_fingerprint(f, d);*/
+		divecmd_print_dive_sampleq_open(f);
 		first = d->datetime;
 		last = 0;
 		TAILQ_FOREACH(d, dq, entries)
@@ -408,13 +404,17 @@ print_all(enum pmode pmode,
 					dl->file, dl->line);
 			else
 				print_join(f, d, &last, first);
-		print_dive_close(f);
+		divecmd_print_dive_sampleq_close(f);
+		divecmd_print_dive_close(f);
 		divecmd_print_diveq_close(f);
 		divecmd_print_close(f);
 		if (NULL != out) {
 			fclose(f);
 			f = stdout;
 		}
+		break;
+	default:
+		abort();
 	}
 
 	return(1);

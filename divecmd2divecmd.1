@@ -51,20 +51,26 @@ Many dive computers automatically produce canonical free diving mode,
 for example, the Suunto D6i.
 Others, like the HW OSTC 2C, do not, and instead put all dives into one,
 including surface time.
+The new split dives are given a fingerprint formatted as
+.Li fingerprint-num ,
+where
+.Dq fingerprint
+is from the dive being split.
 .Pp
 Joining
 .Pq Fl j
 is useful when exporting data into Subsurface, which expects a single
 dive profile.
 Here, a set of dives are merged into a single one.
-Dives not using the same dive computer as the first (by date) are
-omitted.
 .Pp
 If dives already are split,
 .Fl s
 does nothing; same goes with
 .Fl j
 and dives already being joined.
+For both modes, dives not using the same dive computer as the first (by
+date) are omitted.
+The diver identity is ignored.
 .Pp
 If invoked using neither
 .Fl j
