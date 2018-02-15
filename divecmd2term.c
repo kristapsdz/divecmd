@@ -537,6 +537,12 @@ main(int argc, char *argv[])
 
 	setlocale(LC_ALL, "");
 
+	if (-1 == ioctl(0, TIOCGWINSZ, &ws)) {
+		warnx("TIOCGWINSZ");
+		ws.ws_row = 25;
+		ws.ws_col = 80;
+	}
+
 	/* Pledge us early: only reading files. */
 
 #if HAVE_PLEDGE
@@ -595,12 +601,6 @@ main(int argc, char *argv[])
 	 * minimum size.
 	 * Otherwise, use the terminal's reported dimensions.
 	 */
-
-	if (-1 == ioctl(0, TIOCGWINSZ, &ws)) {
-		warnx("TIOCGWINSZ");
-		ws.ws_row = 25;
-		ws.ws_col = 80;
-	}
 
 	if (ws.ws_row < 25)
 		ws.ws_row = 25;
