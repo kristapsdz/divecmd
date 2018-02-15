@@ -1180,6 +1180,12 @@ divecmd_print_dive_sample(FILE *f, const struct samp *s)
 				   s->events[j].duration);
 			break;
 		}
+	if (SAMP_DECO & s->flags)
+		fprintf(f, "\t\t\t\t\t"
+			"<deco depth=\"%g\" type=\"%s\" "
+			"duration=\"%zu\" />\n",
+			s->deco.depth, decos[s->deco.type], 
+			s->deco.duration);
 	fputs("\t\t\t\t</sample>\n", f);
 }
 
