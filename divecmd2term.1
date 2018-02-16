@@ -1,6 +1,6 @@
 .\"	$Id$
 .\"
-.\" Copyright (c) 2016--2017 Kristaps Dzonsons <kristaps@bsd.lv>
+.\" Copyright (c) 2016--2018 Kristaps Dzonsons <kristaps@bsd.lv>
 .\"
 .\" This library is free software; you can redistribute it and/or
 .\" modify it under the terms of the GNU Lesser General Public
@@ -25,7 +25,7 @@
 .Nd graph dives on the terminal
 .Sh SYNOPSIS
 .Nm divecmd2term
-.Op Fl auv
+.Op Fl alntv
 .Op Ar files...
 .Sh DESCRIPTION
 The
@@ -40,9 +40,12 @@ Its arguments are as follows:
 Accumulate dives instead of showing them stacked.
 This is useful for free-diving where multiple dives are done in
 sequence.
-.It Fl u
-Draw utf8-encoded output sequences.
-Much prettier.
+.It Fl l
+Show the legend.
+.It Fl n
+Don't show UTF-8 or ANSI colours.
+.It fl t
+Show temperatures if the dive profile contains them.
 .It Fl v
 Parse files in verbose mode.
 .It Ar files...
@@ -60,7 +63,7 @@ standard input is used.
 .Pp
 By default,
 .Nm
-graphs two vertical panes: temperature and depth.
+graphs depth.
 Each dive is associated with a colour that is the same for both graphs.
 In practise, more than three dives is a little much.
 A title is printed above the graphs, along with the associated line
@@ -79,7 +82,7 @@ This is useful, for example, with a sequence of free-dives.
 .Sh EXAMPLES
 To pipe the output of the day's free-dives from on a Suunto D6i:
 .Pp
-.Dl divecmd -r \(dq\(dq \(dqsuunto d6i\(dq | divecmd2term -au
+.Dl divecmd -r \(dq\(dq \(dqsuunto d6i\(dq | divecmd2term -a
 .Pp
 This will extract only the current day's dives, then format them
 alongside (instead of stacked) using UTF-8 characters.
@@ -90,7 +93,7 @@ and
 .Pa dive2.xml ,
 run:
 .Pp
-.D1 divecmd2term -u dive1.xml dive2.xml
+.D1 divecmd2term dive1.xml dive2.xml
 .Sh SEE ALSO
 .Xr divecmd 1
 .Sh AUTHORS

@@ -1,6 +1,6 @@
 /*	$Id$ */
 /*
- * Copyright (c) 2016--2017 Kristaps Dzonsons <kristaps@bsd.lv>
+ * Copyright (c) 2016--2018 Kristaps Dzonsons <kristaps@bsd.lv>
  *
  * Permission to use, copy, modify, and distribute this software for any
  * purpose with or without fee is hereby granted, provided that the above
@@ -36,13 +36,25 @@
 
 #include "parser.h"
 
+/*
+ * Print parse warnings.
+ */
 int verbose = 0;
 
 /*
- * UTF-8 output mode.
- * This makes nice boxes and uses pretty characters.
+ * Disable UTF-8 and colours output mode.
  */
-static int utf8 = 0;
+static int dumb = 0;
+
+/*
+ * Print the legend (dive titles).
+ */
+static int showlegend = 0;
+
+/*
+ * Print temperatures, if found.
+ */
+static int showtemp = 0;
 
 /*
  * Aggregate dives.
@@ -94,6 +106,53 @@ static	const char *modes[] = {
 	"Closed-circuit" /* MODE_CC */
 };
 
+static void
+print_legend(const struct diveq *dq, const struct win *win)
+{
+	const struct dive *d;
+	int		   c;
+	size_t		   i, titlesz;
+	char		  *title;
+	char		   buf[128];
+	
+	i = 0;
+	TAILQ_FOREACH(d, dq, entries) {
+		if (d->datetime) {
+			ctime_r(&d->datetime, buf);
+			buf[strlen(buf) - 1] = '\0';
+		}
+		c = 0 != d->datetime ?
+			asprintf(&title, "%s Dive #%zu on %s",
+				modes[d->mode], d->num, buf) :
+			asprintf(&title, "%s Dive #%zu",
+				modes[d->mode], d->num);
+		if (c < 0)
+			err(EXIT_FAILURE, NULL);
+
+		/* Title: centre, bold.  Room for legend. */
+
+		titlesz = strlen(title) + 2;
+		if (titlesz >= win->cols) {
+			title[win->cols - 4] = '\0';
+			titlesz = strlen(title) + 2;
+		}
+
+		if ( ! dumb)
+			printf("\033[%zu;%zuH\033[1m%s \033[3%zum%lc\033[0m", 
+				win->top + i + 1, 
+				win->left + ((win->cols - titlesz) / 2) + 1,
+				title, i + 1, L'\x2022');
+		else
+			printf("\033[%zu;%zuH\033[1m%s \033[3%zum+\033[0m", 
+				win->top + i + 1, 
+				win->left + ((win->cols - titlesz) / 2) + 1,
+				title, i + 1);
+
+		free(title);
+		i++;
+	}
+}
+
 /*
  * Print a set of averages.
  * Accepts the averages, "avgs", and the window in which to print,
@@ -104,22 +163,25 @@ static	const char *modes[] = {
  * Finally, "dir" tells us whether the direction to show the y-axis
  * values, upward (1) or downward (0).
  */
-static void
+static int
 print_avgs(const struct avg *const *avgs, size_t avgsz,
 	const struct win *iwin, double min, double max, 
 	time_t mint, time_t maxt, size_t lbuf, int dir)
 {
-	size_t		 i, x, y, t, ytics, xtics;
+	size_t		 i, x, y, t, ytics, xtics, datarows;
 	double		 v;
 
+	assert(iwin->rows >= 6);
+	datarows = iwin->rows - 2;
+
 	/* 
-	 * Make our y-axis and y-axis labels. 
-	 * Start drawing the borders.
-	 * Then draw the labels and tics.
+	 * Draw the y-axis border down to the x-axis.
+	 * The x-axis is one shy of the bottom, which has the label.
+	 * Note that all ANSI escapes are from 1, not 0.
 	 */
 
-	for (y = 0; y < iwin->rows; y++)
-		if (utf8)
+	for (y = 0; y < datarows; y++)
+		if ( ! dumb)
 			printf("\033[%zu;%zuH%lc", 
 				iwin->top + y + 1, 
 				iwin->left - 1 + 1, L'\x2502');
@@ -128,25 +190,18 @@ print_avgs(const struct avg *const *avgs, size_t avgsz,
 				iwin->top + y + 1, 
 				iwin->left - 1 + 1);
 
-	if (utf8)
-		printf("\033[%zu;%zuH%lc", 
-			iwin->top + y + 1, 
-			iwin->left - 1 + 1, L'\x2514');
-	else
-		printf("\033[%zu;%zuH\\", 
-			iwin->top + y + 1, 
-			iwin->left - 1 + 1);
+	/* We have ticks enough for all but the x-axis line. */
 
 	if (iwin->rows > 50)
-		ytics = (iwin->rows - 1) / 8;
+		ytics = datarows / 8;
 	else
-		ytics = (iwin->rows - 1) / 4;
+		ytics = datarows / 4;
 
-	for (y = 0; y < iwin->rows; y += ytics) {
+	for (y = 0; y < datarows; y += ytics) {
 		v = dir ?
-			max - (max - min) * (double)y / iwin->rows :
-			min + (max - min) * (double)y / iwin->rows;
-		if (utf8)
+			max - (max - min) * (double)y / (datarows) :
+			min + (max - min) * (double)y / (datarows);
+		if ( ! dumb)
 			printf("\033[%zu;%zuH%lc", 
 				iwin->top + y + 1, 
 				iwin->left - 1 + 1, L'\x251c');
@@ -161,27 +216,30 @@ print_avgs(const struct avg *const *avgs, size_t avgsz,
 
 	/* Make sure we have a value at the maximum. */
 
-	if ((iwin->rows > 50 && 0 != (iwin->rows - 1) % 8) ||
-	    0 != (iwin->rows - 1) % 4) {
-		v = dir ?
-			max - (max - min) * 
-				(double)(iwin->rows - 1) / iwin->rows :
-			min + (max - min) * 
-				(double)(iwin->rows - 1) / iwin->rows;
+	if (y >= datarows) {
+		v = dir ? max - (max - min) : min + (max - min);
         	printf("\033[%zu;%zuH%*.1f", 
-			iwin->top + (iwin->rows - 1) + 1, 
+			iwin->top + (iwin->rows - 2) + 1, 
 			iwin->left - lbuf + 1, (int)lbuf - 1,
 			v);
-		if (utf8)
+		if ( ! dumb)
 			printf("\033[%zu;%zuH%lc", 
-				iwin->top + (iwin->rows - 1) + 1, 
+				iwin->top + (iwin->rows - 2) + 1, 
 				iwin->left - 1 + 1, L'\x251c');
 		else
 			printf("\033[%zu;%zuH-", 
-				iwin->top + (iwin->rows - 1) + 1, 
+				iwin->top + (iwin->rows - 2) + 1, 
 				iwin->left - 1 + 1);
 	}
 
+	if ( ! dumb)
+		printf("\033[%zu;%zuH%lc", 
+			iwin->top + iwin->rows, 
+			iwin->left - 1 + 1, L'\x2514');
+	else
+		printf("\033[%zu;%zuH\\", 
+			iwin->top + iwin->rows, 
+			iwin->left - 1 + 1);
 	/* 
 	 * Now make the x-axis and x-axis label.
 	 * Again, start with the border.
@@ -189,13 +247,13 @@ print_avgs(const struct avg *const *avgs, size_t avgsz,
 	 */
 
 	for (x = 0; x < iwin->cols; x++)
-		if (utf8)
+		if ( ! dumb)
 			printf("\033[%zu;%zuH%lc", 
-				iwin->top + iwin->rows + 1, 
+				iwin->top + iwin->rows, 
 				iwin->left + x + 1, L'\x2500');
 		else
 			printf("\033[%zu;%zuH-", 
-				iwin->top + iwin->rows + 1, 
+				iwin->top + iwin->rows, 
 				iwin->left + x + 1);
 
 	if (iwin->cols > 100)
@@ -208,16 +266,16 @@ print_avgs(const struct avg *const *avgs, size_t avgsz,
 			((double)x / iwin->cols);
 		if ( ! aggr)
 			t += mint;
-		if (utf8)
+		if ( ! dumb)
 			printf("\033[%zu;%zuH%lc", 
-				iwin->top + iwin->rows + 1, 
+				iwin->top + iwin->rows, 
 				iwin->left + x + 1, L'\x253c');
 		else
 			printf("\033[%zu;%zuH|", 
-				iwin->top + iwin->rows + 1, 
+				iwin->top + iwin->rows, 
 				iwin->left + x + 1);
         	printf("\033[%zu;%zuH%03zu:%02zu", 
-			iwin->top + iwin->rows + 2, 
+			iwin->top + iwin->rows + 1, 
 			iwin->left + x + 1,
 			t / 60, t % 60);
 	}
@@ -226,19 +284,16 @@ print_avgs(const struct avg *const *avgs, size_t avgsz,
 
 	for (i = 0; i < avgsz; i++)
 		for (x = 0; x < iwin->cols; x++) {
-			/* No values to sample? */
-
 			if (0 == avgs[i][x].sz)
 				continue;
-
 			v = avgs[i][x].accum / (double)avgs[i][x].sz;
 			y = dir ?
-				(iwin->rows - 1) * 
+				(iwin->rows - 2) * 
 				((max - v) / (max - min)) :
-				(iwin->rows - 1) * 
+				(iwin->rows - 2) * 
 				((v - min) / (max - min));
 
-			if (utf8)
+			if ( ! dumb)
 				printf("\033[1;3%zum\033[%zu;%zuH%lc", 
 					(i % 7) + 1,
 					iwin->top + y + 1, 
@@ -253,6 +308,7 @@ print_avgs(const struct avg *const *avgs, size_t avgsz,
 	/* Reset terminal attributes. */
 
         printf("\033[0m");
+	return(1);
 }
 
 /*
@@ -311,16 +367,14 @@ collect(const struct dive *d, size_t cols,
 static int
 print_all(const struct diveq *dq, const struct winsize *ws)
 {
-	struct dive	 *d;
-	struct graph	  temp, depth;
-	struct samp	 *samp;
-	int		  c, dtemp = 0, ddepth = 0;
-	struct win	  win, iwin;
-	size_t		  i, lbuf, titlesz, avgsz;
-	struct avg	**avg;
-	char		 *title;
-	char		  buf[128];
-	time_t		  mint = 0, maxt = 0, t;
+	const struct dive *d;
+	struct graph	   temp, depth;
+	struct samp	  *samp;
+	int		   dtemp = 0, ddepth = 0, clr = 0;
+	struct win	   win, iwin;
+	size_t		   i, lbuf, avgsz, tbuf, need;
+	struct avg	 **avg;
+	time_t		   mint = 0, maxt = 0, t;
 
 	memset(&temp, 0, sizeof(struct graph));
 	memset(&depth, 0, sizeof(struct graph));
@@ -338,6 +392,11 @@ print_all(const struct diveq *dq, const struct winsize *ws)
 
 	avgsz = 0;
 	TAILQ_FOREACH(d, dq, entries) {
+		if (aggr && 0 == d->datetime) {
+			warnx("%s:%zu: datetime required",
+				d->log->file, d->line);
+			continue;
+		}
 		avgsz++;
 		TAILQ_FOREACH(samp, &d->samps, entries) {
 			if (SAMP_DEPTH & samp->flags) {
@@ -367,15 +426,13 @@ print_all(const struct diveq *dq, const struct winsize *ws)
 	 */
 
 	if (aggr) {
-		TAILQ_FOREACH(d, dq, entries) {
-			if (0 == d->datetime) {
-				warnx("date and time required");
-				return(0);
-			}
-			if (0 == mint || d->datetime < mint)
-				mint = d->datetime;
-		}
 		TAILQ_FOREACH(d, dq, entries)
+			if (d->datetime &&
+			    (0 == mint || d->datetime < mint))
+				mint = d->datetime;
+		TAILQ_FOREACH(d, dq, entries) {
+			if (0 == d->datetime)
+				continue;
 			TAILQ_FOREACH(samp, &d->samps, entries)
 				if (SAMP_TEMP & samp->flags ||
 				    SAMP_DEPTH & samp->flags) {
@@ -383,6 +440,7 @@ print_all(const struct diveq *dq, const struct winsize *ws)
 					if (t > maxt)
 						maxt = t;
 				}
+		}
 	} else
 		TAILQ_FOREACH(d, dq, entries) 
 			TAILQ_FOREACH(samp, &d->samps, entries)
@@ -407,8 +465,11 @@ print_all(const struct diveq *dq, const struct winsize *ws)
 	    fabs(depth.maxvalue - depth.minvalue) > FLT_EPSILON)
 		ddepth = 1;
 
+	if (0 == showtemp && dtemp)
+		dtemp = 0;
+
 	if (0 == dtemp && 0 == ddepth) {
-		warnx("nothing to graph");
+		warnx("no data points to graph");
 		return(0);
 	}
 
@@ -416,10 +477,11 @@ print_all(const struct diveq *dq, const struct winsize *ws)
 		err(EXIT_FAILURE, NULL);
 
 	/*
-	 * Begin by clearing our workspace.
+	 * Make some decisions on what we should show.
+	 * If we want a legend and we don't have enough space to do any
+	 * graphing, then disable the legend.
 	 */
 
-	printf("\e[1;1H\e[2J");
 
 	/* 
 	 * Include a margin: 4 vertical (one at the top, two on the
@@ -432,42 +494,39 @@ print_all(const struct diveq *dq, const struct winsize *ws)
 	win.top = 1;
 	win.left = 1;
 
-	i = 0;
-	TAILQ_FOREACH(d, dq, entries) {
-		if (d->datetime) {
-			ctime_r(&d->datetime, buf);
-			buf[strlen(buf) - 1] = '\0';
-		}
-		c = 0 != d->datetime ?
-			asprintf(&title, "%s Dive #%zu on %s",
-				modes[d->mode], d->num, buf) :
-			asprintf(&title, "%s Dive #%zu",
-				modes[d->mode], d->num);
-		if (c < 0)
-			err(EXIT_FAILURE, NULL);
+	/* 
+	 * Make some allowances.
+	 * If we're requesting both graphs and don't have enough space
+	 * for both graphs (7 for each, including top buffer), then
+	 * disable the legend.
+	 * If we're requesting one graph and don't have space, disable
+	 * the legend.
+	 */
 
-		/* Title: centre, bold.  Room for legend. */
+	need = (showlegend ? avgsz + 1 : 0) +
+		(dtemp ? 6 : 0) +
+		(ddepth ? 6 : 0);
 
-		titlesz = strlen(title) + 2;
-		if (titlesz >= win.cols) {
-			title[win.cols - 4] = '\0';
-			titlesz = strlen(title) + 2;
-		}
+	if (dtemp && ddepth)
+		need += 2;
 
-		if (utf8)
-			printf("\033[%zu;%zuH\033[1m%s \033[3%zum%lc\033[0m", 
-				win.top + i + 1, 
-				win.left + ((win.cols - titlesz) / 2) + 1,
-				title, i + 1, L'\x2022');
-		else
-			printf("\033[%zu;%zuH\033[1m%s \033[3%zum+\033[0m", 
-				win.top + i + 1, 
-				win.left + ((win.cols - titlesz) / 2) + 1,
-				title, i + 1);
-
-		i++;
+	if (need >= win.rows) {
+		warnx("not enough output rows");
+		free(avg);
+		return(0);
 	}
 
+	if (dtemp && ddepth && 0 == win.rows % 2)
+		win.rows--;
+
+	printf("\e[1;1H\e[2J");
+
+	/* Now do the actual printing. */
+
+	if (showlegend) 
+		print_legend(dq, &win);
+
+	tbuf = showlegend ? avgsz + 1 : 0;
 	lbuf = (dtemp && temp.maxvalue >= 100.0) || 
 	       (ddepth && depth.maxvalue >= 100.0) ? 6 : 5;
 
@@ -475,11 +534,11 @@ print_all(const struct diveq *dq, const struct winsize *ws)
 		iwin = win;
 		iwin.cols -= lbuf;
 		iwin.left += lbuf;
-		iwin.top += avgsz;
+		iwin.top += tbuf;
 		if (ddepth)
-			iwin.rows = (win.rows / 2) - 3;
+			iwin.rows = (win.rows / 2) - (tbuf / 2) - 1;
 		else
-			iwin.rows -= (avgsz + 1);
+			iwin.rows -= tbuf;
 
 		i = 0;
 		TAILQ_FOREACH(d, dq, entries) 
@@ -498,19 +557,19 @@ print_all(const struct diveq *dq, const struct winsize *ws)
 		iwin.cols -= lbuf;
 		iwin.left += lbuf;
 		if (dtemp) {
-			iwin.top = (win.rows / 2) + avgsz + 1;
-			iwin.rows = (win.rows / 2) - (avgsz + 1);
+			iwin.top = (win.rows / 2) + (tbuf / 2) + 3;
+			iwin.rows = (win.rows / 2) - (tbuf / 2) - 1;
 		} else {
-			iwin.rows -= (avgsz + 1);
-			iwin.top += avgsz;
+			iwin.top += tbuf;
+			iwin.rows -= tbuf;
 		}
 
 		i = 0;
 		TAILQ_FOREACH(d, dq, entries)
 			avg[i++] = collect(d, iwin.cols, 
 				mint, maxt, GRAPH_DEPTH);
-		print_avgs((const struct avg *const *)avg, avgsz, 
-			&iwin, depth.minvalue, depth.maxvalue, 
+		clr = print_avgs((const struct avg *const *)avg, 
+			avgsz, &iwin, 0, depth.maxvalue, 
 			mint, maxt, lbuf, 0);
 		for (i = 0; i < avgsz; i++)
 			free(avg[i]);
@@ -521,7 +580,6 @@ print_all(const struct diveq *dq, const struct winsize *ws)
         printf("\033[%d;%dH", ws->ws_row, 0);
 
 	free(avg);
-	free(title);
 	return(1);
 }
 
@@ -538,6 +596,8 @@ main(int argc, char *argv[])
 	setlocale(LC_ALL, "");
 	memset(&ws, 0, sizeof(struct winsize));
 
+	/* Do our best to get terminal dimensions. */
+
 	if (-1 == ioctl(STDOUT_FILENO, TIOCGWINSZ, &ws)) {
 		if (NULL != getenv("LINES"))
 			ws.ws_row = atoi(getenv("LINES"));
@@ -545,19 +605,24 @@ main(int argc, char *argv[])
 			ws.ws_col = atoi(getenv("COLUMNS"));
 	}
 
-	/* Pledge us early: only reading files. */
-
 #if HAVE_PLEDGE
 	if (-1 == pledge("stdio rpath", NULL))
 		err(EXIT_FAILURE, "pledge");
 #endif
-	while (-1 != (c = getopt(argc, argv, "auv")))
+
+	while (-1 != (c = getopt(argc, argv, "alntv")))
 		switch (c) {
 		case ('a'):
 			aggr = 1;
 			break;
-		case ('u'):
-			utf8 = 1;
+		case ('l'):
+			showlegend = 1;
+			break;
+		case ('n'):
+			dumb = 1;
+			break;
+		case ('t'):
+			showtemp = 1;
 			break;
 		case ('v'):
 			verbose = 1;
@@ -569,12 +634,8 @@ main(int argc, char *argv[])
 	argc -= optind;
 	argv += optind;
 
-	divecmd_init(&p, &dq, &st, GROUP_NONE, GROUPSORT_DATETIME);
-
-	/* 
-	 * Handle all files or stdin.
-	 * File "-" is interpreted as stdin.
-	 */
+	divecmd_init(&p, &dq, &st, 
+		GROUP_NONE, GROUPSORT_DATETIME);
 
 	if (0 == argc)
 		rc = divecmd_parse("-", p, &dq, &st);
@@ -597,17 +658,7 @@ main(int argc, char *argv[])
 		goto out;
 	}
 
-	/*
-	 * Initialise screen real estate.
-	 * By default, pretend we're a 80x25, which will also be our
-	 * minimum size.
-	 * Otherwise, use the terminal's reported dimensions.
-	 */
-
-	if (ws.ws_row < 25)
-		ws.ws_row = 25;
-	if (ws.ws_col < 80)
-		ws.ws_col = 80;
+	/* Establish minima. */
 
 	if ( ! TAILQ_EMPTY(&dq))
 		rc = print_all(&dq, &ws);
@@ -617,6 +668,6 @@ out:
 	divecmd_free(&dq, &st);
 	return(rc ? EXIT_SUCCESS : EXIT_FAILURE);
 usage:
-	fprintf(stderr, "usage: %s [-auv] [file]\n", getprogname());
+	fprintf(stderr, "usage: %s [-alntv] [file]\n", getprogname());
 	return(EXIT_FAILURE);
 }
