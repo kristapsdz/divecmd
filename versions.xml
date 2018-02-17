@@ -3,6 +3,27 @@
 <articles>
 	<article data-sblg-article="1" data-sblg-tags="version">
 		<header>
+			<h1>0.0.13</h1>
+			<address>Kristaps Dzonsons</address>
+			<time datetime="2018-02-16">2018-02-16</time>
+		</header>
+		<aside>
+			<p>
+				Significantly improve the utility of <a
+					href="divecmd2divecmd.1.html">divecmd2divecmd(1)</a>,
+				allowing it to extract certain dives (by date ranges and mode, for
+				the time being) from a larger dive file.
+			</p>
+			<p>
+				Also fix <a href="divecmd2term.1.html">divecmd2term(1)</a> to work
+				better when used in a pipe, fix its arguments (<b>-n</b> for
+				<q>dumb</q> mode, with UTF-8 and colours by default), and also allow
+				for inhibiting the display of temperatures or the legend.
+			</p>
+		</aside>
+	</article>
+	<article data-sblg-article="1" data-sblg-tags="version">
+		<header>
 			<h1>0.0.12</h1>
 			<address>Kristaps Dzonsons</address>
 			<time datetime="2018-02-15">2018-02-15</time>
