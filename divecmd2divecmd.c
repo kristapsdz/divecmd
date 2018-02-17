@@ -77,25 +77,25 @@ limit_match(const struct dive *d, const struct limitq *lq)
 			if (d->datetime < l->date ||
 			    d->datetime > l->date + 60 * 60 * 24)
 				return(0);
-			break;
+			continue;
 		case LIMIT_DATE_BEFORE:
 		case LIMIT_DATETIME_BEFORE:
 			if (0 == d->datetime)
 				return(0);
 			if (d->datetime > l->date)
 				return(0);
-			break;
+			continue;
 		case LIMIT_DATE_AFTER:
 		case LIMIT_DATETIME_AFTER:
 			if (0 == d->datetime)
 				return(0);
 			if (d->datetime < l->date)
 				return(0);
-			break;
+			continue;
 		case LIMIT_MODE_EQ:
 			if (l->mode != d->mode)
 				return(0);
-			break;
+			continue;
 		}
 	}
 
@@ -492,7 +492,7 @@ print_all(enum pmode pmode, const char *out,
 static int
 limit_parse(const char *arg, struct limits *l)
 {
-	const char 	*obj;
+	const char 	*obj, *cp;
 	struct tm	 tm;
 
 	memset(l, 0, sizeof(struct limits));
@@ -532,7 +532,8 @@ limit_parse(const char *arg, struct limits *l)
 	case LIMIT_DATETIME_AFTER:
 	case LIMIT_DATETIME_BEFORE:
 		memset(&tm, 0, sizeof(struct tm));
-		if (strptime(obj, "%Y-%m-%dT%R", &tm)) {
+		cp = strptime(obj, "%Y-%m-%dT%R", &tm);
+		if (NULL != cp && '\0' == *cp) {
 			l->date = mktime(&tm);
 			break;
 		}
@@ -542,7 +543,8 @@ limit_parse(const char *arg, struct limits *l)
 	case LIMIT_DATE_BEFORE:
 	case LIMIT_DATE_EQ:
 		memset(&tm, 0, sizeof(struct tm));
-		if (strptime(obj, "%Y-%m-%d", &tm)) {
+		cp = strptime(obj, "%Y-%m-%d", &tm);
+		if (NULL != cp && '\0' == *cp) {
 			l->date = mktime(&tm);
 			break;
 		}
