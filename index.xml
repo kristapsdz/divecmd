@@ -67,7 +67,7 @@
 			</p>
 			<blockquote>
 				<code>
-					divecmd2pdf -m summary <a href="daily.xml">daily.xml</a> | > <a href="daily.summary.pdf">daily.summary.pdf</a>
+					divecmd2pdf -m summary <a href="daily.xml">daily.xml</a> > <a href="daily.summary.pdf">daily.summary.pdf</a>
 				</code>
 				<code>
 					divecmd2pdf -m restscatter <a href="daily.xml">daily.xml</a> > <a href="daily.restscatter.pdf">daily.restscatter.pdf</a>
@@ -79,7 +79,13 @@
 				<strong>Note</strong>: if you're free diving and using a dive computer that lumps all free dives into one huge
 				dive without splitting them up by surface time, use <a href="divecmd2divecmd.1.html">divecmd2divecmd(1)</a> to
 				canonicalise the dives.  My HW OSTC 2C does this.
+				Or I'll take a sneak peak only at the day's dives on my terminal:
 			</p>
+			<blockquote>
+				<code>
+					divecmd2divecmd -ldate=`date +'%Y-%m-%d'` <a href="daily.xml">daily.xml</a> | divecmd2term
+				</code>
+			</blockquote>
 			<p>
 				There are a number of ways to export from the native <a href="divecmd.1.html">divecmd(1)</a> XML file without
 				needing to parse the file yourself.
@@ -308,7 +314,7 @@
 							<a class="img" href="screenshot1.png"><img src="screenshot1.png" alt="" /></a>
 							<figcaption>
 								<p>
-									Screenshot of the terminal mode in UTF8 (<b>-u</b>).
+									Screenshot of the terminal mode.
 									The temperature of a longer dive is shown on the top frame; depth, in the lower frame.
 								</p>
 							</figcaption>
