@@ -52,10 +52,8 @@ print_divelog(const struct dlog *dl)
 		printf("%s%s", ns ? ", " : "", dl->model);
 		ns = 1;
 	}
-	if (NULL != dl->ident) {
+	if (NULL != dl->ident)
 		printf("%s%s", ns ? ": " : "", dl->ident);
-		ns = 1;
-	}
 	putchar('\n');
 }
 

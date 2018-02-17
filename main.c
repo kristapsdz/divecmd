@@ -516,6 +516,7 @@ parserange(const char *range, struct dcmd_rng **pp)
 		if ( ! parsedatetime(start, &tstart)) {
 			warnx("failed to parse range start");
 			free(cp);
+			free(p);
 			return(0);
 		} 
 		if ((p->start = dc_datetime_mktime(&tstart)) < 0)

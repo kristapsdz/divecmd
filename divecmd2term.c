@@ -163,7 +163,7 @@ print_legend(const struct diveq *dq, const struct win *win)
  * Finally, "dir" tells us whether the direction to show the y-axis
  * values, upward (1) or downward (0).
  */
-static int
+static void
 print_avgs(const struct avg *const *avgs, size_t avgsz,
 	const struct win *iwin, double min, double max, 
 	time_t mint, time_t maxt, size_t lbuf, int dir)
@@ -308,7 +308,6 @@ print_avgs(const struct avg *const *avgs, size_t avgsz,
 	/* Reset terminal attributes. */
 
         printf("\033[0m");
-	return(1);
 }
 
 /*
@@ -370,7 +369,7 @@ print_all(const struct diveq *dq, const struct winsize *ws)
 	const struct dive *d;
 	struct graph	   temp, depth;
 	struct samp	  *samp;
-	int		   dtemp = 0, ddepth = 0, clr = 0;
+	int		   dtemp = 0, ddepth = 0;
 	struct win	   win, iwin;
 	size_t		   i, lbuf, avgsz, tbuf, need;
 	struct avg	 **avg;
@@ -568,7 +567,7 @@ print_all(const struct diveq *dq, const struct winsize *ws)
 		TAILQ_FOREACH(d, dq, entries)
 			avg[i++] = collect(d, iwin.cols, 
 				mint, maxt, GRAPH_DEPTH);
-		clr = print_avgs((const struct avg *const *)avg, 
+		print_avgs((const struct avg *const *)avg, 
 			avgsz, &iwin, 0, depth.maxvalue, 
 			mint, maxt, lbuf, 0);
 		for (i = 0; i < avgsz; i++)
