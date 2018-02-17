@@ -603,7 +603,7 @@ main(int argc, char *argv[])
 		case ('j'):
 			mode = PMODE_JOIN;
 			break;
-		case ('o'):
+		case ('o'): /* XXX: undocumented */
 			out = optarg;
 			break;
 		case ('s'):
@@ -662,8 +662,7 @@ usage:
 	}
 	fprintf(stderr, "usage: %s "
 		"[-jsv] "
-		"[-l limits] "
-		"[-o out] "
+		"[-l limit] "
 		"[file ...]\n", getprogname());
 	return(EXIT_FAILURE);
 }

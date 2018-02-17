@@ -26,7 +26,7 @@
 .Sh SYNOPSIS
 .Nm divecmd2divecmd
 .Op Fl jsv
-.Op Fl o Ar dir
+.Op Fl l Ar limit
 .Op Ar
 .Sh DESCRIPTION
 The
@@ -34,12 +34,23 @@ The
 utility accepts divelog files produced by
 .Xr divecmd 1
 and manipulates their contents: it can split individual dives into
-multiple dives
-.Pq Fl s ,
-it can join multiple dives into a single dive
-.Pq Fl j ,
-or join multiple divelogs into a single divelog
-.Pq the default .
+multiple dives; join multiple dives into a single dive; or join multiple
+divelogs into a single divelog, which is the default.
+Its arguments are as follows:
+.Bl -tag -width Ds
+.It Fl l Ar limit
+Limit which dives are emitted.
+See
+.Sx Limits
+for details.
+.It Fl j
+Join a sequence of dives within a divelog into a single dive.
+.It Fl s
+Split a single dive into a sequence of dives by its surface intervals.
+.It Fl v
+Emit warnings during parse.
+Specify twice for further debugging information.
+.El
 .Pp
 Splitting
 .Pq Fl s
@@ -85,16 +96,39 @@ all dives are merged into a single divelog.
 All dives must have the same dive computer as the first (by date), else
 they are omitted, and duplicate fingerprints are also omitted.
 .Pp
-The only other arguments are
-.Fl v ,
-which triggers verbose parsing, and
-.Fl o Ar dir ,
-which outputs dive files (one dive per file) into
-.Ar dir .
-.Pp
 .Nm
 produces output on standard output as documented in
 .Xr divecmd 1 .
+.Ss Limits
+Processed dives may be limited with the
+.Fl l Ar limit
+option consisting of
+.Ar key Ns = Ns Ar value
+limit pairs.
+The keys may be as follows:
+.Bl -tag -width Ds
+.It Ar dafter Ns = Ns Ar date
+Dives starting after (inclusive) the
+.Ar date .
+.It Ar dbefore Ns = Ns Ar date
+Dives starting before (inclusive) the
+.Ar date .
+.It Ar date Ns = Ns Ar date
+Dives starting on the
+.Ar date .
+.It Ar mode Ns = Ns Ar free|open|closed|gauge
+Dives matching the
+.Ar mode .
+.It Ar dtafter Ns = Ns Ar datetime
+Dives starting after (inclusive) the
+.Ar datetime .
+.It Ar dtbefore Ns = Ns Ar datetime
+Dives starting before (inclusive) the
+.Ar datetime .
+.El
+.Pp
+Dates are always formatted as YYYY-mm-dd.
+Date-times are formatted as YYYY-mm-ddTHH:MM.
 .Sh EXIT STATUS
 .Ex -std
 .Sh SEE ALSO
@@ -107,3 +141,4 @@ utility was written by
 .Mt kristaps@bsd.lv .
 .Sh BUGS
 Some data (e.g., vendor events) are ignored during conversion.
+These are reported to standard error.
