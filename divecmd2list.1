@@ -33,9 +33,52 @@ utility accepts a set of
 files and collects them into an easy list view.
 Lists are grouped by dive computer and diver and shown as:
 .Bd -literal
-divelog: [vendor] [product] [model]
-  [date]  [time]  [maxdepth]  [maxtime]  [avgtemp|-]  [type]
+divelog: [vendor] [, product] [, model] [: diver]
+ [pid] [date] [time] [maxdepth] [avgtemp|-] [maxtime] [type]
 .Ed
+.Pp
+These fields are as follows:
+.Bl -tag -width Ds
+.It Cm vendor
+If specified, the dive computer vendor.
+For example,
+.Qq Suunto .
+.It Cm product
+If specified, the dive computer.
+For example,
+.Qq D6i .
+.It Cm model
+If specified, the model of the dive computer.
+.It Cm diver
+If specified, the diver.
+.It Cm pid
+The parse identifier.
+This is unique within a series of dives and depends on input ordering.
+.It Cm date
+The starting date in YYYY-mm-dd format.
+.It Cm time
+The starting time in YYYY-mm-dd format.
+.It Cm maxdepth
+The maximum depth in metres.
+.It Cm maxtime
+The maximum time (dive time) in seconds or as a formatted time if
+.Fl h
+was specified.
+.It Cm avgtemp
+The average temperature or
+.Cm \&-
+if no temperatures were specified.
+.It Cm type
+The type of dive:
+.Qq open
+for open-circuit,
+.Qq free
+for free diving,
+.Qq gauge
+for gauge mode, or
+.Qq closed 
+for closed-circuit dives.
+.El
 .Sh EXIT STATUS
 .Ex -std
 .Sh SEE ALSO
