@@ -3,6 +3,21 @@
 <articles>
 	<article data-sblg-article="1" data-sblg-tags="version">
 		<header>
+			<h1>0.0.14</h1>
+			<address>Kristaps Dzonsons</address>
+			<time datetime="2018-02-18">2018-02-18</time>
+		</header>
+		<aside>
+			<p>
+				Have <a href="divecmd2list.1.html">divecmd2list(1)</a> show average
+				temperature, if found.
+				Also show parse identifier, for easier use with <a
+					href="divecmd2divecmd.1.html">divecmd2divecmd(1)</a>.
+			</p>
+		</aside>
+	</article>
+	<article data-sblg-article="1" data-sblg-tags="version">
+		<header>
 			<h1>0.0.13</h1>
 			<address>Kristaps Dzonsons</address>
 			<time datetime="2018-02-16">2018-02-16</time>
