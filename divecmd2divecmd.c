@@ -25,6 +25,7 @@
 #endif
 #include <limits.h>
 #include <stdlib.h>
+#include <stdint.h>
 #include <stdio.h>
 #include <string.h>
 #include <time.h>
@@ -46,6 +47,7 @@ enum	limit {
 	LIMIT_DATE_EQ,
 	LIMIT_DATETIME_AFTER,
 	LIMIT_DATETIME_BEFORE,
+	LIMIT_DIVE_EQ,
 	LIMIT_MODE_EQ
 };
 
@@ -59,6 +61,7 @@ struct	limits {
 	enum limit	 type; /* type of constraint */
 	time_t		 date; /* date/time, if applicable */
 	enum mode	 mode; /* mode, if applicable */
+	size_t		 pid; /* parse id, if applicable */
 	TAILQ_ENTRY(limits) entries;
 };
 
@@ -92,6 +95,10 @@ limit_match(const struct dive *d, const struct limitq *lq)
 			if (d->datetime < l->date)
 				return(0);
 			continue;
+		case LIMIT_DIVE_EQ:
+			if (d->pid != l->pid)
+				return(0);
+			break;
 		case LIMIT_MODE_EQ:
 			if (l->mode != d->mode)
 				return(0);
@@ -494,6 +501,7 @@ limit_parse(const char *arg, struct limits *l)
 {
 	const char 	*obj, *cp;
 	struct tm	 tm;
+	const char	*er = NULL;
 
 	memset(l, 0, sizeof(struct limits));
 
@@ -511,6 +519,9 @@ limit_parse(const char *arg, struct limits *l)
 		obj = optarg + 9;
 	} else if (0 == strncmp("date=", optarg, 5)) {
 		l->type = LIMIT_DATE_EQ;
+		obj = optarg + 5;
+	} else if (0 == strncmp("dive=", optarg, 5)) {
+		l->type = LIMIT_DIVE_EQ;
 		obj = optarg + 5;
 	} else if (0 == strncmp("mode=", optarg, 5)) {
 		l->type = LIMIT_MODE_EQ;
@@ -549,6 +560,14 @@ limit_parse(const char *arg, struct limits *l)
 			break;
 		}
 		warnx("-l: bad date: %s", obj);
+		return(0);
+	case LIMIT_DIVE_EQ:
+		l->pid = strtonum(obj, 0, LONG_MAX, &er);
+		if (NULL == er) {
+			warnx("pid: %zu", l->pid);
+			break;
+		}
+		warnx("-l: bad pid: %s: %s", obj, er);
 		return(0);
 	case LIMIT_MODE_EQ:
 		if (0 == strcasecmp(obj, "open")) {
