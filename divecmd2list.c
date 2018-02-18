@@ -96,14 +96,27 @@ print_all(int human, const struct divestat *ds)
 {
 	const struct dgroup	*dg;
 	const struct dive	*d;
-	size_t			 i;
+	const struct samp	*s;
+	size_t			 i, tempsz;
+	double			 temp;
 
 	for (i = 0; i < ds->groupsz; i++) {
 		dg = ds->groups[i];
 		print_divelog(TAILQ_FIRST(&dg->dives)->log);
 		TAILQ_FOREACH(d, &dg->dives, gentries) {
+			tempsz = 0;
+			temp = 0.0;
+			TAILQ_FOREACH(s, &d->samps, entries)
+				if (SAMP_TEMP & s->flags) {
+					temp += s->temp;
+					tempsz++;
+				}
 			print_datetime(d);
 			printf("%5.2f  ", d->maxdepth);
+			if (tempsz > 0)
+				printf("%5.1f  ", temp / tempsz);
+			else
+				fputs("    -  ", stdout);
 			print_duration(human, d);
 			if (MODE_FREEDIVE == d->mode)
 				puts("free");
