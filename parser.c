@@ -46,6 +46,7 @@ struct	parse {
 	struct divestat	 *stat; /* statistics */
 	char		 *buf; /* temporary buffer */
 	size_t		  bufsz; /* length of buf */
+	size_t		  pid;
 };
 
 static	const char *decos[DECO__MAX] = {
@@ -493,6 +494,7 @@ parse_open(void *dat, const XML_Char *s, const XML_Char **atts)
 		}
 
 		p->curdive = d = xcalloc(p, 1, sizeof(struct dive));
+		p->curdive->pid = ++p->pid;
 		p->curdive->line = XML_GetCurrentLineNumber(p->p);
 		TAILQ_INIT(&d->samps);
 		d->log = p->curlog;

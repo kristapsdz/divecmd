@@ -150,6 +150,7 @@ struct	divegas {
 };
 
 struct	dive {
+	size_t		     pid; /* unique in parse sequence */
 	size_t		     line; /* parse line */
 	time_t		     datetime; /* time or zero */
 	size_t		     num; /* number or zero */
