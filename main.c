@@ -68,7 +68,8 @@ struct	descr {
  * The first match returns.
  */
 static int
-search_descr(dc_descriptor_t **out, const char *name, int mod)
+search_descr(dc_descriptor_t **out, const char *name, 
+	unsigned int mod, int has_mod)
 {
 	dc_status_t	 rc = DC_STATUS_SUCCESS;
 	dc_iterator_t	*iterator = NULL;
@@ -101,7 +102,7 @@ search_descr(dc_descriptor_t **out, const char *name, int mod)
 		if (strncasecmp(name, vendor, n) == 0 && 
 		    name[n] == ' ' &&
 		    strcasecmp(name + n + 1, product) == 0 &&
-		    (mod < 0 || (unsigned int)mod == model)) {
+		    ( ! has_mod || mod == model)) {
 			current = descriptor;
 			break;
 		} 
@@ -112,7 +113,7 @@ search_descr(dc_descriptor_t **out, const char *name, int mod)
 		 */
 
 		if (strcasecmp(name, product) == 0 &&
-		    (mod < 0 || (unsigned int)mod == model)) {
+		    ( ! has_mod || mod == model)) {
 			current = descriptor;
 			break;
 		}
@@ -335,7 +336,8 @@ fprint_set(int fd, const char *file, dc_buffer_t *buf)
  * the file is open anyway.
  */
 static dc_buffer_t *
-fprint_get(int *fd, char **filep, int all, dc_descriptor_t *desc)
+fprint_get(int *fd, char **filep, int all, 
+	dc_descriptor_t *desc, const char *ident)
 {
 	char		*cp, *ccp, *file;
 	unsigned char	 buf[1024];
@@ -370,16 +372,24 @@ fprint_get(int *fd, char **filep, int all, dc_descriptor_t *desc)
 
 	/* Escape device name as file. */
 
-	rc = asprintf(&cp, "%s %s-%u", 
-		dc_descriptor_get_vendor(desc),
-		dc_descriptor_get_product(desc),
-		dc_descriptor_get_model(desc));
+	rc = NULL != ident ?
+		asprintf(&cp, "%s %s-%u", 
+			dc_descriptor_get_vendor(desc),
+			dc_descriptor_get_product(desc),
+			dc_descriptor_get_model(desc)) :
+		asprintf(&cp, "%s %s-%u %s", 
+			dc_descriptor_get_vendor(desc),
+			dc_descriptor_get_product(desc),
+			dc_descriptor_get_model(desc),
+			ident);
 
 	if (rc < 0)
 		err(EXIT_FAILURE, NULL);
 
+	/* Replace whitespace and path delimiters. */
+
 	for (ccp = cp; '\0' != *ccp; ccp++)
-		if (isspace((int)*ccp) || '(' == *ccp || ')' == *ccp)
+		if (isspace((int)*ccp) || '/' == *ccp)
 			*ccp = '_';
 		else if (isalpha((int)*ccp))
 			*ccp = tolower((int)*ccp);
@@ -566,14 +576,15 @@ main(int argc, char *argv[])
 	dc_context_t	*context = NULL;
 	dc_descriptor_t *descriptor = NULL;
 	dc_loglevel_t 	 loglevel = DC_LOGLEVEL_WARNING;
-	const char 	*ofp = NULL, *range = NULL, *ident = NULL;
+	const char 	*ofp = NULL, *range = NULL, *ident = NULL, *er;
 	const char	*udev = "/dev/ttyU0";
 	int 		 show = 0, ch, ofd = -1, nofp = 0, all = 0;
 	dc_buffer_t	*fprint = NULL, *ofprint = NULL, *lprint = NULL;
 	enum dcmd_type	 out = DC_OUTPUT_XML;
 	char		*ofile = NULL;
 	struct dcmd_rng	*rng = NULL;
-	int	 	 model = -1;
+	unsigned int	 model;
+	int		 has_model = 0;
 
 	while (-1 != (ch = getopt (argc, argv, "ad:f:i:lm:nr:sv"))) {
 		switch (ch) {
@@ -593,9 +604,13 @@ main(int argc, char *argv[])
 			out = DC_OUTPUT_LIST;
 			break;
 		case 'm':
-			/* FIXME: use strtonum. */
-			model = atoi(optarg);
-			break;
+			model = strtonum(optarg, 0, UINT_MAX, &er);
+			if (NULL == er) {
+				has_model = 1;
+				break;
+			}
+			errx(EXIT_FAILURE, "-m: %s", er);
+			/* NOTREACHED */
 		case 'n':
 			nofp = 1;
 			break;
@@ -619,8 +634,8 @@ main(int argc, char *argv[])
 	argv += optind;
 
 	/* 
-	 * If we're only showing our available devices, then do so now as this
-	 * uses no resources.
+	 * If we're only showing our available devices, then do so now
+	 * as this uses no resources.
 	 */
 
 	if (show) {
@@ -632,7 +647,7 @@ main(int argc, char *argv[])
 
 	/* Look up the device in our descriptor table. */
 
-	if ( ! search_descr(&descriptor, argv[0], model))
+	if ( ! search_descr(&descriptor, argv[0], model, has_model))
 		goto cleanup;
 
 	if (descriptor == NULL) {
@@ -655,7 +670,7 @@ main(int argc, char *argv[])
 
 	/* Deserialise last-seen fingerprint. */
 
-	fprint = fprint_get(&ofd, &ofile, all, descriptor);
+	fprint = fprint_get(&ofd, &ofile, all, descriptor, ident);
 
 	/* Setup the cancel signal handler. */
 
