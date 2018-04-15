@@ -152,6 +152,10 @@ sample_cb(dc_sample_type_t type, dc_sample_value_t v, void *userdata)
 			v.deco.depth, dcmd_deco_types[v.deco.type],
 			v.deco.time);
 		break;
+	case DC_SAMPLE_GASMIX:
+		fprintf(sd->f, "\t\t\t\t\t"
+			"<gaschange mix=\"%u\" />\n", v.gasmix);
+		break;
 	case DC_SAMPLE_EVENT:
 		fprintf(sd->f, "\t\t\t\t\t"
 			"<event type=\"%s\" duration=\"%u\" />\n", 
