@@ -124,6 +124,13 @@ logattr(const struct parse *p, const char *tag, const char *attr)
 }
 
 static void
+lognattr(struct parse *p, const char *tag, const char *attr)
+{
+
+	logerrx(p, "missing <%s> attribute: %s", attr, tag);
+}
+
+static void
 logwarnx(const struct parse *p, const char *fmt, ...)
 {
 	va_list	 ap;
@@ -648,7 +655,11 @@ parse_open(void *dat, const XML_Char *s, const XML_Char **atts)
 			TAILQ_INSERT_TAIL(p->dives, d, entries);
 		}
 	} else if (0 == strcmp(s, "fingerprint")) {
-		if (p->bufsz)
+		if (NULL == (d = p->curdive))
+			logerrx(p, "<fingerprint> not in <dive>");
+		else if (NULL != d->fprint)
+			logerrx(p, "restatement of <fingerprint>");
+		else if (p->bufsz)
 			logerrx(p, "nested <fingerprint>");
 		else
 			XML_SetDefaultHandler(p->p, parse_text);
@@ -671,7 +682,7 @@ parse_open(void *dat, const XML_Char *s, const XML_Char **atts)
 			else
 				logattr(p, "gasmix", *ap);
 		if (NULL == v) {
-			logerrx(p, "<gasmix> missing attributes");
+			lognattr(p, "gasmix", "num");
 			return;
 		}
 
@@ -721,9 +732,8 @@ parse_open(void *dat, const XML_Char *s, const XML_Char **atts)
 				v = ap[1];
 			else
 				logattr(p, "sample", *ap);
-
 		if (NULL == v) {
-			logerrx(p, "<sample> missing attributes");
+			lognattr(p, "sample", "time");
 			return;
 		}
 
@@ -750,9 +760,38 @@ parse_open(void *dat, const XML_Char *s, const XML_Char **atts)
 
 		logdbg(p, "new sample: num=%zu, time=%zu",
 			d->num, samp->time);
+	} else if (0 == strcmp(s, "vendor")) {
+		if (NULL == (samp = p->cursamp)) {
+			logerrx(p, "<vendor> not in <sample>");
+			return;
+		} else if (SAMP_VENDOR & samp->flags) {
+			logerrx(p, "restatement of <vendor>");
+			return;
+		}
+		v = NULL;
+		for (ap = atts; NULL != ap[0]; ap += 2)
+			if (0 == strcmp(*ap, "type"))
+				v = ap[1];
+			else
+				logattr(p, "vendor", *ap);
+		if (NULL == v) {
+			lognattr(p, "vendor", "type");
+			return;
+		}
+		samp->vendor.type = strtonum(v, 0, LONG_MAX, &er);
+		if (NULL != er) {
+			logerrx(p, "malformed <vendor> type: %s", v);
+			return;
+		}
+		XML_SetDefaultHandler(p->p, parse_text);
+		samp->flags |= SAMP_VENDOR;
 	} else if (0 == strcmp(s, "depth")) {
 		if (NULL == (samp = p->cursamp))
 			return;
+		if (SAMP_DEPTH & samp->flags) {
+			logerrx(p, "restatement of <depth>");
+			return;
+		}
 
 		v = NULL;
 		for (ap = atts; NULL != ap[0]; ap += 2)
@@ -760,9 +799,8 @@ parse_open(void *dat, const XML_Char *s, const XML_Char **atts)
 				v = ap[1];
 			else
 				logattr(p, "depth", *ap);
-
 		if (NULL == v) {
-			logerrx(p, "<depth> missing attributes");
+			lognattr(p, "depth", "value");
 			return;
 		}
 
@@ -777,7 +815,10 @@ parse_open(void *dat, const XML_Char *s, const XML_Char **atts)
 		samp->flags |= SAMP_DEPTH;
 	} else if (0 == strcmp(s, "rbt")) {
 		if (NULL == (samp = p->cursamp)) {
-			logerrx(p, "sample rbt outside sample");
+			logerrx(p, "<rbt> not in <sample>");
+			return;
+		} else if (SAMP_RBT & samp->flags) {
+			logerrx(p, "restatement of <rbt>");
 			return;
 		}
 
@@ -787,9 +828,8 @@ parse_open(void *dat, const XML_Char *s, const XML_Char **atts)
 				v = ap[1];
 			else
 				logattr(p, "rbt", *ap);
-
 		if (NULL == v) {
-			logerrx(p, "<rbt> missing attributes");
+			lognattr(p, "rbt", "value");
 			return;
 		}
 
@@ -813,12 +853,10 @@ parse_open(void *dat, const XML_Char *s, const XML_Char **atts)
 				dur = ap[1];
 			else
 				logattr(p, "event", *ap);
-
 		if (NULL == v) {
-			logerrx(p, "<event> missing attributes");
+			lognattr(p, "event", "type");
 			return;
 		}
-
 		for (bits = 0, i = 0; i < EVENT__MAX; i++)
 			if (0 == strcmp(v, events[i])) {
 				bits = (1U << i);
@@ -851,6 +889,9 @@ parse_open(void *dat, const XML_Char *s, const XML_Char **atts)
 		if (NULL == (samp = p->cursamp)) {
 			logerrx(p, "<deco> not in <sample>");
 			return;
+		} else if (SAMP_DECO & samp->flags) {
+			logerrx(p, "restatement of <deco>");
+			return;
 		}
 
 		v = mode = dur = NULL;
@@ -863,9 +904,14 @@ parse_open(void *dat, const XML_Char *s, const XML_Char **atts)
 				dur = ap[1];
 			else
 				logattr(p, "deco", *ap);
-
-		if (NULL == v || NULL == mode || NULL == dur) {
-			logerrx(p, "<deco> missing attributes");
+		if (NULL == v) {
+			lognattr(p, "deco", "depth");
+			return;
+		} else if (NULL == mode) {
+			lognattr(p, "deco", "type");
+			return;
+		} else if (NULL == dur) {
+			lognattr(p, "deco", "duration");
 			return;
 		}
 
@@ -891,10 +937,15 @@ parse_open(void *dat, const XML_Char *s, const XML_Char **atts)
 			return;
 		}
 
+		if (SAMP_DECO & samp->flags)
+			logwarnx(p, "multiple <deco>");
 		samp->flags |= SAMP_DECO;
 	} else if (0 == strcmp(s, "temp")) {
 		if (NULL == (samp = p->cursamp)) {
 			logerrx(p, "<temp> not in <sample>");
+			return;
+		} else if (SAMP_TEMP & samp->flags) {
+			logerrx(p, "restatement of <temp>");
 			return;
 		}
 
@@ -904,9 +955,8 @@ parse_open(void *dat, const XML_Char *s, const XML_Char **atts)
 				v = ap[1];
 			else
 				logattr(p, "temp", *ap);
-
 		if (NULL == v) {
-			logerrx(p, "<temp> missing attributes");
+			lognattr(p, "temp", "value");
 			return;
 		}
 
@@ -929,17 +979,19 @@ parse_open(void *dat, const XML_Char *s, const XML_Char **atts)
 		samp->flags |= SAMP_TEMP;
 	} else if (0 == strcmp(s, "dives")) {
 		if (NULL == p->curlog)
-			logwarnx(p, "<dives> not in <divelog>");
+			logerrx(p, "<dives> not in <divelog>");
 	} else if (0 == strcmp(s, "gasmixes")) {
 		if (NULL == p->curdive)
-			logwarnx(p, "<gasmix> not in <dive>");
-		if (NULL != p->cursamp)
-			logwarnx(p, "<gasmix> in <sample>");
+			logerrx(p, "<gasmix> not in <dive>");
+		else if (NULL != p->cursamp)
+			logerrx(p, "<gasmix> in <sample>");
+		else if (p->curdive->gassz) 
+			logerrx(p, "restatement of <gasmixes>");
 	} else if (0 == strcmp(s, "samples")) {
 		if (NULL == p->curdive)
-			logwarnx(p, "<samples> not in <dive>");
-		if (NULL != p->cursamp)
-			logwarnx(p, "<samples> in <sample>");
+			logerrx(p, "<samples> not in <dive>");
+		else if (NULL != p->cursamp)
+			logerrx(p, "<samples> in <sample>");
 	} else {
 		if (NULL != p->cursamp)
 			logwarnx(p, "%s: unknown <sample> child", s);
@@ -982,6 +1034,16 @@ parse_close(void *dat, const XML_Char *s)
 		p->curdive = NULL;
 	} else if (0 == strcmp(s, "sample")) {
 		p->cursamp = NULL;
+	} else if (0 == strcmp(s, "vendor")) {
+		XML_SetDefaultHandler(p->p, NULL);
+		if (NULL != p->cursamp) {
+			free(p->cursamp->vendor.buf);
+			p->cursamp->vendor.buf = 
+				xstrndup(p, p->buf, p->bufsz);
+		}
+		free(p->buf);
+		p->buf = NULL;
+		p->bufsz = 0;
 	}
 
 }
@@ -1055,6 +1117,7 @@ divecmd_free(struct diveq *dq, struct divestat *st)
 			TAILQ_REMOVE(dq, d, entries);
 			while (NULL != (s = TAILQ_FIRST(&d->samps))) {
 				TAILQ_REMOVE(&d->samps, s, entries);
+				free(s->vendor.buf);
 				free(s->events);
 				free(s);
 			}
@@ -1188,6 +1251,10 @@ divecmd_print_dive_sample(FILE *f, const struct samp *s)
 			"duration=\"%zu\" />\n",
 			s->deco.depth, decos[s->deco.type], 
 			s->deco.duration);
+	if (SAMP_VENDOR & s->flags)
+		fprintf(f, "\t\t\t\t\t"
+			"<vendor type=\"%zu\">%s</vendor>\n",
+			s->vendor.type, s->vendor.buf);
 	fputs("\t\t\t\t</sample>\n", f);
 }
 

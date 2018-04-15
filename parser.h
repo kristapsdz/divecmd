@@ -89,6 +89,11 @@ struct	sampdeco {
 	size_t	  	 duration;
 };
 
+struct	sampvendor {
+	char		*buf;
+	size_t		 type;
+};
+
 /*
  * A sample within a dive profile.
  * The "flags" field (which may be zero) dictates which are the
@@ -103,11 +108,13 @@ struct	samp {
 	size_t		  eventsz;
 	unsigned int	  flags; /* bits of 1u << "enum event" */
 	struct sampdeco	  deco;
+	struct sampvendor vendor;
 #define	SAMP_DEPTH	  0x01
 #define	SAMP_TEMP	  0x02
 #define	SAMP_RBT	  0x04
 #define	SAMP_EVENT	  0x08
 #define	SAMP_DECO	  0x10
+#define	SAMP_VENDOR	  0x20
 	TAILQ_ENTRY(samp) entries;
 };
 
