@@ -104,6 +104,7 @@ struct	samp {
 	double		  depth; /* metres */
 	double		  temp; /* celsius */
 	size_t		  rbt; /* seconds */
+	size_t		  gaschange; /* num of gas change */
 	struct sampevent *events;
 	size_t		  eventsz;
 	unsigned int	  flags; /* bits of 1u << "enum event" */
@@ -115,6 +116,7 @@ struct	samp {
 #define	SAMP_EVENT	  0x08
 #define	SAMP_DECO	  0x10
 #define	SAMP_VENDOR	  0x20
+#define	SAMP_GASCHANGE	  0x40
 	TAILQ_ENTRY(samp) entries;
 };
 

@@ -977,6 +977,45 @@ parse_open(void *dat, const XML_Char *s, const XML_Char **atts)
 				p->curdive->mintemp = samp->temp;
 		}
 		samp->flags |= SAMP_TEMP;
+	} else if (0 == strcmp(s, "gaschange")) {
+		if (NULL == (samp = p->cursamp)) {
+			logerrx(p, "<gaschange> not in <sample>");
+			return;
+		} else if (SAMP_GASCHANGE & samp->flags) {
+			logerrx(p, "restatement of <gaschange>");
+			return;
+		}
+
+		v = NULL;
+		for (ap = atts; NULL != ap[0]; ap += 2)
+			if (0 == strcmp(*ap, "mix"))
+				v = ap[1];
+			else
+				logattr(p, "gaschange", *ap);
+		if (NULL == v) {
+			lognattr(p, "gaschange", "mix");
+			return;
+		}
+
+		/* We've added a 1 to the gas mix.  Dunno why. */
+
+		samp->gaschange = strtonum(v, 0, UINT_MAX, &er) + 1;
+		if (NULL != er) {
+			logerrx(p, "malformed "
+				"<gaschange> mix: %s", er);
+			return;
+		}
+
+		for (i = 0; i < p->curdive->gassz; i++)
+			if (samp->gaschange == p->curdive->gas[i].num)
+				break;
+
+		if (i == p->curdive->gassz) {
+			logerrx(p, "unknown <gaschange> mix");
+			return;
+		}
+
+		samp->flags |= SAMP_GASCHANGE;
 	} else if (0 == strcmp(s, "dives")) {
 		if (NULL == p->curlog)
 			logerrx(p, "<dives> not in <divelog>");
@@ -1231,6 +1270,9 @@ divecmd_print_dive_sample(FILE *f, const struct samp *s)
 	if (SAMP_TEMP & s->flags)
 		fprintf(f, "\t\t\t\t\t"
 		        "<temp value=\"%g\" />\n", s->temp);
+	if (SAMP_GASCHANGE & s->flags)
+		fprintf(f, "\t\t\t\t\t"
+		        "<gaschange mix=\"%zu\" />\n", s->gaschange);
 	if (SAMP_RBT & s->flags)
 		fprintf(f, "\t\t\t\t\t"
 		        "<rbt value=\"%zu\" />\n", s->rbt);
