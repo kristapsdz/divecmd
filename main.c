@@ -1,7 +1,7 @@
 /*	$Id$ */
 /*
  * Copyright (C) 2015 Jef Driesen
- * Copyright (c) 2016--2017 Kristaps Dzonsons <kristaps@bsd.lv>
+ * Copyright (c) 2016--2018 Kristaps Dzonsons <kristaps@bsd.lv>
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -372,7 +372,7 @@ fprint_get(int *fd, char **filep, int all,
 
 	/* Escape device name as file. */
 
-	rc = NULL != ident ?
+	rc = NULL == ident ?
 		asprintf(&cp, "%s %s-%u", 
 			dc_descriptor_get_vendor(desc),
 			dc_descriptor_get_product(desc),

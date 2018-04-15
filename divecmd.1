@@ -123,12 +123,15 @@ is opened and its contents downloaded and formatted as XML.
 many dive computers don't charge when connected to a computer.
 Plug it in, suck down your data, and unplug it as soon as possible.
 .Pp
-By default, the file
+The last-seen fingerprint is stored in
 .Pa ~/.divecmd/DEVICE ,
 where
 .Dq DEVICE
-is the dive computer device name rendered as a filename,
-is used to get (and/or initialise) and set the last known dive.
+is the dive computer device name and diver identifier rendered as a
+filename, for example,
+.Pa ~/.divecmd/suunto_d6i-26_kristaps
+.Pq vendor, product, model, diver .
+It is used to get (and/or initialise) and set the last known dive.
 This suppresses old dives from being re-downloaded every time
 .Nm
 is invoked.
