@@ -1,6 +1,6 @@
 .\"	$Id$
 .\"
-.\" Copyright (c) 2016--2017 Kristaps Dzonsons <kristaps@bsd.lv>
+.\" Copyright (c) 2016--2018 Kristaps Dzonsons <kristaps@bsd.lv>
 .\"
 .\" This library is free software; you can redistribute it and/or
 .\" modify it under the terms of the GNU Lesser General Public
@@ -245,6 +245,7 @@ And now, the samples...
          [<temp value="xxx" />]
          [<pressure value="xxx" tank="nnn" />]
          [<deco depth="xxx" type="zzz" duration="ss" />]
+         [<gaschange mix="nnn" />]
          [<event type="event" />]
         </sample>
       </samples>
@@ -282,6 +283,15 @@ Tank pressure (in bar).
 References a tank number in the
 .Li <tanks>
 section.
+.It Li gaschange
+Change of gas mixture.
+This refers to the
+.Li mix
+corresponding to the
+.Li <gasmix num="nnn">
+in the
+.Li <gasmixes>
+set for the dive.
 .It Li deco
 A decompression notice.
 The
