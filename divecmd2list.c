@@ -134,7 +134,7 @@ print_all(int human, const struct divestat *ds)
 int
 main(int argc, char *argv[])
 {
-	int		 c, rc = 1, human = 0;
+	int		 c, rc = 1, human = 1;
 	const char	*sort = NULL;
 	enum groupsort	 gsort;
 	size_t		 i;
@@ -147,10 +147,13 @@ main(int argc, char *argv[])
 		err(EXIT_FAILURE, "pledge");
 #endif
 
-	while (-1 != (c = getopt(argc, argv, "hs:v")))
+	while (-1 != (c = getopt(argc, argv, "hms:v")))
 		switch (c) {
 		case ('h'):
 			human = 1;
+			break;
+		case ('m'):
+			human = 0;
 			break;
 		case ('s'):
 			sort = optarg;
@@ -207,7 +210,7 @@ out:
 	return(rc ? EXIT_SUCCESS : EXIT_FAILURE);
 
 usage:
-	fprintf(stderr, "usage: %s [-hv] [-s sort] [file ...]\n", 
+	fprintf(stderr, "usage: %s [-hmv] [-s sort] [file ...]\n", 
 		getprogname());
 	return(EXIT_FAILURE);
 }
