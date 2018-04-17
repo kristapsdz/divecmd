@@ -22,7 +22,7 @@
 .Nd list contents of divecmd files
 .Sh SYNOPSIS
 .Nm divecmd2list
-.Op Fl hv
+.Op Fl hmv
 .Op Fl s Ar sort
 .Op Ar
 .Sh DESCRIPTION
@@ -31,6 +31,31 @@ The
 utility accepts a set of
 .Xr divecmd 1
 files and collects them into an easy list view.
+Its arguments are as follows:
+.Bl -tag -width Ds
+.It Fl h
+Human-readable time spans: break down time into minutes and seconds
+instead of just seconds.
+This is the default.
+.It Fl m
+Machine-readable time spans: always seconds.
+.It Fl v
+Verbose parsing.
+.It Fl s Ar sort
+Sort listed output within a divelog.
+This may be one of
+.Ar datetime
+for time (the default),
+.Ar maxtime
+for maximum dive time,
+.Ar rmaxtime
+for reverse maximum dive time,
+.Ar maxdepth
+for maximum depth,
+.Ar rmaxdepth ,
+for reverse maximum depth.
+.El
+.Pp
 Lists are grouped by dive computer and diver and shown as:
 .Bd -literal
 divelog: [vendor] [, product] [, model] [: diver]
