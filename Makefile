@@ -1,4 +1,4 @@
-.SUFFIXES: .1.html .1 .xml .rest.pdf .restscatter.pdf .summary.pdf .png .pdf .stack.pdf .aggr.pdf .scatter.pdf .aggrtemp.pdf
+.SUFFIXES: .1.html .1 .xml .rest.pdf .restscatter.pdf .summary.pdf .png .pdf .stack.pdf .aggr.pdf .scatter.pdf .aggrtemp.pdf .all.pdf
 .PHONY: clean
 
 include Makefile.configure
@@ -54,6 +54,7 @@ PNGS		 = daily.aggr.png \
 		   short.stack.png
 PDFS		 = daily.aggr.pdf \
 		   daily.aggrtemp.pdf \
+		   daily.all.pdf \
 		   daily.rest.pdf \
 		   daily.restscatter.pdf \
 		   daily.scatter.pdf \
@@ -172,6 +173,9 @@ index.html: index.xml
 
 .xml.summary.pdf:
 	./divecmd2grap -m summary $< | groff -Gp -Tpdf -P-p5.8i,8.3i >$@
+
+.xml.all.pdf:
+	./divecmd2grap -a -m all $< | groff -Gp -Tpdf -P-p5.8i,8.3i >$@
 
 .xml.restscatter.pdf:
 	./divecmd2grap -m restscatter $< | groff -Gp -Tpdf -P-p5.8i,8.3i >$@
