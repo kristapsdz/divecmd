@@ -3,6 +3,22 @@
 <articles>
 	<article data-sblg-article="1" data-sblg-tags="version">
 		<header>
+			<h1>0.0.15</h1>
+			<address>Kristaps Dzonsons</address>
+			<time datetime="2018-04-17">2018-04-17</time>
+		</header>
+		<aside>
+			<p>
+				Add in support for gas change sample types.
+				Also have the fingerprint take into account the diver identity in
+				case you want to keep track of the dive computers for two people
+				with the same model.
+				Make human-readable the default for list view.
+			</p>
+		</aside>
+	</article>
+	<article data-sblg-article="1" data-sblg-tags="version">
+		<header>
 			<h1>0.0.14</h1>
 			<address>Kristaps Dzonsons</address>
 			<time datetime="2018-02-18">2018-02-18</time>

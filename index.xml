@@ -29,10 +29,13 @@
 			<a href="snapshots/">archive</a>
 		</nav>
 		<header>
-			<div>
+			<div class="title">
 				<h1>divecmd</h1>
 				&#8212;
 				<div class="description">download and process dive computer data</div>
+			</div>
+			<div class="cite">
+				Image from <a href="https://divelog.blue">divelog.blue</a>'s <a href="https://divelog.blue/article079.html">Kittiwake</a>.
 			</div>
 		</header>
 		<article>
@@ -41,7 +44,9 @@
 				dives from dive computers.
 				It wraps thinly around the excellent <a href="http://www.libdivecomputer.org/">libdivecomputer</a>, which does
 				the heavy lifting to interface with your device.
-				Why use <span class="nm">divecmd</span> instead of, say, <a href="https://subsurface-divelog.org/">subsurface</a>?
+			</p>
+			<p>
+				Why use <span class="nm">divecmd</span> instead of, say, <a href="https://subsurface-divelog.org/">Subsurface</a>?
 				Because it's built to work in a command-line workflow with other command-line tools for processing, such as 
 				<a href="http://www.lunabase.org/~faber/Vault/software/grap/">grap(1)</a> (or any other <span
 					class="nm">grap</span> implementation) piped into 
@@ -58,6 +63,15 @@
 			<blockquote>
 				<code>
 					divecmd d6i > <a href="daily.xml">daily.xml</a>
+				</code>
+			</blockquote>
+			<p>
+				In reality, I usually archive my dives after each day of diving to prevent me from overrunning the computer's
+				internal memory and losing dives.
+			</p>
+			<blockquote>
+				<code>
+					divecmd d6i > daily-`date +%F`.xml
 				</code>
 			</blockquote>
 			<p>
@@ -83,7 +97,18 @@
 			</p>
 			<blockquote>
 				<code>
-					divecmd2divecmd -ldate=`date +'%Y-%m-%d'` <a href="daily.xml">daily.xml</a> | divecmd2term
+					divecmd2divecmd -ldate=`date +%F` <a href="daily.xml">daily.xml</a> | divecmd2list
+				</code>
+				<code>
+					divecmd2divecmd -ldate=`date +%F` <a href="daily.xml">daily.xml</a> | divecmd2term
+				</code>
+			</blockquote>
+			<p>
+				Want to see a full analysis of these dives in PDF?
+			</p>
+			<blockquote>
+				<code>
+					divecmd2divecmd -ldate=`date +%F` <a href="daily.xml">daily.xml</a> | divecmd2pdf -a -m all ><a href="daily.all.pdf">daily.pdf</a>
 				</code>
 			</blockquote>
 			<p>

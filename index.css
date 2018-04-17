@@ -1,5 +1,5 @@
 body, html				{ margin: 0; 
-					  background-color: #002c5b;
+					  background-color: #fff;
 					  font-family: "Alegreya sans", sans-serif;
 					  font-size: 14pt;
 					  font-weight: 400;
@@ -8,11 +8,10 @@ body > header				{ position: relative;
 					  height: 700px;
 					  font-weight: 400;
 					  background-image: 
-						linear-gradient(rgba(0, 0, 0, 0.0), rgba(0, 0, 0, 0.4)), 
-						url('https://res.cloudinary.com/kristapsdz/image/upload/q_auto,f_auto/divelog/article033/DSCN1201.jpg'); 
+						linear-gradient(rgba(0, 0, 0, 0.0), rgba(0, 0, 0, 0.2)), 
+						url('https://res.cloudinary.com/kristapsdz/image/upload/q_auto,f_auto/divelog/article079/DSC07030-clean.jpg');
 					  background-size: cover;
-					  background-attachment: fixed;
-					  background-position: 50% 80%;
+					  background-position: 50% 25%;
 					  background-repeat: no-repeat; }
 h1					{ font-weight: 500; }
 b, strong, h3, h4			{ font-weight: 500; }
@@ -26,22 +25,28 @@ h2 span					{ font-weight: 500;
 a					{ color: blue; 
 					  text-decoration: none; }
 a.img					{ border-bottom: none; }
-body > header > div			{ position: absolute;
-				  	  left: 50%;
-					  top: 85%;
-					  width: 80%;
+body > header > .title			{ position: absolute;
+				  	  left: 0;
+					  bottom: 4rem;
+					  width: 100%;
 					  text-align: center;
-					  color: #fff;
-					  transform: translate(-50%, -50%);
-					  -webkit-transform: translate(-50%, -50%); }
-body > header h1,
-body > header .description		{ display: inline-block; 
+					  color: #fff; }
+body > header > .cite			{ position: absolute;
+					  bottom: 1rem;
+					  left: 0;
+					  color: #aaa;
+					  width: 100%;
+					  text-align: center; }
+body > header > .cite a			{ color: #eee; }
+body > header .title h1,
+body > header .title .description	{ display: inline-block; 
 					  text-shadow: 0 0 1px #000;
+					  margin: 0;
 					  font-size: 20pt; }
 body > nav				{ text-align: center;
 					  color: #aaa;
-					  font-size: 16pt;
-					  padding: 2em 0;
+					  background-color: #002c5b;
+					  padding: 2em 0 1em 0;
 					  font-variant: small-caps; }
 body > nav span				{ border-right: thin solid #aaa; 
 					  margin-right: 4pt; 
@@ -57,6 +62,8 @@ body > article				{ padding: 1em 20%;
 body > article a			{ text-decoration: underline; }
 body > footer				{ text-align: center;
 					  padding: 2em 0;
+					  font-size: smaller;
+					  background-color: #002c5b;
 					  color: rgba(255, 255, 255, 0.5); }
 body > footer a				{ color: rgba(255, 255, 255, 0.8); }
 body > footer a:hover			{ color: rgba(255, 255, 255, 1.0); }
@@ -98,9 +105,23 @@ nav[data-sblg-nav] ul			{ margin: 0;
 					  padding: 0;
 					  list-style-type: none; }
 nav[data-sblg-nav] article		{ color: #666; }
+nav[data-sblg-nav] > ul > li		{ opacity: 0.7; }
+nav[data-sblg-nav] > ul > li:first-child 
+					{ opacity: 1.0; }
 
 @media only screen and (max-width: 768px), only screen and (max-device-width: 768px) {
-body > header h1,
-body > header .description		{ font-size: 18pt; }
-body > article				{ padding: 1em 2%; }
+  body > header .title h1,
+  body > header .title .description	{ font-size: 18pt; }
+  body > article			{ padding: 1em 2%; }
+  body > header				{ height: 500px;
+  					  background-image: 
+  						linear-gradient(rgba(0, 0, 0, 0.0), rgba(0, 0, 0, 0.2)), 
+  						url('https://res.cloudinary.com/kristapsdz/image/upload/q_auto,f_auto/divelog/article079/DSC07030-clean.jpg');
+  					  background-position: 75% 25%; }
+  body > nav				{ font-size: inherit; }
+  body > nav span			{ border-right: none;
+					  margin: 0;
+					  padding: 0;
+					  display: block; }
+  blockquote				{ margin: 1em 0; }
 }
