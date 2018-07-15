@@ -813,6 +813,43 @@ parse_open(void *dat, const XML_Char *s, const XML_Char **atts)
 		if (samp->depth > p->curdive->maxdepth)
 			p->curdive->maxdepth = samp->depth;
 		samp->flags |= SAMP_DEPTH;
+	} else if (0 == strcmp(s, "pressure")) {
+		if (NULL == (samp = p->cursamp))
+			return;
+		if (SAMP_PRESSURE & samp->flags) {
+			logerrx(p, "restatement of <pressure>");
+			return;
+		}
+
+		v = num = NULL;
+		for (ap = atts; NULL != ap[0]; ap += 2)
+			if (0 == strcmp(*ap, "value"))
+				v = ap[1];
+			else if (0 == strcmp(*ap, "tank"))
+				num = ap[1];
+			else
+				logattr(p, "pressure", *ap);
+		if (NULL == v) {
+			lognattr(p, "pressure", "value");
+			return;
+		} else if (NULL == num) {
+			lognattr(p, "pressure", "tank");
+			return;
+		}
+
+		samp->pressure.pressure = strtod(v, &ep);
+		if (ep == v || ERANGE == errno) {
+			logerrx(p, "bad <pressure> value");
+			return;
+		}
+
+		samp->pressure.tank = strtonum
+			(num, 0, LONG_MAX, &er);
+		if (NULL != er) {
+			logerrx(p, "bad <pressure> tank");
+			return;
+		}
+		samp->flags |= SAMP_PRESSURE;
 	} else if (0 == strcmp(s, "rbt")) {
 		if (NULL == (samp = p->cursamp)) {
 			logerrx(p, "<rbt> not in <sample>");
@@ -1276,6 +1313,10 @@ divecmd_print_dive_sample(FILE *f, const struct samp *s)
 	if (SAMP_RBT & s->flags)
 		fprintf(f, "\t\t\t\t\t"
 		        "<rbt value=\"%zu\" />\n", s->rbt);
+	if (SAMP_PRESSURE & s->flags)
+		fprintf(f, "\t\t\t\t\t"
+		        "<pressure value=\"%g\" tank=\"%zu\" />\n", 
+			s->pressure.pressure, s->pressure.tank);
 	for (j = 0; j < s->eventsz; j++)
 		for (i = 0; i < EVENT__MAX; i++) {
 			if ( ! ((1U << i) & s->events[j].bits))
