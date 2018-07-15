@@ -697,7 +697,7 @@ parse_open(void *dat, const XML_Char *s, const XML_Char **atts)
 		d->gas[d->gassz].num = i;
 		if (NULL != mixes[0]) {
 			d->gas[d->gassz].o2 = strtod(mixes[0], &ep);
-			if (ep == v || ERANGE == errno) {
+			if (ep == mixes[0] || ERANGE == errno) {
 				d->gas[d->gassz].o2 = 0.0;
 				logwarnx(p, "malformed <o2> "
 					"value: %s", mixes[0]);
@@ -705,7 +705,7 @@ parse_open(void *dat, const XML_Char *s, const XML_Char **atts)
 		}
 		if (NULL != mixes[1]) {
 			d->gas[d->gassz].n2 = strtod(mixes[1], &ep);
-			if (ep == v || ERANGE == errno) {
+			if (ep == mixes[1] || ERANGE == errno) {
 				d->gas[d->gassz].n2 = 0.0;
 				logwarnx(p, "malformed <n2> "
 					"value: %s", mixes[1]);
@@ -713,7 +713,7 @@ parse_open(void *dat, const XML_Char *s, const XML_Char **atts)
 		}
 		if (NULL != mixes[2]) {
 			d->gas[d->gassz].he = strtod(mixes[2], &ep);
-			if (ep == v || ERANGE == errno) {
+			if (ep == mixes[2] || ERANGE == errno) {
 				d->gas[d->gassz].he = 0.0;
 				logwarnx(p, "malformed <he> "
 					"value: %s", mixes[2]);
