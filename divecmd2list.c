@@ -127,6 +127,8 @@ print_all(int human, const struct divestat *ds)
 				puts("open");
 			else if (MODE_CC == d->mode)
 				puts("closed");
+			else
+				puts("unknown");
 		}
 	}
 }
