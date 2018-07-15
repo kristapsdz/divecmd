@@ -19,7 +19,8 @@ BINOBJS		 = divecmd2csv.o \
 		   divecmd2list.o \
 		   divecmd2json.o \
 		   divecmd2term.o \
-		   parser.o
+		   parser.o \
+		   ssrf2divecmd.o
 PREBINS		 = divecmd2pdf.in \
 		   divecmd2ps.in
 BINS		 = divecmd \
@@ -30,7 +31,8 @@ BINS		 = divecmd \
 		   divecmd2json \
 		   divecmd2term \
 		   divecmd2pdf \
-		   divecmd2ps
+		   divecmd2ps \
+		   ssrf2divecmd
 MAN1S		 = divecmd.1 \
 		   divecmd2csv.1 \
 		   divecmd2divecmd.1 \
@@ -100,6 +102,9 @@ divecmd: $(OBJS) compats.o
 
 divecmd2divecmd: divecmd2divecmd.o parser.o compats.o
 	$(CC) $(CPPFLAGS) -o $@ divecmd2divecmd.o parser.o compats.o -lexpat
+
+ssrf2divecmd: ssrf2divecmd.o parser.o compats.o
+	$(CC) $(CPPFLAGS) -o $@ ssrf2divecmd.o parser.o compats.o -lexpat
 
 divecmd2term: divecmd2term.o parser.o compats.o
 	$(CC) $(CPPFLAGS) -o $@ divecmd2term.o parser.o compats.o -lexpat -lm
