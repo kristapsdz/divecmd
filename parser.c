@@ -1378,7 +1378,7 @@ divecmd_print_open(FILE *f, const struct dlog *dl)
 {
 	fprintf(f, 
 		"<?xml version=\"1.0\" encoding=\"UTF-8\" ?>\n"
-		"<divelog program=\"divecmd2divecmd\" "
+		"<divelog program=\"dcmdfind\" "
 	         "version=\"" VERSION "\"");
 
 	if (NULL != dl->ident)

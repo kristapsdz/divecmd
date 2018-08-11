@@ -25,7 +25,7 @@ PREBINS		 = divecmd2pdf.in \
 		   divecmd2ps.in
 BINS		 = dcmd \
 		   divecmd2csv \
-		   divecmd2divecmd \
+		   dcmdfind \
 		   divecmd2grap \
 		   divecmd2list \
 		   divecmd2json \
@@ -35,7 +35,7 @@ BINS		 = dcmd \
 		   ssrf2divecmd
 MAN1S		 = dcmd.1 \
 		   divecmd2csv.1 \
-		   divecmd2divecmd.1 \
+		   dcmdfind.1 \
 		   divecmd2grap.1 \
 		   divecmd2list.1 \
 		   divecmd2json.1 \
@@ -69,7 +69,7 @@ PDFS		 = daily.aggr.pdf \
 		   short.stack.pdf
 HTMLS		 = dcmd.1.html \
 		   divecmd2csv.1.html \
-		   divecmd2divecmd.1.html \
+		   dcmdfind.1.html \
 		   divecmd2grap.1.html \
 		   divecmd2list.1.html \
 		   divecmd2json.1.html \
@@ -100,7 +100,7 @@ install: all
 dcmd: $(OBJS) compats.o
 	$(CC) $(CPPFLAGS) -o $@ $(OBJS) compats.o $(LDFLAGS) $(LDADD)
 
-divecmd2divecmd: divecmd2divecmd.o parser.o compats.o
+dcmdfind: divecmd2divecmd.o parser.o compats.o
 	$(CC) $(CPPFLAGS) -o $@ divecmd2divecmd.o parser.o compats.o -lexpat
 
 ssrf2divecmd: ssrf2divecmd.o parser.o compats.o
@@ -157,7 +157,7 @@ installwww: www
 
 $(PNGS): $(PDFS)
 
-$(PDFS): divecmd2grap divecmd2divecmd
+$(PDFS): divecmd2grap dcmdfind
 
 divecmd.tar.gz:
 	mkdir -p .dist/divecmd-$(VERSION)/
@@ -204,7 +204,7 @@ daily.aggrtemp.pdf: temperature.xml
 	./divecmd2grap -m aggrtemp temperature.xml | groff -Gp -Tpdf -P-p5.8i,8.3i >$@
 
 daily.temp.pdf: temperature.xml
-	./divecmd2divecmd -s temperature.xml | ./divecmd2grap -am temp | groff -Gp -Tpdf -P-p5.8i,8.3i >$@
+	./dcmdfind -s temperature.xml | ./divecmd2grap -am temp | groff -Gp -Tpdf -P-p5.8i,8.3i >$@
 
 multiday.stack.pdf: multiday.xml
 	./divecmd2grap -s date -m stack multiday.xml | groff -Gp -Tpdf -P-p5.8i,8.3i >$@

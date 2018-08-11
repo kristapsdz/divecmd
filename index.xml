@@ -91,16 +91,16 @@
 				These graphs let me see my dive depths and times, and also see whether I'm following the surface-time rule of
 				thumb, where rest is twice the prior dive.
 				<strong>Note</strong>: if you're free diving and using a dive computer that lumps all free dives into one huge
-				dive without splitting them up by surface time, use <a href="divecmd2divecmd.1.html">divecmd2divecmd(1)</a> to
+				dive without splitting them up by surface time, use <a href="dcmdfind.1.html">dcmdfind(1)</a> to
 				canonicalise the dives.  My HW OSTC 2C does this.
 				Or I'll take a sneak peak only at the day's dives on my terminal:
 			</p>
 			<blockquote>
 				<code>
-					divecmd2divecmd -ldate=`date +%F` <a href="daily.xml">daily.xml</a> | divecmd2list
+					dcmdfind -ldate=`date +%F` <a href="daily.xml">daily.xml</a> | divecmd2list
 				</code>
 				<code>
-					divecmd2divecmd -ldate=`date +%F` <a href="daily.xml">daily.xml</a> | divecmd2term
+					dcmdfind -ldate=`date +%F` <a href="daily.xml">daily.xml</a> | divecmd2term
 				</code>
 			</blockquote>
 			<p>
@@ -108,7 +108,7 @@
 			</p>
 			<blockquote>
 				<code>
-					divecmd2divecmd -ldate=`date +%F` <a href="daily.xml">daily.xml</a> | divecmd2pdf -a -m all ><a href="daily.all.pdf">daily.pdf</a>
+					dcmdfind -ldate=`date +%F` <a href="daily.xml">daily.xml</a> | divecmd2pdf -a -m all ><a href="daily.all.pdf">daily.pdf</a>
 				</code>
 			</blockquote>
 			<p>
@@ -377,7 +377,7 @@
 			</p>
 			<p>
 				If you have lots of dive files and want to consolidate, you can use the 
-				<a href="divecmd2divecmd.1.html">divecmd2divecmd(1)</a> utility, which is able to pull together a lot of files,
+				<a href="dcmdfind.1.html">dcmdfind(1)</a> utility, which is able to pull together a lot of files,
 				de-duplicate entries, and print them out again.
 				This tool is also able to split and join dive sequences for analysis in different ways: some dive computers
 				export free dives as a single dive including surface time, while others don't.
