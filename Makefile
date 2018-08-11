@@ -29,7 +29,7 @@ BINS		 = dcmd \
 		   divecmd2grap \
 		   dcmdls \
 		   divecmd2json \
-		   divecmd2term \
+		   dcmdterm \
 		   divecmd2pdf \
 		   divecmd2ps \
 		   ssrf2divecmd
@@ -41,7 +41,7 @@ MAN1S		 = dcmd.1 \
 		   divecmd2json.1 \
 		   divecmd2pdf.1 \
 		   divecmd2ps.1 \
-		   divecmd2term.1
+		   dcmdterm.1
 PNGS		 = daily.aggr.png \
 		   daily.aggrtemp.png \
 		   daily.rest.png \
@@ -75,7 +75,7 @@ HTMLS		 = dcmd.1.html \
 		   divecmd2json.1.html \
 		   divecmd2pdf.1.html \
 		   divecmd2ps.1.html \
-		   divecmd2term.1.html \
+		   dcmdterm.1.html \
 		   index.html
 CSSS		 = index.css \
 		   mandoc.css
@@ -106,7 +106,7 @@ dcmdfind: divecmd2divecmd.o parser.o compats.o
 ssrf2divecmd: ssrf2divecmd.o parser.o compats.o
 	$(CC) $(CPPFLAGS) -o $@ ssrf2divecmd.o parser.o compats.o -lexpat
 
-divecmd2term: divecmd2term.o parser.o compats.o
+dcmdterm: divecmd2term.o parser.o compats.o
 	$(CC) $(CPPFLAGS) -o $@ divecmd2term.o parser.o compats.o -lexpat -lm
 
 divecmd2grap: divecmd2grap.o parser.o compats.o

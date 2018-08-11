@@ -100,7 +100,7 @@
 					dcmdfind -ldate=`date +%F` <a href="daily.xml">daily.xml</a> | dcmdls
 				</code>
 				<code>
-					dcmdfind -ldate=`date +%F` <a href="daily.xml">daily.xml</a> | divecmd2term
+					dcmdfind -ldate=`date +%F` <a href="daily.xml">daily.xml</a> | dcmdterm
 				</code>
 			</blockquote>
 			<p>
@@ -317,13 +317,13 @@
 			</h2>
 			<p>
 				The <span class="nm">divecmd</span> suite also has
-				<a href="divecmd2term.1.html">divecmd2term(1)</a>, which formats graphs on a UNIX terminal. 
+				<a href="dcmdterm.1.html">dcmdterm(1)</a>, which formats graphs on a UNIX terminal. 
 				This is useful for a <q>quick peek</q> at one's dives.
 				It was the first output mode I wrote, just to test that <a href="dcmd.1.html">dcmd(1)</a> was exporting
 				reasonable data.
 			</p>
 			<p>
-				<a href="divecmd2term.1.html">divecmd2term(1)</a> doesn't have as many fancy modes as
+				<a href="dcmdterm.1.html">dcmdterm(1)</a> doesn't have as many fancy modes as
 				<a href="divecmd2grap.1.html">divecmd2grap(1)</a>, but it's still a quick and easy way to see one's dives.
 				Especially when setting up a <a href="https://www.gnu.org/software/groff/">groff(1)</a> pipeline takes too many
 				characters.
