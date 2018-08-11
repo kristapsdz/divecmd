@@ -513,7 +513,7 @@ parse_open(void *dat, const XML_Char *s, const XML_Char **atts)
 			TAILQ_INSERT_BEFORE(dp, d, entries);
 	} else if (0 == strcmp(s, "cylinder")) {
 		if (NULL == (d = p->curdive)) { 
-			logerrx(p, "<gasmix> not in <dive>");
+			logerrx(p, "<cylinder> not in <dive>");
 			return;
 		}
 
@@ -528,7 +528,7 @@ parse_open(void *dat, const XML_Char *s, const XML_Char **atts)
 			else if (0 == strcmp(*ap, "description"))
 				/* Do nothing. */ ;
 			else
-				logattr(p, "gasmix", *ap);
+				logattr(p, "cylinder", *ap);
 
 		d->gas = xreallocarray(p, d->gas, 
 			d->gassz + 1, sizeof(struct divegas));
