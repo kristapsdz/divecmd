@@ -22,7 +22,7 @@
 .Os
 .Sh NAME
 .Nm divecmd2divecmd
-.Nd manipulate files produced by divecmd
+.Nd search for dive profiles
 .Sh SYNOPSIS
 .Nm divecmd2divecmd
 .Op Fl jsv
@@ -32,7 +32,7 @@
 The
 .Nm
 utility accepts divelog files produced by
-.Xr divecmd 1
+.Xr dcmd 1
 and manipulates their contents: it can split individual dives into
 multiple dives; join multiple dives into a single dive; or join multiple
 divelogs into a single divelog, which is the default.
@@ -98,7 +98,7 @@ they are omitted, and duplicate fingerprints are also omitted.
 .Pp
 .Nm
 produces output on standard output as documented in
-.Xr divecmd 1 .
+.Xr dcmd 1 .
 .Ss Limits
 Processed dives may be limited with the
 .Fl l Ar limit
@@ -136,7 +136,7 @@ Date-times are formatted as YYYY-mm-ddTHH:MM.
 .Sh EXIT STATUS
 .Ex -std
 .Sh SEE ALSO
-.Xr divecmd 1
+.Xr dcmd 1
 .Sh AUTHORS
 The
 .Nm

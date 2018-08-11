@@ -55,14 +55,14 @@
 				Plus, it has much better support and analysis tools for free diving.
 			</p>
 			<p>
-				My workflow usually begins with <a href="divecmd.1.html">divecmd(1)</a> on the day of my dive.  
+				My workflow usually begins with <a href="dcmd.1.html">dcmd(1)</a> on the day of my dive.  
 				First, I extract the dives from my Suunto D6i into an XML file for the day.  
-				<a href="divecmd.1.html">divecmd(1)</a> keeps track of my last extracted dive, so it will only extract new dives
+				<a href="dcmd.1.html">dcmd(1)</a> keeps track of my last extracted dive, so it will only extract new dives
 				(presumably from the current day):
 			</p>
 			<blockquote>
 				<code>
-					divecmd d6i > <a href="daily.xml">daily.xml</a>
+					dcmd d6i > <a href="daily.xml">daily.xml</a>
 				</code>
 			</blockquote>
 			<p>
@@ -71,7 +71,7 @@
 			</p>
 			<blockquote>
 				<code>
-					divecmd d6i > daily-`date +%F`.xml
+					dcmd d6i > daily-`date +%F`.xml
 				</code>
 			</blockquote>
 			<p>
@@ -112,7 +112,7 @@
 				</code>
 			</blockquote>
 			<p>
-				There are a number of ways to export from the native <a href="divecmd.1.html">divecmd(1)</a> XML file without
+				There are a number of ways to export from the native <a href="dcmd.1.html">dcmd(1)</a> XML file without
 				needing to parse the file yourself.
 			</p>
 			<h2>
@@ -319,7 +319,7 @@
 				The <span class="nm">divecmd</span> suite also has
 				<a href="divecmd2term.1.html">divecmd2term(1)</a>, which formats graphs on a UNIX terminal. 
 				This is useful for a <q>quick peek</q> at one's dives.
-				It was the first output mode I wrote, just to test that <a href="divecmd.1.html">divecmd(1)</a> was exporting
+				It was the first output mode I wrote, just to test that <a href="dcmd.1.html">dcmd(1)</a> was exporting
 				reasonable data.
 			</p>
 			<p>
@@ -365,7 +365,7 @@
 				The arguably most-used output mode is also the simplest: <a href="divecmd2json.1.html">divecmd2json(1)</a>,
 				which converts graphs to JSON.  I use it constantly for <a href="https://divelog.blue">divelog.blue</a>,
 				specifically to show the <a href="https://divelog.blue/article040.html">dive profiles</a>.  Technically, I could
-				simply bundle the native <a href="divecmd.1.html">divecmd(1)</a> output directly and use an XML-to-JSON
+				simply bundle the native <a href="dcmd.1.html">dcmd(1)</a> output directly and use an XML-to-JSON
 				formatter in the client, but this is easier.
 			</p>
 			<p>

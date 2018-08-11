@@ -23,7 +23,7 @@ BINOBJS		 = divecmd2csv.o \
 		   ssrf2divecmd.o
 PREBINS		 = divecmd2pdf.in \
 		   divecmd2ps.in
-BINS		 = divecmd \
+BINS		 = dcmd \
 		   divecmd2csv \
 		   divecmd2divecmd \
 		   divecmd2grap \
@@ -33,7 +33,7 @@ BINS		 = divecmd \
 		   divecmd2pdf \
 		   divecmd2ps \
 		   ssrf2divecmd
-MAN1S		 = divecmd.1 \
+MAN1S		 = dcmd.1 \
 		   divecmd2csv.1 \
 		   divecmd2divecmd.1 \
 		   divecmd2grap.1 \
@@ -67,7 +67,7 @@ PDFS		 = daily.aggr.pdf \
 		   multiday.rsummary.pdf \
 		   multiday.stack.pdf \
 		   short.stack.pdf
-HTMLS		 = divecmd.1.html \
+HTMLS		 = dcmd.1.html \
 		   divecmd2csv.1.html \
 		   divecmd2divecmd.1.html \
 		   divecmd2grap.1.html \
@@ -97,7 +97,7 @@ install: all
 	install -m 0755 $(BINS) $(DESTDIR)$(BINDIR)
 	install -m 0444 $(MAN1S) $(DESTDIR)$(MANDIR)/man1
 
-divecmd: $(OBJS) compats.o
+dcmd: $(OBJS) compats.o
 	$(CC) $(CPPFLAGS) -o $@ $(OBJS) compats.o $(LDFLAGS) $(LDADD)
 
 divecmd2divecmd: divecmd2divecmd.o parser.o compats.o
