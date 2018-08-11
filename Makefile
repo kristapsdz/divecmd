@@ -24,23 +24,23 @@ BINOBJS		 = divecmd2csv.o \
 PREBINS		 = divecmd2pdf.in \
 		   divecmd2ps.in
 BINS		 = dcmd \
-		   divecmd2csv \
+		   dcmd2csv \
 		   dcmdfind \
-		   divecmd2grap \
+		   dcmd2grap \
 		   dcmdls \
-		   divecmd2json \
+		   dcmd2json \
 		   dcmdterm \
-		   divecmd2pdf \
-		   divecmd2ps \
+		   dcmd2pdf \
+		   dcmd2ps \
 		   ssrf2divecmd
 MAN1S		 = dcmd.1 \
-		   divecmd2csv.1 \
+		   dcmd2csv.1 \
 		   dcmdfind.1 \
-		   divecmd2grap.1 \
+		   dcmd2grap.1 \
 		   dcmdls.1 \
-		   divecmd2json.1 \
-		   divecmd2pdf.1 \
-		   divecmd2ps.1 \
+		   dcmd2json.1 \
+		   dcmd2pdf.1 \
+		   dcmd2ps.1 \
 		   dcmdterm.1
 PNGS		 = daily.aggr.png \
 		   daily.aggrtemp.png \
@@ -68,13 +68,13 @@ PDFS		 = daily.aggr.pdf \
 		   multiday.stack.pdf \
 		   short.stack.pdf
 HTMLS		 = dcmd.1.html \
-		   divecmd2csv.1.html \
+		   dcmd2csv.1.html \
 		   dcmdfind.1.html \
-		   divecmd2grap.1.html \
+		   dcmd2grap.1.html \
 		   dcmdls.1.html \
-		   divecmd2json.1.html \
-		   divecmd2pdf.1.html \
-		   divecmd2ps.1.html \
+		   dcmd2json.1.html \
+		   dcmd2pdf.1.html \
+		   dcmd2ps.1.html \
 		   dcmdterm.1.html \
 		   index.html
 CSSS		 = index.css \
@@ -109,22 +109,22 @@ ssrf2divecmd: ssrf2divecmd.o parser.o compats.o
 dcmdterm: divecmd2term.o parser.o compats.o
 	$(CC) $(CPPFLAGS) -o $@ divecmd2term.o parser.o compats.o -lexpat -lm
 
-divecmd2grap: divecmd2grap.o parser.o compats.o
+dcmd2grap: divecmd2grap.o parser.o compats.o
 	$(CC) $(CPPFLAGS) -o $@ divecmd2grap.o parser.o compats.o -lexpat
 
 dcmdls: divecmd2list.o parser.o compats.o
 	$(CC) $(CPPFLAGS) -o $@ divecmd2list.o parser.o compats.o -lexpat
 
-divecmd2json: divecmd2json.o parser.o compats.o
+dcmd2json: divecmd2json.o parser.o compats.o
 	$(CC) $(CPPFLAGS) -o $@ divecmd2json.o parser.o compats.o -lexpat
 
-divecmd2csv: divecmd2csv.o parser.o compats.o
+dcmd2csv: divecmd2csv.o parser.o compats.o
 	$(CC) $(CPPFLAGS) -o $@ divecmd2csv.o parser.o compats.o -lexpat
 
-divecmd2pdf: divecmd2pdf.in
+dcmd2pdf: divecmd2pdf.in
 	sed "s!@GROFF@!$(GROFF)!g" divecmd2pdf.in >$@
 
-divecmd2ps: divecmd2pdf.in
+dcmd2ps: divecmd2pdf.in
 	sed "s!@GROFF@!$(GROFF)!g" divecmd2ps.in >$@
 
 $(OBJS): extern.h config.h
@@ -157,7 +157,7 @@ installwww: www
 
 $(PNGS): $(PDFS)
 
-$(PDFS): divecmd2grap dcmdfind
+$(PDFS): dcmd2grap dcmdfind
 
 divecmd.tar.gz:
 	mkdir -p .dist/divecmd-$(VERSION)/
@@ -177,43 +177,43 @@ index.html: index.xml
 	mandoc -Thtml -Ostyle=mandoc.css $< >$@
 
 .xml.summary.pdf:
-	./divecmd2grap -m summary $< | groff -Gp -Tpdf -P-p5.8i,8.3i >$@
+	./dcmd2grap -m summary $< | groff -Gp -Tpdf -P-p5.8i,8.3i >$@
 
 .xml.all.pdf:
-	./divecmd2grap -a -m all $< | groff -Gp -Tpdf -P-p5.8i,8.3i >$@
+	./dcmd2grap -a -m all $< | groff -Gp -Tpdf -P-p5.8i,8.3i >$@
 
 .xml.restscatter.pdf:
-	./divecmd2grap -m restscatter $< | groff -Gp -Tpdf -P-p5.8i,8.3i >$@
+	./dcmd2grap -m restscatter $< | groff -Gp -Tpdf -P-p5.8i,8.3i >$@
 
 multiday.restscatter.pdf: day1.xml day2.xml
-	./divecmd2grap -s date -m restscatter day1.xml day2.xml | groff -Gp -Tpdf -P-p5.8i,8.3i >$@
+	./dcmd2grap -s date -m restscatter day1.xml day2.xml | groff -Gp -Tpdf -P-p5.8i,8.3i >$@
 
 .xml.rest.pdf:
-	./divecmd2grap -m rest $< | groff -Gp -Tpdf -P-p5.8i,8.3i >$@
+	./dcmd2grap -m rest $< | groff -Gp -Tpdf -P-p5.8i,8.3i >$@
 
 .xml.stack.pdf:
-	./divecmd2grap -m stack $< | groff -Gp -Tpdf -P-p5.8i,8.3i >$@
+	./dcmd2grap -m stack $< | groff -Gp -Tpdf -P-p5.8i,8.3i >$@
 
 short.stack.pdf: multiday.xml
-	./divecmd2grap -s date -d -m stack multiday.xml | groff -Gp -Tpdf -P-p5.8i,8.3i >$@
+	./dcmd2grap -s date -d -m stack multiday.xml | groff -Gp -Tpdf -P-p5.8i,8.3i >$@
 
 .xml.aggr.pdf:
-	./divecmd2grap -m aggr $< | groff -Gp -Tpdf -P-p5.8i,8.3i >$@
+	./dcmd2grap -m aggr $< | groff -Gp -Tpdf -P-p5.8i,8.3i >$@
 
 daily.aggrtemp.pdf: temperature.xml
-	./divecmd2grap -m aggrtemp temperature.xml | groff -Gp -Tpdf -P-p5.8i,8.3i >$@
+	./dcmd2grap -m aggrtemp temperature.xml | groff -Gp -Tpdf -P-p5.8i,8.3i >$@
 
 daily.temp.pdf: temperature.xml
-	./dcmdfind -s temperature.xml | ./divecmd2grap -am temp | groff -Gp -Tpdf -P-p5.8i,8.3i >$@
+	./dcmdfind -s temperature.xml | ./dcmd2grap -am temp | groff -Gp -Tpdf -P-p5.8i,8.3i >$@
 
 multiday.stack.pdf: multiday.xml
-	./divecmd2grap -s date -m stack multiday.xml | groff -Gp -Tpdf -P-p5.8i,8.3i >$@
+	./dcmd2grap -s date -m stack multiday.xml | groff -Gp -Tpdf -P-p5.8i,8.3i >$@
 
 multiday.rsummary.pdf: day1.xml day2.xml
-	./divecmd2grap -s date -m rsummary day1.xml day2.xml | groff -Gp -Tpdf -P-p5.8i,8.3i >$@
+	./dcmd2grap -s date -m rsummary day1.xml day2.xml | groff -Gp -Tpdf -P-p5.8i,8.3i >$@
 
 .xml.scatter.pdf:
-	./divecmd2grap -m scatter $< | groff -Gp -Tpdf -P-p5.8i,8.3i >$@
+	./dcmd2grap -m scatter $< | groff -Gp -Tpdf -P-p5.8i,8.3i >$@
 
 .pdf.png:
 	convert -density 120 $< -flatten -trim $@

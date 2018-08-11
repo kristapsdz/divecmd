@@ -75,16 +75,16 @@
 				</code>
 			</blockquote>
 			<p>
-				Following that, I'll analyse my dives by plotting them with <a href="divecmd2grap.1.html">divecmd2grap(1)</a> via
-				<a href="divecmd2pdf.1.html">divecmd2pdf(1)</a>.
+				Following that, I'll analyse my dives by plotting them with <a href="dcmd2grap.1.html">dcmd2grap(1)</a> via
+				<a href="dcmd2pdf.1.html">dcmd2pdf(1)</a>.
 				In the case of free diving, for example, I might do this:
 			</p>
 			<blockquote>
 				<code>
-					divecmd2pdf -m summary <a href="daily.xml">daily.xml</a> > <a href="daily.summary.pdf">daily.summary.pdf</a>
+					dcmd2pdf -m summary <a href="daily.xml">daily.xml</a> > <a href="daily.summary.pdf">daily.summary.pdf</a>
 				</code>
 				<code>
-					divecmd2pdf -m restscatter <a href="daily.xml">daily.xml</a> > <a href="daily.restscatter.pdf">daily.restscatter.pdf</a>
+					dcmd2pdf -m restscatter <a href="daily.xml">daily.xml</a> > <a href="daily.restscatter.pdf">daily.restscatter.pdf</a>
 				</code>
 			</blockquote>
 			<p>
@@ -108,7 +108,7 @@
 			</p>
 			<blockquote>
 				<code>
-					dcmdfind -ldate=`date +%F` <a href="daily.xml">daily.xml</a> | divecmd2pdf -a -m all ><a href="daily.all.pdf">daily.pdf</a>
+					dcmdfind -ldate=`date +%F` <a href="daily.xml">daily.xml</a> | dcmd2pdf -a -m all ><a href="daily.all.pdf">daily.pdf</a>
 				</code>
 			</blockquote>
 			<p>
@@ -119,7 +119,7 @@
 				printable graphs
 			</h2>
 			<p>
-				The <a href="divecmd2grap.1.html">divecmd2grap(1)</a> utility converts from XML into the <a
+				The <a href="dcmd2grap.1.html">dcmd2grap(1)</a> utility converts from XML into the <a
 					href="http://www.lunabase.org/~faber/Vault/software/grap/">grap(1)</a> format.
 				<strong>Aside</strong>: why <a href="http://www.lunabase.org/~faber/Vault/software/grap/">grap(1)</a>?  Because
 				it fits into the standard piped UNIX workflow.
@@ -127,10 +127,10 @@
 				to manage the intermediary files of <a href="http://www.gnuplot.info/">gnuplot</a> or <a
 					href="https://www.latex-project.org/">LaTeX</a>.
 				I use these other tools all of the time, but prefer to avoid them for that reason.
-				See also <a href="divecmd2pdf.1.html">divecmd2pdf(1)</a>, which manages the groff pipeline.
+				See also <a href="dcmd2pdf.1.html">dcmd2pdf(1)</a>, which manages the groff pipeline.
 			</p>
 			<p>
-				There are a number of graphing modes available to <a href="divecmd2grap.1.html">divecmd2grap(1)</a>.
+				There are a number of graphing modes available to <a href="dcmd2grap.1.html">dcmd2grap(1)</a>.
 				In all of them, I use <a href="daily.xml">daily.xml</a>, <a href="multiday.xml">multiday.xml</a>, <a
 					href="day1.xml">day1.xml</a>, and/or <a href="day2.xml">day2.xml</a>, as input.
 				The graph names (e.g., <q>aggr</q>) are used in the <b>-m</b> argument.
@@ -324,7 +324,7 @@
 			</p>
 			<p>
 				<a href="dcmdterm.1.html">dcmdterm(1)</a> doesn't have as many fancy modes as
-				<a href="divecmd2grap.1.html">divecmd2grap(1)</a>, but it's still a quick and easy way to see one's dives.
+				<a href="dcmd2grap.1.html">dcmd2grap(1)</a>, but it's still a quick and easy way to see one's dives.
 				Especially when setting up a <a href="https://www.gnu.org/software/groff/">groff(1)</a> pipeline takes too many
 				characters.
 			</p>
@@ -362,17 +362,17 @@
 				other utilities
 			</h2>
 			<p>
-				The arguably most-used output mode is also the simplest: <a href="divecmd2json.1.html">divecmd2json(1)</a>,
+				The arguably most-used output mode is also the simplest: <a href="dcmd2json.1.html">dcmd2json(1)</a>,
 				which converts graphs to JSON.  I use it constantly for <a href="https://divelog.blue">divelog.blue</a>,
 				specifically to show the <a href="https://divelog.blue/article040.html">dive profiles</a>.  Technically, I could
 				simply bundle the native <a href="dcmd.1.html">dcmd(1)</a> output directly and use an XML-to-JSON
 				formatter in the client, but this is easier.
 			</p>
 			<p>
-				As much as I use <a href="divecmd2grap.1.html">divecmd2grap(1)</a> and friends for my needs, others prefer using
+				As much as I use <a href="dcmd2grap.1.html">dcmd2grap(1)</a> and friends for my needs, others prefer using
 				tools like <a href="https://subsurface-divelog.org">Subsurface</a> To do so, one needs to be able to export into
 				a format used by Subsurface.  The <span class="nm">divecmd</span> suite has <a
-					href="divecmd2csv.1.html">divecmd2csv(1)</a>, which exports a (for the time being minimal) set of
+					href="dcmd2csv.1.html">dcmd2csv(1)</a>, which exports a (for the time being minimal) set of
 				information in CSV format.  This can then be imported into Subsurface using the import utility.
 			</p>
 			<p>
@@ -382,7 +382,7 @@
 				This tool is also able to split and join dive sequences for analysis in different ways: some dive computers
 				export free dives as a single dive including surface time, while others don't.
 				Sometimes you may want a single sequence (for example, when analysing with Subsurface), other times (like with
-				the <a href="divecmd2grap.1.html">divecmd2grap(1)</a> graphing tool) you want them separated.
+				the <a href="dcmd2grap.1.html">dcmd2grap(1)</a> graphing tool) you want them separated.
 			</p>
 			<p>
 				Lastly, the <a href="dcmdls.1.html">dcmdls(1)</a> tool accepts a set of files, groups them by dive

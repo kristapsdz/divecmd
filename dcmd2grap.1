@@ -21,10 +21,10 @@
 .Dt DIVECMD2GRAP 1
 .Os
 .Sh NAME
-.Nm divecmd2grap
+.Nm dcmd2grap
 .Nd graph dives with grap
 .Sh SYNOPSIS
-.Nm divecmd2grap
+.Nm dcmd2grap
 .Op Fl adv
 .Op Fl m Ar mode
 .Op Fl s Ar splitmode
@@ -166,9 +166,9 @@ A simple
 .Xr grap 1
 documented is also emitted with width 5 inches, height 3 inches.
 Use
-.Xr divecmd2pdf 1
+.Xr dcmd2pdf 1
 or
-.Xr divecmd2ps 1
+.Xr dcmd2ps 1
 to avoid needing to prepare a
 .Xr groff 1
 pipe.
@@ -190,7 +190,7 @@ output modes handy to free diving (e.g.,
 .Ar rest )
 assume canonical free diving mode.
 The
-.Xr divecmd2divecmd 1
+.Xr dcmdfind 1
 utility is capable of
 .Dq splitting
 non-canonical free dive mode into canonical.
@@ -208,29 +208,29 @@ and
 .Xr groff 1
 tools don't play nicely with landscape display.
 .Bd -literal -offset indent
-divecmd2grap -msummary dives.xml | \e
+dcmd2grap -msummary dives.xml | \e
   groff -Gp -Tpdf -P-p5.8i,8.3i > foo.pdf
 .Ed
 .Pp
 To compare free dive resting times across days:
 .Bd -literal -offset indent
-divecmd2grap -sdate -mrestscatter day1.xml day2 | \e
+dcmd2grap -sdate -mrestscatter day1.xml day2 | \e
   groff -Gp -Tpdf -P-p5.8i,8.3i > foo.pdf
 .Ed
 .Pp
 You can always use
-.Xr divecmd2pdf 1
+.Xr dcmd2pdf 1
 or
-.Xr divecmd2ps 1
+.Xr dcmd2ps 1
 to make this call easier:
 .Bd -literal -offset indent
-divecmd2pdf -sdate -mrestscatter day1.xml day2 > foo.pdf
+dcmd2pdf -sdate -mrestscatter day1.xml day2 > foo.pdf
 .Ed
 .Sh SEE ALSO
 .Xr dcmd 1 ,
-.Xr divecmd2divecmd 1 ,
-.Xr divecmd2pdf 1 ,
-.Xr divecmd2ps 1 ,
+.Xr dcmdfind 1 ,
+.Xr dcmd2pdf 1 ,
+.Xr dcmd2ps 1 ,
 .Xr grap 1 ,
 .Xr groff 1
 .Sh AUTHORS
