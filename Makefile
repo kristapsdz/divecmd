@@ -27,7 +27,7 @@ BINS		 = dcmd \
 		   divecmd2csv \
 		   dcmdfind \
 		   divecmd2grap \
-		   divecmd2list \
+		   dcmdls \
 		   divecmd2json \
 		   divecmd2term \
 		   divecmd2pdf \
@@ -37,7 +37,7 @@ MAN1S		 = dcmd.1 \
 		   divecmd2csv.1 \
 		   dcmdfind.1 \
 		   divecmd2grap.1 \
-		   divecmd2list.1 \
+		   dcmdls.1 \
 		   divecmd2json.1 \
 		   divecmd2pdf.1 \
 		   divecmd2ps.1 \
@@ -71,7 +71,7 @@ HTMLS		 = dcmd.1.html \
 		   divecmd2csv.1.html \
 		   dcmdfind.1.html \
 		   divecmd2grap.1.html \
-		   divecmd2list.1.html \
+		   dcmdls.1.html \
 		   divecmd2json.1.html \
 		   divecmd2pdf.1.html \
 		   divecmd2ps.1.html \
@@ -112,7 +112,7 @@ divecmd2term: divecmd2term.o parser.o compats.o
 divecmd2grap: divecmd2grap.o parser.o compats.o
 	$(CC) $(CPPFLAGS) -o $@ divecmd2grap.o parser.o compats.o -lexpat
 
-divecmd2list: divecmd2list.o parser.o compats.o
+dcmdls: divecmd2list.o parser.o compats.o
 	$(CC) $(CPPFLAGS) -o $@ divecmd2list.o parser.o compats.o -lexpat
 
 divecmd2json: divecmd2json.o parser.o compats.o

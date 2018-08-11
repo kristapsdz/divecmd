@@ -97,7 +97,7 @@
 			</p>
 			<blockquote>
 				<code>
-					dcmdfind -ldate=`date +%F` <a href="daily.xml">daily.xml</a> | divecmd2list
+					dcmdfind -ldate=`date +%F` <a href="daily.xml">daily.xml</a> | dcmdls
 				</code>
 				<code>
 					dcmdfind -ldate=`date +%F` <a href="daily.xml">daily.xml</a> | divecmd2term
@@ -385,7 +385,7 @@
 				the <a href="divecmd2grap.1.html">divecmd2grap(1)</a> graphing tool) you want them separated.
 			</p>
 			<p>
-				Lastly, the <a href="divecmd2list.1.html">divecmd2list(1)</a> tool accepts a set of files, groups them by dive
+				Lastly, the <a href="dcmdls.1.html">dcmdls(1)</a> tool accepts a set of files, groups them by dive
 				computer and diver, and lists their contents.
 				This makes browsing through a lot of dives much easier!
 			</p>
