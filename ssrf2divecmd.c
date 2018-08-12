@@ -661,6 +661,8 @@ parse_open(void *dat, const XML_Char *s, const XML_Char **atts)
 			logwarnx(p, "%s: unknown <dive> child", s);
 		else if (NULL != p->curlog)
 			logwarnx(p, "%s: unknown <divelog> child", s);
+
+		logwarnx(p, "%s: unknown element", s);
 	}
 }
 

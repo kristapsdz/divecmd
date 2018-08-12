@@ -32,7 +32,7 @@ BINS		 = dcmd \
 		   dcmdterm \
 		   dcmd2pdf \
 		   dcmd2ps \
-		   ssrf2divecmd
+		   ssrf2dcmd
 MAN1S		 = dcmd.1 \
 		   dcmd2csv.1 \
 		   dcmdfind.1 \
@@ -41,7 +41,8 @@ MAN1S		 = dcmd.1 \
 		   dcmd2json.1 \
 		   dcmd2pdf.1 \
 		   dcmd2ps.1 \
-		   dcmdterm.1
+		   dcmdterm.1 \
+		   ssrf2dcmd.1
 PNGS		 = daily.aggr.png \
 		   daily.aggrtemp.png \
 		   daily.rest.png \
@@ -76,7 +77,8 @@ HTMLS		 = dcmd.1.html \
 		   dcmd2pdf.1.html \
 		   dcmd2ps.1.html \
 		   dcmdterm.1.html \
-		   index.html
+		   index.html \
+		   ssrf2dcmd.1.html
 CSSS		 = index.css \
 		   mandoc.css
 WWWDIR		 = /var/www/vhosts/kristaps.bsd.lv/htdocs/divecmd
@@ -103,7 +105,7 @@ dcmd: $(OBJS) compats.o
 dcmdfind: divecmd2divecmd.o parser.o compats.o
 	$(CC) $(CPPFLAGS) -o $@ divecmd2divecmd.o parser.o compats.o -lexpat
 
-ssrf2divecmd: ssrf2divecmd.o parser.o compats.o
+ssrf2dcmd: ssrf2divecmd.o parser.o compats.o
 	$(CC) $(CPPFLAGS) -o $@ ssrf2divecmd.o parser.o compats.o -lexpat
 
 dcmdterm: divecmd2term.o parser.o compats.o

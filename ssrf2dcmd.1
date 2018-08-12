@@ -1,0 +1,54 @@
+.\"	$Id$
+.\"
+.\" Copyright (c) 2018 Kristaps Dzonsons <kristaps@bsd.lv>
+.\"
+.\" This library is free software; you can redistribute it and/or
+.\" modify it under the terms of the GNU Lesser General Public
+.\" License as published by the Free Software Foundation; either
+.\" version 2.1 of the License, or (at your option) any later version.
+.\" 
+.\" This library is distributed in the hope that it will be useful,
+.\" but WITHOUT ANY WARRANTY; without even the implied warranty of
+.\" MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+.\" Lesser General Public License for more details.
+.\" 
+.\" You should have received a copy of the GNU Lesser General Public
+.\" License along with this library; if not, write to the Free Software
+.\" Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston,
+.\" MA 02110-1301 USA
+.\" 
+.Dd $Mdocdate$
+.Dt SSRF2DCMD 1
+.Os
+.Sh NAME
+.Nm ssrf2dcmd
+.Nd convert dives from Subsurface
+.Sh SYNOPSIS
+.Nm ssrf2dcmd
+.Op Fl i Ar ident
+.Op Fl v
+.Op Ar files...
+.Sh DESCRIPTION
+The
+.Nm
+utility accepts Subsurface native XML files and outputs dives in the
+.Xr dcmd 1
+format.
+Its arguments are as follows:
+.Bl -tag -width Ds
+.It Fl v
+Parse files in verbose mode.
+.It Ar files...
+Subsurface XML input files with one or more dives.
+.El
+.Pp
+This tool is experimental.
+It is still under development.
+.Sh EXIT STATUS
+.Ex -std
+.Sh AUTHORS
+The
+.Nm
+utility was written by
+.An Kristaps Dzonsons ,
+.Mt kristaps@bsd.lv .
