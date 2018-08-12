@@ -501,6 +501,8 @@ limit_parse(const char *arg, struct limits *l)
 {
 	const char 	*obj, *cp;
 	struct tm	 tm;
+	struct tm	*tmp;
+	time_t		 t;
 	const char	*er = NULL;
 
 	memset(l, 0, sizeof(struct limits));
@@ -550,9 +552,17 @@ limit_parse(const char *arg, struct limits *l)
 		}
 		warnx("-l: bad datetime: %s", obj);
 		return(0);
+	case LIMIT_DATE_EQ:
 	case LIMIT_DATE_AFTER:
 	case LIMIT_DATE_BEFORE:
-	case LIMIT_DATE_EQ:
+		if (0 == strcasecmp(obj, "today")) {
+			t = time(NULL);
+			tmp = localtime(&t);
+			tmp->tm_sec = tmp->tm_min =
+				tmp->tm_hour = 0;
+			l->date = mktime(tmp);
+			break;
+		}
 		memset(&tm, 0, sizeof(struct tm));
 		cp = strptime(obj, "%Y-%m-%d", &tm);
 		if (NULL != cp && '\0' == *cp) {

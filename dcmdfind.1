@@ -31,11 +31,11 @@
 .Sh DESCRIPTION
 The
 .Nm
-utility accepts divelog files produced by
+utility searches for dives in
 .Xr dcmd 1
-and manipulates their contents: it can split individual dives into
-multiple dives; join multiple dives into a single dive; or join multiple
-divelogs into a single divelog, which is the default.
+files.
+It can also split resulting single dives into multiple dives or join
+multiple dives into a single dive.
 Its arguments are as follows:
 .Bl -tag -width Ds
 .It Fl l Ar limit
@@ -51,6 +51,9 @@ Split a single dive into a sequence of dives by its surface intervals.
 Emit warnings during parse.
 Specify twice for further debugging information.
 .El
+.Pp
+If there are multiple dive computers specified, or multiple divers, the
+first is selected to represent all output dives.
 .Pp
 Splitting
 .Pq Fl s
@@ -132,9 +135,20 @@ Dives starting before (inclusive) the
 .El
 .Pp
 Dates are always formatted as YYYY-mm-dd.
+The special date
+.Qq today
+refers to the current date.
 Date-times are formatted as YYYY-mm-ddTHH:MM.
 .Sh EXIT STATUS
 .Ex -std
+.Sh EXAMPLES
+To list only the current date's dives:
+.Pp
+.Dl dcmdfind -ldate=today *.xml | dcmdls
+.Pp
+To graph today's open-circuit dive:
+.Pp
+.Dl dcmdfind -ldate=today -lmode=open *.xml | dcmdterm
 .Sh SEE ALSO
 .Xr dcmd 1
 .Sh AUTHORS
