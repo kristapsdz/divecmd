@@ -153,6 +153,63 @@ print_legend(const struct diveq *dq, const struct win *win)
 	}
 }
 
+static void
+print_line(const struct win *iwin, size_t i,
+	size_t lastx, size_t lasty, size_t x, size_t y)
+{
+
+	if ( ! (lastx > 0 || lasty > 0))
+		return;
+
+	if (lasty > y) {
+		for (lasty--; lasty > y; lasty--) 
+			if ( ! dumb)
+				printf("\033[1;3%zum\033[%zu;%zuH|", 
+					(i % 7) + 1,
+					iwin->top + lasty + 1, 
+					iwin->left + lastx + 1);
+			else
+				printf("\033[%zu;%zuH|", 
+					iwin->top + lasty + 1, 
+					iwin->left + lastx + 1);
+	} else if (lasty < y) {
+		for (lasty++; lasty < y; lasty++) 
+			if ( ! dumb)
+				printf("\033[1;3%zum\033[%zu;%zuH|", 
+					(i % 7) + 1,
+					iwin->top + lasty + 1, 
+					iwin->left + lastx + 1);
+			else
+				printf("\033[%zu;%zuH|", 
+					iwin->top + lasty + 1, 
+					iwin->left + lastx + 1);
+	}
+	for ( ; lastx < x; lastx++)
+		if ( ! dumb)
+			printf("\033[1;3%zum\033[%zu;%zuH-", 
+				(i % 7) + 1,
+				iwin->top + y + 1, 
+				iwin->left + lastx + 1);
+		else
+			printf("\033[%zu;%zuH-", 
+				iwin->top + y + 1, 
+				iwin->left + lastx + 1);
+}
+
+static void
+print_point(const struct win *iwin, size_t i, size_t x, size_t y)
+{
+	if ( ! dumb)
+		printf("\033[1;3%zum\033[%zu;%zuH%lc", 
+			(i % 7) + 1,
+			iwin->top + y + 1, 
+			iwin->left + x + 1, L'\x2022');
+	else
+		printf("\033[%zu;%zuH+", 
+			iwin->top + y + 1, 
+			iwin->left + x + 1);
+}
+
 /*
  * Print a set of averages.
  * Accepts the averages, "avgs", and the window in which to print,
@@ -168,7 +225,8 @@ print_avgs(const struct avg *const *avgs, size_t avgsz,
 	const struct win *iwin, double min, double max, 
 	time_t mint, time_t maxt, size_t lbuf, int dir)
 {
-	size_t		 i, x, y, t, ytics, xtics, datarows;
+	size_t		 i, x, y, t, ytics, xtics, datarows,
+			 lastx, lasty;
 	double		 v;
 
 	assert(iwin->rows >= 6);
@@ -240,6 +298,7 @@ print_avgs(const struct avg *const *avgs, size_t avgsz,
 		printf("\033[%zu;%zuH\\", 
 			iwin->top + iwin->rows, 
 			iwin->left - 1 + 1);
+
 	/* 
 	 * Now make the x-axis and x-axis label.
 	 * Again, start with the border.
@@ -283,7 +342,7 @@ print_avgs(const struct avg *const *avgs, size_t avgsz,
 	/* Draw graph values, if applicable. */
 
 	for (i = 0; i < avgsz; i++)
-		for (x = 0; x < iwin->cols; x++) {
+		for (lastx = lasty = x = 0; x < iwin->cols; x++) {
 			if (0 == avgs[i][x].sz)
 				continue;
 			v = avgs[i][x].accum / (double)avgs[i][x].sz;
@@ -293,16 +352,11 @@ print_avgs(const struct avg *const *avgs, size_t avgsz,
 				(iwin->rows - 2) * 
 				((v - min) / (max - min));
 
-			if ( ! dumb)
-				printf("\033[1;3%zum\033[%zu;%zuH%lc", 
-					(i % 7) + 1,
-					iwin->top + y + 1, 
-					iwin->left + x + 1, L'\x2022');
-			else
-				printf("\033[1;3%zum\033[%zu;%zuH+", 
-					(i % 7) + 1,
-					iwin->top + y + 1, 
-					iwin->left + x + 1);
+			print_line(iwin, i, lastx, lasty, x, y);
+			print_point(iwin, i, x, y);
+
+			lastx = x;
+			lasty = y;
 		}
 
 	/* Reset terminal attributes. */
