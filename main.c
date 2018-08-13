@@ -583,7 +583,7 @@ main(int argc, char *argv[])
 	enum dcmd_type	 out = DC_OUTPUT_XML;
 	char		*ofile = NULL;
 	struct dcmd_rng	*rng = NULL;
-	unsigned int	 model;
+	unsigned int	 model = 0;
 	int		 has_model = 0;
 
 	while (-1 != (ch = getopt (argc, argv, "ad:f:i:lm:nr:sv"))) {
