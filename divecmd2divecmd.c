@@ -335,6 +335,13 @@ limit_parse(const char *arg, struct limits *l)
 				tmp->tm_hour = 0;
 			l->date = mktime(tmp);
 			break;
+		} else if (0 == strcasecmp(obj, "yesterday")) {
+			t = time(NULL) - 60 * 60 * 24;
+			tmp = localtime(&t);
+			tmp->tm_sec = tmp->tm_min =
+				tmp->tm_hour = 0;
+			l->date = mktime(tmp);
+			break;
 		}
 		memset(&tm, 0, sizeof(struct tm));
 		cp = strptime(obj, "%Y-%m-%d", &tm);
