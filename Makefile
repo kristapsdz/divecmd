@@ -13,7 +13,9 @@ OBJS		 = common.o \
 		   download.o \
 		   list.o \
 		   xml.o
-BINOBJS		 = divecmd2csv.o \
+BINOBJS		 = dcmdedit.o \
+		   divecmdedit.o \
+		   divecmd2csv.o \
 		   divecmd2divecmd.o \
 		   divecmd2grap.o \
 		   divecmd2list.o \
@@ -25,22 +27,24 @@ PREBINS		 = divecmd2pdf.in \
 		   divecmd2ps.in
 BINS		 = dcmd \
 		   dcmd2csv \
-		   dcmdfind \
 		   dcmd2grap \
-		   dcmdls \
 		   dcmd2json \
-		   dcmdterm \
 		   dcmd2pdf \
 		   dcmd2ps \
+		   dcmdedit \
+		   dcmdfind \
+		   dcmdls \
+		   dcmdterm \
 		   ssrf2dcmd
 MAN1S		 = dcmd.1 \
 		   dcmd2csv.1 \
-		   dcmdfind.1 \
 		   dcmd2grap.1 \
-		   dcmdls.1 \
 		   dcmd2json.1 \
 		   dcmd2pdf.1 \
 		   dcmd2ps.1 \
+		   dcmdedit.1 \
+		   dcmdfind.1 \
+		   dcmdls.1 \
 		   dcmdterm.1 \
 		   ssrf2dcmd.1
 PNGS		 = daily.aggr.png \
@@ -70,12 +74,13 @@ PDFS		 = daily.aggr.pdf \
 		   short.stack.pdf
 HTMLS		 = dcmd.1.html \
 		   dcmd2csv.1.html \
-		   dcmdfind.1.html \
 		   dcmd2grap.1.html \
-		   dcmdls.1.html \
 		   dcmd2json.1.html \
 		   dcmd2pdf.1.html \
 		   dcmd2ps.1.html \
+		   dcmdedit.1.html \
+		   dcmdfind.1.html \
+		   dcmdls.1.html \
 		   dcmdterm.1.html \
 		   index.html \
 		   ssrf2dcmd.1.html
@@ -122,6 +127,9 @@ dcmd2json: divecmd2json.o parser.o compats.o
 
 dcmd2csv: divecmd2csv.o parser.o compats.o
 	$(CC) $(CPPFLAGS) -o $@ divecmd2csv.o parser.o compats.o -lexpat
+
+dcmdedit: dcmdedit.o parser.o compats.o
+	$(CC) $(CPPFLAGS) -o $@ dcmdedit.o parser.o compats.o -lexpat
 
 dcmd2pdf: divecmd2pdf.in
 	sed "s!@GROFF@!$(GROFF)!g" divecmd2pdf.in >$@

@@ -1,0 +1,108 @@
+.\"	$Id$
+.\"
+.\" Copyright (c) 2018 Kristaps Dzonsons <kristaps@bsd.lv>
+.\"
+.\" This library is free software; you can redistribute it and/or
+.\" modify it under the terms of the GNU Lesser General Public
+.\" License as published by the Free Software Foundation; either
+.\" version 2.1 of the License, or (at your option) any later version.
+.\"
+.\" This library is distributed in the hope that it will be useful,
+.\" but WITHOUT ANY WARRANTY; without even the implied warranty of
+.\" MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+.\" Lesser General Public License for more details.
+.\"
+.\" You should have received a copy of the GNU Lesser General Public
+.\" License along with this library; if not, write to the Free Software
+.\" Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston,
+.\" MA 02110-1301 USA
+.\"
+.Dd $Mdocdate$
+.Dt DCMDEDIT 1
+.Os
+.Sh NAME
+.Nm dcmdedit
+.Nd edit dives
+.Sh SYNOPSIS
+.Nm dcmdedit
+.Op Fl jsv
+.Op Ar
+.Sh DESCRIPTION
+The
+.Nm
+utility can split resulting single dives into multiple dives or join
+multiple dives into a single dive.
+Its arguments are as follows:
+.Bl -tag -width Ds
+.It Fl j
+Join a sequence of dives within a divelog into a single dive.
+.It Fl s
+Split a single dive into a sequence of dives by its surface intervals.
+.It Fl v
+Emit warnings during parse.
+Specify twice for further debugging information.
+.El
+.Pp
+If there are multiple dive computers specified, or multiple divers, the
+first is selected to represent all output dives.
+.Pp
+Splitting
+.Pq Fl s
+is useful for establishing
+.Dq canonical free dive mode ,
+wherein each dive in a sequence has its own dive profile and surface
+time is omitted.
+Many dive computers automatically produce canonical free diving mode,
+for example, the Suunto D6i.
+Others, like the HW OSTC 2C, do not, and instead put all dives into one,
+including surface time.
+The new split dives are given a fingerprint formatted as
+.Li fingerprint-num ,
+where
+.Dq fingerprint
+is from the dive being split.
+.Pp
+Joining
+.Pq Fl j
+is useful when exporting data into Subsurface, which expects a single
+dive profile.
+Here, a set of dives are merged into a single one.
+The new merged dive is given a fingerprint formatted as
+.Li fingerprint-join ,
+where
+.Dq fingerprint
+is from the first dive entry.
+.Pp
+If dives already are split,
+.Fl s
+does nothing; same goes with
+.Fl j
+and dives already being joined.
+For both modes, dives not using the same dive computer as the first (by
+date) are omitted.
+The diver identity is ignored.
+.Pp
+If invoked using neither
+.Fl j
+nor
+.Fl s ,
+all dives are merged into a single divelog.
+All dives must have the same dive computer as the first (by date), else
+they are omitted, and duplicate fingerprints are also omitted.
+.Pp
+.Nm
+produces output on standard output as documented in
+.Xr dcmd 1 .
+.Sh EXIT STATUS
+.Ex -std
+.Sh SEE ALSO
+.Xr dcmd 1
+.Sh AUTHORS
+The
+.Nm
+utility was written by
+.An Kristaps Dzonsons ,
+.Mt kristaps@bsd.lv .
+.Sh BUGS
+Some data (e.g., vendor events) are ignored during conversion.
+These are reported to standard error.
