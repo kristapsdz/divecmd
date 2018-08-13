@@ -3,6 +3,32 @@
 <articles>
 	<article data-sblg-article="1" data-sblg-tags="version">
 		<header>
+			<h1>0.1.0</h1>
+			<address>Kristaps Dzonsons</address>
+			<time datetime="2018-08-12">2018-08-12</time>
+		</header>
+		<aside>
+			<p>
+				Rename binaries for brevity: divecmd is now <a
+					href="dcmd.1.html">dcmd(1)</a>, divecmd2list is <a
+					href="dcmdls.1.html">dcmdls(1)</a>, divecmd2divecmd is <a
+					href="dcmdfind.1.html">dcmdfind(1)</a>. divecmd2term is <a
+					href="dcmdterm.1.html">dcmdterm(1)</a>, and all converters
+				have <q>divecmd</q> shortened to <q>dcmd</q>.
+				Introduce an experimental utility, <a
+					href="ssrf2dcmd.1.html">ssrf2dcmd(1)</a>, for importing from
+				<a href="https://subsurface-divelog.org">Subsurface</a> export
+				dives.
+			</p>
+			<p>
+				Have unset dive type be listed when listing dives.
+				Fix gas mix error check.
+				Add tank pressure recognition.
+			</p>
+		</aside>
+	</article>
+	<article data-sblg-article="1" data-sblg-tags="version">
+		<header>
 			<h1>0.0.15</h1>
 			<address>Kristaps Dzonsons</address>
 			<time datetime="2018-04-17">2018-04-17</time>

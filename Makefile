@@ -3,7 +3,7 @@
 
 include Makefile.configure
 
-VERSION		 = 0.0.15
+VERSION		 = 0.1.0
 LDADD		+= -ldivecomputer
 CFLAGS		+= -DVERSION="\"$(VERSION)\""
 GROFF		?= groff
@@ -167,7 +167,7 @@ installwww: www
 
 $(PNGS): $(PDFS)
 
-$(PDFS): dcmd2grap dcmdfind
+$(PDFS): dcmd2grap dcmdfind dcmdedit
 
 divecmd.tar.gz:
 	mkdir -p .dist/divecmd-$(VERSION)/
@@ -214,7 +214,7 @@ daily.aggrtemp.pdf: temperature.xml
 	./dcmd2grap -m aggrtemp temperature.xml | groff -Gp -Tpdf -P-p5.8i,8.3i >$@
 
 daily.temp.pdf: temperature.xml
-	./dcmdfind -s temperature.xml | ./dcmd2grap -am temp | groff -Gp -Tpdf -P-p5.8i,8.3i >$@
+	./dcmdedit -s temperature.xml | ./dcmd2grap -am temp | groff -Gp -Tpdf -P-p5.8i,8.3i >$@
 
 multiday.stack.pdf: multiday.xml
 	./dcmd2grap -s date -m stack multiday.xml | groff -Gp -Tpdf -P-p5.8i,8.3i >$@

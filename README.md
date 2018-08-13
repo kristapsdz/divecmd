@@ -4,19 +4,21 @@
 extract the contents of your dive computer in a safe, simple manner.  It
 has several programs: 
 
-- [divecmd(1)](https://kristaps.bsd.lv/divecmd/divecmd.1.html), which
+- [dcmd(1)](https://kristaps.bsd.lv/divecmd/dcmd.1.html), which
   downloads, parses, and formats dives;
-- [divecmd2term(1)](https://kristaps.bsd.lv/divecmd/divecmd2term.1.html),
+- [dcmdterm(1)](https://kristaps.bsd.lv/divecmd/dcmdterm.1.html),
   which graphs formatted dives in an ANSI/VT100 terminal;
-- [divecmd2grap(1)](https://kristaps.bsd.lv/divecmd/divecmd2grap.1.html),
+- [dcmd2grap(1)](https://kristaps.bsd.lv/divecmd/dcmd2grap.1.html),
   which graphs using *grap(1)*; 
-- [divecmd2json(1)](https://kristaps.bsd.lv/divecmd/divecmd2json.1.html),
+- [dcmd2json(1)](https://kristaps.bsd.lv/divecmd/dcmd2json.1.html),
   which exports dive profiles to the JSON format;
-- [divecmd2csv(1)](https://kristaps.bsd.lv/divecmd/divecmd2csv.1.html),
+- [dcmd2csv(1)](https://kristaps.bsd.lv/divecmd/dcmd2csv.1.html),
   which exports to CSV (usually for [Subsurface](https://subsurface-divelog.org/)).
-- [divecmd2divecmd(1)](https://kristaps.bsd.lv/divecmd/divecmd2divecmd.1.html),
-  which reflows or reformulates profiles; and
-- [divecmd2list(1)](https://kristaps.bsd.lv/divecmd/divecmd2list.1.html),
+- [dcmdfind(1)](https://kristaps.bsd.lv/divecmd/dcmdfind.1.html),
+  which searches for dives;
+- [dcmdedit(1)](https://kristaps.bsd.lv/divecmd/dcmdedit.1.html),
+  which edits dive properties;
+- [dcmdls(1)](https://kristaps.bsd.lv/divecmd/dcmdls.1.html),
   which lists dive profiles.
 
 It compiles and runs on Linux, Mac OS X, and OpenBSD.
@@ -25,14 +27,14 @@ For Mac OS X machines with homebrew, see BSD.lv's
 
 There are also some supporting utilities:
 
-- [divecmd2pdf(1)](https://kristaps.bsd.lv/divecmd/divecmd2pdf.1.html), which
+- [dcmd2pdf(1)](https://kristaps.bsd.lv/divecmd/dcmd2pdf.1.html), which
   manages a *groff(1)* toolchain into PDF; 
-- [divecmd2ps(1)](https://kristaps.bsd.lv/divecmd/divecmd2ps.1.html), which
+- [dcmd2ps(1)](https://kristaps.bsd.lv/divecmd/dcmd2ps.1.html), which
   does the same but for PS (Mac OS X's *groff(1)* doesn't have PDF support);
   and
 
 I forked [libdivecomputer](http://www.libdivecomputer.org)'s *dctool* to
-write [divecmd(1)](https://kristaps.bsd.lv/divecmd/divecmd.1.html) ---
+write [dcmd(1)](https://kristaps.bsd.lv/divecmd/dcmd.1.html) ---
 originally to provide output like
 [Subsurface](https://subsurface-divelog.org/)'s XML format, but later to
 significantly simplify the code, to add sandboxing via
@@ -46,7 +48,7 @@ See "[Dive computer
 analysis](https://divelog.blue/cgi-bin/dblg/public.html?entryid=68)" and "[Visualising
 recovery time when free
 diving](https://divelog.blue/cgi-bin/dblg/public.html?entryid=69)" for examples of how
-[divecmd2grap(1)](https://kristaps.bsd.lv/divecmd/divecmd2grap.1.html),
+[dcmd2grap(1)](https://kristaps.bsd.lv/divecmd/dcmd2grap.1.html),
 operates.  Also see "[Suunto D6i temperature
 rounding](https://divelog.blue/cgi-bin/dblg/public.html?entryid=77)", which
 showcases both temperature and split (by diver) modes.
