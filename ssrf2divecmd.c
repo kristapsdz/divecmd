@@ -319,12 +319,14 @@ parse_depth(struct parse *p, const char *v)
  * the minute component.
  * Returns the time or 0 on failure.
  */
-static size_t
-parse_time(struct parse *p, const char *v)
+static int
+parse_time(struct parse *p, const char *v, size_t *res)
 {
 	size_t	 sz;
 	char	*cp;
 	int	 rc, min, sec;
+
+	*res = 0;
 
 	if ((sz = strlen(v)) < 4)
 		return 0;
@@ -335,7 +337,11 @@ parse_time(struct parse *p, const char *v)
 	rc = sscanf(cp, "%d:%d", &min, &sec);
 	free(cp);
 
-	return 2 != rc ? 0 : min * 60 + sec;
+	if (2 != rc)
+		return 0;
+
+	*res = min * 60 + sec;
+	return 1;
 }
 
 /*
@@ -454,7 +460,7 @@ parse_open(void *dat, const XML_Char *s, const XML_Char **atts)
 		}
 
 		if (NULL != dur && 
-		    0 == (d->duration = parse_time(p, dur))) {
+		    ! parse_time(p, dur, &d->duration)) {
 			logerrx(p, "bad <dive> duration");
 			return;
 		}
@@ -589,7 +595,7 @@ parse_open(void *dat, const XML_Char *s, const XML_Char **atts)
 		TAILQ_INSERT_TAIL(&d->samps, samp, entries);
 		d->nsamps++;
 
-		if (0 == (samp->time = parse_time(p, v))) {
+		if ( ! parse_time(p, v, &samp->time)) {
 			logerrx(p, "bad <sample> time");
 			return;
 		} 
@@ -613,8 +619,7 @@ parse_open(void *dat, const XML_Char *s, const XML_Char **atts)
 				}
 				samp->flags |= SAMP_DEPTH;
 			} else if (0 == strcmp(*ap, "rbt")) {
-				samp->rbt = parse_time(p, ap[1]);
-				if (0 == samp->rbt) {
+				if ( ! parse_time(p, ap[1], &samp->rbt)) {
 					logerrx(p, "bad <sample> depth");
 					return;
 				}
@@ -656,6 +661,30 @@ parse_open(void *dat, const XML_Char *s, const XML_Char **atts)
 	} else if (0 == strcmp(s, "dives")) {
 		if (NULL == p->curlog)
 			logerrx(p, "<dives> not in <divelog>");
+	} else if (0 == strcmp(s, "settings")) {
+		if (NULL != p->curdive)
+			logerrx(p, "<settings> in <dive>");
+#if 0
+	} else if (0 == strcmp(s, "divecomputerid")) {
+		if (NULL != p->curlog) {
+			logerrx(p, "<divecomputerid> not in <divelog>");
+			return;
+		}
+		if (NULL != p->curlog->vendor ||
+		    NULL != p->curlog->product ||
+		    NULL != p->curlog->model) {
+			logerrx(p, "multiple <divecomputerid>");
+			return;
+		}
+		for (ap = atts; NULL != ap[0]; ap += 2)
+			if (0 == strcmp(ap[0], "model"))
+				p->vendor->model = xstrdup(ap[1]);
+			else if (0 == strcmp(ap[0], "deviceid"))
+			else if (0 == strcmp(ap[0], "serial"))
+			else if (0 == strcmp(ap[0], "firmware"))
+			else
+				logattr(p, "divecomputerid", ap[0]);
+#endif
 	} else {
 		if (NULL != p->curdive)
 			logwarnx(p, "%s: unknown <dive> child", s);
