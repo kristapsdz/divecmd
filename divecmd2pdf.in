@@ -1,3 +1,19 @@
 #! /bin/sh
 
-divecmd2grap $@ | @GROFF@ -Gp -Tpdf -P-p5.8i,8.3i
+type groff >/dev/null 2>&1
+
+if [ $? -ne 0 ]
+then
+	echo "$0: groff not found" 1>&2
+	exit 1
+fi
+
+type grap >/dev/null 2>&1
+
+if [ $? -ne 0 ]
+then
+	echo "$0: grap not found" 1>&2
+	exit 1
+fi
+
+dcmd2grap $@ | groff -Gp -Tpdf -P-p5.8i,8.3i
