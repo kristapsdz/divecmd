@@ -44,10 +44,9 @@
 				dives from dive computers.
 				Why use it instead of, say, <a href="https://subsurface-divelog.org/">Subsurface</a>?
 				Because it's built to work in a command-line workflow with other command-line tools for processing, such as 
-				<a href="http://www.lunabase.org/~faber/Vault/software/grap/">grap(1)</a> (or any other <span
-					class="nm">grap</span> implementation) piped into 
-				<a href="https://www.gnu.org/software/groff/">groff(1)</a> (or other <span class="nm">troff</span>) or <a
-					href="https://www.latex-project.org/">LaTeX</a> (or other <span class="nm">TeX</span>).
+				<a href="http://www.lunabase.org/~faber/Vault/software/grap/">grap(1)</a> piped into <a
+					href="https://www.gnu.org/software/groff/">groff(1)</a> or <a
+					href="https://www.latex-project.org/">LaTeX</a>.
 			</p>
 			<p>
 				My workflow usually begins with <a href="dcmd.1.html">dcmd(1)</a> on the day of my dive.  

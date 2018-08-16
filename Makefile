@@ -3,7 +3,7 @@
 
 include Makefile.configure
 
-VERSION		 = 0.1.0
+VERSION		 = 0.1.1
 LDADD		+= -ldivecomputer
 CFLAGS		+= -DVERSION="\"$(VERSION)\""
 GROFF		?= groff

@@ -3,6 +3,22 @@
 <articles>
 	<article data-sblg-article="1" data-sblg-tags="version">
 		<header>
+			<h1>0.1.1</h1>
+			<address>Kristaps Dzonsons</address>
+			<time datetime="2018-08-12">ongoing</time>
+		</header>
+		<aside>
+			<p>
+				Graph lines (not just points) in <a
+					href="dcmdterm.1.html">dcmdterm</a>.
+				Have <a href="dcmd2pdf.1.html">dcmd2pdf(1)</a> and <a
+					href="dcmd2ps.1.html">dcmd2ps(1)</a> call the proper
+				binaries and now also make sure the formatter exists.
+			</p>
+		</aside>
+	</article>
+	<article data-sblg-article="1" data-sblg-tags="version">
+		<header>
 			<h1>0.1.0</h1>
 			<address>Kristaps Dzonsons</address>
 			<time datetime="2018-08-12">2018-08-12</time>
