@@ -111,7 +111,7 @@ dcmdfind: divecmd2divecmd.o parser.o compats.o
 	$(CC) $(CPPFLAGS) -o $@ divecmd2divecmd.o parser.o compats.o -lexpat
 
 ssrf2dcmd: ssrf2divecmd.o parser.o compats.o
-	$(CC) $(CPPFLAGS) -o $@ ssrf2divecmd.o parser.o compats.o -lexpat
+	$(CC) $(CPPFLAGS) -o $@ ssrf2divecmd.o parser.o compats.o $(LDFLAGS) -lexpat $(LDADD)
 
 dcmdterm: divecmd2term.o parser.o compats.o
 	$(CC) $(CPPFLAGS) -o $@ divecmd2term.o parser.o compats.o -lexpat -lm
