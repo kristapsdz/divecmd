@@ -47,7 +47,6 @@ struct	parse {
 	struct diveq	 *dives; /* all dives */
 	struct divestat	 *stat; /* statistics */
 	size_t		  pid; /* current dive no. */
-	size_t		  curtank; /* current tank */
 };
 
 static void
@@ -437,6 +436,7 @@ parse_open(void *dat, const XML_Char *s, const XML_Char **atts)
 	struct samp	 *samp;
 	struct dive	 *d, *dp;
 	const char	 *date, *time, *num, *er, *dur, *mode, *v;
+	size_t		  sz;
 	char		 *ep, *mixes[3];
 	struct dgroup	 *grp;
 
@@ -473,7 +473,6 @@ parse_open(void *dat, const XML_Char *s, const XML_Char **atts)
 		p->curdive = d = xcalloc(p, 1, sizeof(struct dive));
 		p->curdive->pid = ++p->pid;
 		p->curdive->line = XML_GetCurrentLineNumber(p->p);
-		p->curtank = 0;
 		TAILQ_INIT(&d->samps);
 		d->log = p->curlog;
 		d->mode = MODE_OC;
@@ -686,15 +685,21 @@ parse_open(void *dat, const XML_Char *s, const XML_Char **atts)
 					return;
 				}
 				samp->flags |= SAMP_TEMP;
-			} else if (0 == strcmp(*ap, "pressure")) {
-				samp->pressure.pressure = 
+			} else if (0 == strncmp(*ap, "pressure", 8)) {
+				samp->pressure = xreallocarray
+					(p, samp->pressure,
+					 samp->pressuresz + 1,
+					 sizeof(struct samppres));
+				samp->pressuresz++;
+				samp->pressure[samp->pressuresz - 1].pressure = 
 					parse_pressure(p, ap[1]);
-				if (samp->pressure.pressure < 0.0) {
+				if (samp->pressure[samp->pressuresz - 1].pressure < 0.0) {
 					logerrx(p, "bad <sample> pressure");
 					return;
 				}
-				samp->pressure.tank = p->curtank;
-				samp->flags |= SAMP_PRESSURE;
+				sz = strlen(*ap);
+				samp->pressure[samp->pressuresz - 1].tank =
+					sz > 8 ? atoi(*ap + 8) : 0;
 			}
 
 		if (SAMP_DEPTH & samp->flags)

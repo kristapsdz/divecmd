@@ -816,10 +816,6 @@ parse_open(void *dat, const XML_Char *s, const XML_Char **atts)
 	} else if (0 == strcmp(s, "pressure")) {
 		if (NULL == (samp = p->cursamp))
 			return;
-		if (SAMP_PRESSURE & samp->flags) {
-			logerrx(p, "restatement of <pressure>");
-			return;
-		}
 
 		v = num = NULL;
 		for (ap = atts; NULL != ap[0]; ap += 2)
@@ -837,19 +833,24 @@ parse_open(void *dat, const XML_Char *s, const XML_Char **atts)
 			return;
 		}
 
-		samp->pressure.pressure = strtod(v, &ep);
+		samp->pressure = xreallocarray
+			(p, samp->pressure,
+			 samp->pressuresz + 1,
+			 sizeof(struct samppres));
+		samp->pressuresz++;
+
+		samp->pressure[samp->pressuresz - 1].pressure = 
+			strtod(v, &ep);
 		if (ep == v || ERANGE == errno) {
 			logerrx(p, "bad <pressure> value");
 			return;
 		}
-
-		samp->pressure.tank = strtonum
+		samp->pressure[samp->pressuresz - 1].tank = strtonum
 			(num, 0, LONG_MAX, &er);
 		if (NULL != er) {
 			logerrx(p, "bad <pressure> tank");
 			return;
 		}
-		samp->flags |= SAMP_PRESSURE;
 	} else if (0 == strcmp(s, "rbt")) {
 		if (NULL == (samp = p->cursamp)) {
 			logerrx(p, "<rbt> not in <sample>");
@@ -1195,6 +1196,7 @@ divecmd_free(struct diveq *dq, struct divestat *st)
 				TAILQ_REMOVE(&d->samps, s, entries);
 				free(s->vendor.buf);
 				free(s->events);
+				free(s->pressure);
 				free(s);
 			}
 			free(d->gas);
@@ -1313,10 +1315,10 @@ divecmd_print_dive_sample(FILE *f, const struct samp *s)
 	if (SAMP_RBT & s->flags)
 		fprintf(f, "\t\t\t\t\t"
 		        "<rbt value=\"%zu\" />\n", s->rbt);
-	if (SAMP_PRESSURE & s->flags)
+	for (i = 0; i < s->pressuresz; i++) 
 		fprintf(f, "\t\t\t\t\t"
 		        "<pressure value=\"%g\" tank=\"%zu\" />\n", 
-			s->pressure.pressure, s->pressure.tank);
+			s->pressure[i].pressure, s->pressure[i].tank);
 	for (j = 0; j < s->eventsz; j++)
 		for (i = 0; i < EVENT__MAX; i++) {
 			if ( ! ((1U << i) & s->events[j].bits))

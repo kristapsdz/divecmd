@@ -95,8 +95,7 @@ struct	sampvendor {
 };
 
 struct	samppres {
-	/* FIXME: divegas or tank number? */
-	size_t		 tank; /* divegas num */
+	size_t		 tank; /* tank num */
 	double		 pressure; /* bar */
 };
 
@@ -109,7 +108,8 @@ struct	samp {
 	size_t		  time; /* seconds since start */
 	double		  depth; /* metres */
 	double		  temp; /* celsius */
-	struct samppres	  pressure; /* bar */
+	struct samppres	 *pressure; /* tank pressure */
+	size_t		  pressuresz; /* number of pressures */
 	size_t		  rbt; /* seconds */
 	size_t		  gaschange; /* num of gas change */
 	struct sampevent *events;
@@ -124,7 +124,6 @@ struct	samp {
 #define	SAMP_DECO	  0x10
 #define	SAMP_VENDOR	  0x20
 #define	SAMP_GASCHANGE	  0x40
-#define	SAMP_PRESSURE	  0x80
 	TAILQ_ENTRY(samp) entries;
 };
 
