@@ -32,6 +32,7 @@
 #include <time.h>
 #include <unistd.h>
 
+#include <libdivecomputer/descriptor.h>
 #include <expat.h>
 
 #include "parser.h"
@@ -374,6 +375,60 @@ parse_date(const char *date, const char *time)
 	return mktime(&tm);
 }
 
+/*
+ * Subsurface's format, very annoyingly, puts the vendor and product
+ * into the same string.
+ * So we need to break it down. 
+ * We don't get the model number, unfortunately.
+ */
+static void
+parse_divecomputerid(struct parse *p, const XML_Char **atts)
+{
+	const char	 *vendor, *product, *pmodel = NULL;
+	char		 *buf;
+	const XML_Char	**ap;
+	dc_iterator_t	 *it;
+	dc_descriptor_t  *d;
+
+	if (NULL != p->curlog->vendor) {
+		logerrx(p, "only one <divecomputerid> allowed");
+		return;
+	}
+
+	for (ap = atts; NULL != ap[0]; ap += 2)
+		if (0 == strcmp(ap[0], "model")) {
+			pmodel = ap[1];
+			break;
+		}
+	
+	if (NULL == pmodel) {
+		lognattr(p, "divecomputerid", "model");
+		return;
+	}
+
+	if (DC_STATUS_SUCCESS != dc_descriptor_iterator(&it)) {
+		logerrx(p, "dc_descriptor_iterator");
+		return;
+	}
+
+	while (DC_STATUS_SUCCESS == dc_iterator_next(it, &d)) {
+		vendor = dc_descriptor_get_vendor(d);
+		product = dc_descriptor_get_product(d);
+		asprintf(&buf, "%s %s", vendor, product);
+		if (0 == strcmp(buf, pmodel)) {
+			p->curlog->vendor = xstrdup(p, vendor);
+			p->curlog->product = xstrdup(p, product);
+			free(buf);
+			dc_descriptor_free(d);
+			break;
+		}
+		free(buf);
+		dc_descriptor_free(d);
+	}
+
+	dc_iterator_free(it);
+}
+
 static void
 parse_open(void *dat, const XML_Char *s, const XML_Char **atts)
 {
@@ -664,27 +719,12 @@ parse_open(void *dat, const XML_Char *s, const XML_Char **atts)
 	} else if (0 == strcmp(s, "settings")) {
 		if (NULL != p->curdive)
 			logerrx(p, "<settings> in <dive>");
-#if 0
 	} else if (0 == strcmp(s, "divecomputerid")) {
-		if (NULL != p->curlog) {
+		if (NULL == p->curlog) {
 			logerrx(p, "<divecomputerid> not in <divelog>");
 			return;
 		}
-		if (NULL != p->curlog->vendor ||
-		    NULL != p->curlog->product ||
-		    NULL != p->curlog->model) {
-			logerrx(p, "multiple <divecomputerid>");
-			return;
-		}
-		for (ap = atts; NULL != ap[0]; ap += 2)
-			if (0 == strcmp(ap[0], "model"))
-				p->vendor->model = xstrdup(ap[1]);
-			else if (0 == strcmp(ap[0], "deviceid"))
-			else if (0 == strcmp(ap[0], "serial"))
-			else if (0 == strcmp(ap[0], "firmware"))
-			else
-				logattr(p, "divecomputerid", ap[0]);
-#endif
+		parse_divecomputerid(p, atts);
 	} else {
 		if (NULL != p->curdive)
 			logwarnx(p, "%s: unknown <dive> child", s);
