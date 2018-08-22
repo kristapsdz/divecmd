@@ -930,6 +930,9 @@ parse_open(void *dat, const XML_Char *s, const XML_Char **atts)
 		} else if (SAMP_DECO & samp->flags) {
 			logerrx(p, "restatement of <deco>");
 			return;
+		} else if (MODE_FREEDIVE == p->curdive->mode) {
+			/* Ignore deco when freediving. */
+			return;
 		}
 
 		v = mode = dur = NULL;
