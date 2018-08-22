@@ -109,6 +109,7 @@ struct	samp {
 	size_t		  time; /* seconds since start */
 	double		  depth; /* metres */
 	double		  temp; /* celsius */
+	double		  cns; /* [0,1] */
 	struct samppres	 *pressure; /* tank pressure */
 	size_t		  pressuresz; /* number of pressures */
 	size_t		  rbt; /* seconds */
@@ -123,6 +124,7 @@ struct	samp {
 #define	SAMP_DECO	  0x10
 #define	SAMP_VENDOR	  0x20
 #define	SAMP_GASCHANGE	  0x40
+#define	SAMP_CNS	  0x80
 	unsigned int	  flags; /* bits of SAMP_xxx */
 	TAILQ_ENTRY(samp) entries;
 };

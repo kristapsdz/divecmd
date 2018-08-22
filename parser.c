@@ -694,7 +694,10 @@ parse_open(void *dat, const XML_Char *s, const XML_Char **atts)
 
 		d->gas = xreallocarray(p, d->gas, 
 			d->gassz + 1, sizeof(struct divegas));
+
+		memset(&d->gas[d->gassz], 0, sizeof(struct divegas));
 		d->gas[d->gassz].num = i;
+
 		if (NULL != mixes[0]) {
 			d->gas[d->gassz].o2 = strtod(mixes[0], &ep);
 			if (ep == mixes[0] || ERANGE == errno) {
@@ -1012,6 +1015,32 @@ parse_open(void *dat, const XML_Char *s, const XML_Char **atts)
 				p->curdive->mintemp = samp->temp;
 		}
 		samp->flags |= SAMP_TEMP;
+	} else if (0 == strcmp(s, "cns")) {
+		if (NULL == (samp = p->cursamp)) {
+			logerrx(p, "<cns> not in <sample>");
+			return;
+		} else if (SAMP_CNS & samp->flags) {
+			logerrx(p, "restatement of <cns>");
+			return;
+		}
+
+		for (v = NULL, ap = atts; NULL != ap[0]; ap += 2)
+			if (0 == strcmp(*ap, "value"))
+				v = ap[1];
+			else
+				logattr(p, "cns", *ap);
+
+		if (NULL == v) {
+			lognattr(p, "cns", "value");
+			return;
+		}
+
+		samp->cns = strtod(v, &ep);
+		if (ep == v || ERANGE == errno) {
+			logerrx(p, "malformed <cns> value");
+			return;
+		}
+		samp->flags |= SAMP_CNS;
 	} else if (0 == strcmp(s, "gaschange")) {
 		if (NULL == (samp = p->cursamp)) {
 			logerrx(p, "<gaschange> not in <sample>");
@@ -1031,8 +1060,6 @@ parse_open(void *dat, const XML_Char *s, const XML_Char **atts)
 			lognattr(p, "gaschange", "mix");
 			return;
 		}
-
-		/* We've added a 1 to the gas mix.  Dunno why. */
 
 		samp->gaschange = strtonum(v, 0, UINT_MAX, &er) + 1;
 		if (NULL != er) {
@@ -1344,6 +1371,9 @@ divecmd_print_dive_sample(FILE *f, const struct samp *s)
 		fprintf(f, "\t\t\t\t\t"
 			"<vendor type=\"%zu\">%s</vendor>\n",
 			s->vendor.type, s->vendor.buf);
+	if (SAMP_CNS & s->flags)
+		fprintf(f, "\t\t\t\t\t"
+			"<cns value=\"%.2f\" />\n", s->cns);
 	fputs("\t\t\t\t</sample>\n", f);
 }
 
