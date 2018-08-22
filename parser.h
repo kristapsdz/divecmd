@@ -79,8 +79,9 @@ enum	deco {
 };
 
 struct	sampevent {
-	size_t	  	 duration;
-	unsigned int	 bits;
+	size_t	  	 duration; /* duration (or zero) */
+	unsigned int	 flags; /* any opaque flags (or zero) */
+	enum event	 type; /* event type */
 };
 
 struct	sampdeco {
@@ -114,16 +115,15 @@ struct	samp {
 	size_t		  gaschange; /* num of gas change */
 	struct sampevent *events;
 	size_t		  eventsz;
-	unsigned int	  flags; /* bits of 1u << "enum event" */
 	struct sampdeco	  deco;
 	struct sampvendor vendor;
 #define	SAMP_DEPTH	  0x01
 #define	SAMP_TEMP	  0x02
 #define	SAMP_RBT	  0x04
-#define	SAMP_EVENT	  0x08
 #define	SAMP_DECO	  0x10
 #define	SAMP_VENDOR	  0x20
 #define	SAMP_GASCHANGE	  0x40
+	unsigned int	  flags; /* bits of SAMP_xxx */
 	TAILQ_ENTRY(samp) entries;
 };
 

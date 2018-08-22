@@ -157,9 +157,13 @@ sample_cb(dc_sample_type_t type, dc_sample_value_t v, void *userdata)
 			"<gaschange mix=\"%u\" />\n", v.gasmix);
 		break;
 	case DC_SAMPLE_EVENT:
-		fprintf(sd->f, "\t\t\t\t\t"
-			"<event type=\"%s\" duration=\"%u\" />\n", 
-			dcmd_event_types[v.event.type], v.event.time);
+		fprintf(sd->f, "\t\t\t\t\t<event type=\"%s\"",
+			dcmd_event_types[v.event.type]);
+		if (v.event.time)
+			fprintf(sd->f, " duration=\"%u\"", v.event.time);
+		if (v.event.flags)
+			fprintf(sd->f, " flags=\"%u\"", v.event.flags);
+		fprintf(sd->f, " />\n");
 		break;
 	default:
 		if ( ! verbose)

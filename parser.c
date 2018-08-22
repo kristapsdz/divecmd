@@ -457,7 +457,7 @@ parse_open(void *dat, const XML_Char *s, const XML_Char **atts)
 	int		  rc;
 	struct dgroup	 *grp;
 	size_t		  i;
-	unsigned int	  bits;
+	enum event	  evt;
 
 	if (0 == strcmp(s, "divelog")) {
 		if (NULL != p->curlog) {
@@ -895,12 +895,10 @@ parse_open(void *dat, const XML_Char *s, const XML_Char **atts)
 			lognattr(p, "event", "type");
 			return;
 		}
-		for (bits = 0, i = 0; i < EVENT__MAX; i++)
-			if (0 == strcmp(v, events[i])) {
-				bits = (1U << i);
+		for (evt = 0; evt < EVENT__MAX; evt++)
+			if (0 == strcmp(v, events[evt]))
 				break;
-			}
-		if (EVENT__MAX == i) {
+		if (EVENT__MAX == evt) {
 			logerrx(p, "malformed <event> type: %s", v);
 			return;
 		}
@@ -919,10 +917,9 @@ parse_open(void *dat, const XML_Char *s, const XML_Char **atts)
 			 sizeof(struct sampevent));
 		memset(&samp->events[samp->eventsz], 0,
 			sizeof(struct sampevent));
-		samp->events[samp->eventsz].bits = bits;
+		samp->events[samp->eventsz].type = evt;
 		samp->events[samp->eventsz].duration = i;
 		samp->eventsz++;
-		samp->flags |= SAMP_EVENT;
 	} else if (0 == strcmp(s, "deco")) {
 		if (NULL == (samp = p->cursamp)) {
 			logerrx(p, "<deco> not in <sample>");
@@ -1299,7 +1296,7 @@ divecmd_print_dive_sampleq(FILE *f, const struct sampq *q)
 void
 divecmd_print_dive_sample(FILE *f, const struct samp *s)
 {
-	size_t	 i, j;
+	size_t	 i;
 
 	fprintf(f, "\t\t\t\t<sample time=\"%zu\">\n", s->time);
 
@@ -1319,17 +1316,24 @@ divecmd_print_dive_sample(FILE *f, const struct samp *s)
 		fprintf(f, "\t\t\t\t\t"
 		        "<pressure value=\"%g\" tank=\"%zu\" />\n", 
 			s->pressure[i].pressure, s->pressure[i].tank);
-	for (j = 0; j < s->eventsz; j++)
-		for (i = 0; i < EVENT__MAX; i++) {
-			if ( ! ((1U << i) & s->events[j].bits))
-				continue;
-			fprintf(f, "\t\t\t\t\t"
-			           "<event type=\"%s\""
-			           " duration=\"%zu\" />\n", 
-				   events[i],
-				   s->events[j].duration);
-			break;
+	for (i = 0; i < s->eventsz; i++)  {
+		if ((EVENT_gaschange == s->events[i].type ||
+		     EVENT_gaschange2 == s->events[i].type) &&
+		    s->events[i].flags > 0) {
+			fprintf(f, "\t\t\t\t\t<gaschange mix=\"%u\" />\n",
+				s->events[i].flags - 1);
+			continue;
 		}
+		fprintf(f, "\t\t\t\t\t<event type=\"%s\"", 
+			events[s->events[i].type]);
+		if (s->events[i].flags)
+			fprintf(f, " flags=\"%u\"", 
+				s->events[i].flags);
+		if (s->events[i].duration)
+			fprintf(f, " duration=\"%zu\"", 
+				s->events[i].duration);
+		fprintf(f, " />\n");
+	}
 	if (SAMP_DECO & s->flags)
 		fprintf(f, "\t\t\t\t\t"
 			"<deco depth=\"%g\" type=\"%s\" "
