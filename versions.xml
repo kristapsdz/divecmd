@@ -3,9 +3,26 @@
 <articles>
 	<article data-sblg-article="1" data-sblg-tags="version">
 		<header>
+			<h1>0.1.2</h1>
+			<address>Kristaps Dzonsons</address>
+			<time datetime="2018-08-19">ongoing</time>
+		</header>
+		<aside>
+			<p>
+				Allow for multiple tank pressure reports.
+				This happens when (for example) deco diving with a wireless gauge on
+				both back-gas and deco stage.
+				Allow the vendor and product to be pulled from Subsurface output
+				files, as well as pressures for multiple tanks.
+				Lastly, allow for CNS values.
+			</p>
+		</aside>
+	</article>
+	<article data-sblg-article="1" data-sblg-tags="version">
+		<header>
 			<h1>0.1.1</h1>
 			<address>Kristaps Dzonsons</address>
-			<time datetime="2018-08-12">ongoing</time>
+			<time datetime="2018-08-12">2018-08-12</time>
 		</header>
 		<aside>
 			<p>
