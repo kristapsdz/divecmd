@@ -249,7 +249,8 @@ And now, the samples...
          [<pressure value="xxx" tank="nnn" />]
          [<deco depth="xxx" type="zzz" duration="ss" />]
          [<gaschange mix="nnn" />]
-         [<event type="event" />]
+         [<cns value="xxx" />]
+         [<event type="event" [duration="ss"] [flags="ss"] />]
         </sample>
       </samples>
 .Ed
@@ -295,6 +296,13 @@ corresponding to the
 in the
 .Li <gasmixes>
 set for the dive.
+For historical reasons, the identifier of the gas mixture is
+.Em one less
+than the
+.Li <gasmix>
+number.
+.It Li cns
+CNS oxygen toxicity fraction in the unit interval.
 .It Li deco
 A decompression notice.
 The
@@ -338,7 +346,9 @@ set to one of
 .Dq tissuelevel ,
 or
 .Dq gaschange2 .
-No additional information is provided at this time.
+An opaque
+.Li flags
+value is also exported.
 .El
 .Pp
 In theory, it's possible for a sample to have no inner elements at all,

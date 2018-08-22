@@ -16,6 +16,14 @@
 				files, as well as pressures for multiple tanks.
 				Lastly, allow for CNS values.
 			</p>
+			<p>
+				Fix how <code>&lt;gasmix&gt;</code>es are referenced by a 
+				<code>&lt;gaschange&gt;</code>.
+				<strong>
+					You'll need to decrement the <code>num</code> of all
+					code>&lt;gasmix&gt;</code> statements for them to match.
+				</strong>
+			</p>
 		</aside>
 	</article>
 	<article data-sblg-article="1" data-sblg-tags="version">

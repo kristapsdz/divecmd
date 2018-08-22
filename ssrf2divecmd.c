@@ -192,6 +192,34 @@ logerrp(struct parse *p)
 	logerrx(p, "%s", XML_ErrorString(XML_GetErrorCode(p->p)));
 }
 
+/*
+ * Allocate a sample and insert it into the correct order.
+ * FIXME we should just check the last one first and avoid walking the
+ * whole queue, as most will be well-ordered.
+ */
+static struct samp *
+samp_alloc(struct parse *p, size_t tm)
+{
+	struct samp	*samp, *ss;
+
+	assert(NULL != p->curdive);
+
+	samp = xcalloc(p, 1, sizeof(struct samp));
+	samp->time = tm;
+
+	TAILQ_FOREACH(ss, &p->curdive->samps, entries)
+		if (ss->time >= samp->time)
+			break;
+
+	if (NULL == ss)
+		TAILQ_INSERT_TAIL(&p->curdive->samps, samp, entries);
+	else
+		TAILQ_INSERT_BEFORE(ss, samp, entries);
+
+	p->curdive->nsamps++;
+	return samp;
+}
+
 static struct dgroup *
 group_add(struct parse *p, size_t i, struct dive *d)
 {
@@ -349,6 +377,39 @@ parse_time(struct parse *p, const char *v, size_t *res)
  * These must be in yyyy-mm-dd and hh:mm:ss formats.
  * Returns the epoch stamp or <0 on failure.
  */
+static int
+parse_percent(const char *val, double *res)
+{
+	size_t	 	 sz;
+	long long	 v;
+	char	 	 buf[32];
+	const char	*er;
+
+	if ((sz = strlen(val)) < 2 || sz > sizeof(buf) - 1) {
+		warnx("1: %s", val);
+		return 0;
+	}
+	if ('%' != val[sz - 1]) {
+		warnx("2: %s", val);
+		return 0;
+	}
+
+	strlcpy(buf, val, sizeof(buf));
+	buf[sz - 1] = '\0';
+	v = strtonum(buf, 0, 100, &er);
+	if (NULL != er) {
+		warnx("3: %s, %s", buf, er);
+		return 0;
+	}
+	*res = v / 100.0;
+	return 1;
+}
+
+/*
+ * Parse a date-time from the date and time component.
+ * These must be in yyyy-mm-dd and hh:mm:ss formats.
+ * Returns the epoch stamp or <0 on failure.
+ */
 static time_t
 parse_date(const char *date, const char *time)
 {
@@ -428,15 +489,156 @@ parse_divecomputerid(struct parse *p, const XML_Char **atts)
 	dc_iterator_free(it);
 }
 
+static void 
+parse_event(struct parse *p, const XML_Char **atts)
+{
+	struct samp	 *samp = NULL;
+	int		  type = 0;
+	size_t		  tm;
+	const XML_Char	**ap;
+	const char	 *typep = NULL, *tmp = NULL, *flagp = NULL;
+	
+	/* All events must have a time and type. */
+
+	for (ap = atts; NULL != ap[0]; ap += 2) 
+		if (0 == strcmp(*ap, "type")) 
+			typep = ap[1];
+		else if (0 == strcmp(*ap, "time"))
+			tmp = ap[1];
+		else if (0 == strcmp(*ap, "flags"))
+			flagp = ap[1];
+
+	if (NULL == typep) {
+		lognattr(p, "event", "type");
+		return;
+	} else if (NULL == tmp) {
+		lognattr(p, "event", "time");
+		return;
+	}
+
+	type = atoi(typep);
+	if (type < 0 || type > EVENT_gaschange2) {
+		logerrx(p, "bad <event> type");
+		return;
+	} else if ( ! parse_time(p, tmp, &tm)) {
+		logerrx(p, "bad <event> time");
+		return;
+	}
+
+	/* Each is going to be a singleton. */
+
+	samp = samp_alloc(p, tm);
+	samp->events = xcalloc(p, 1, sizeof(struct sampevent));
+	samp->eventsz++;
+	samp->events[0].type = type;
+	if (NULL != flagp) 
+		samp->events[0].flags = atoi(flagp);
+}
+
+static void 
+parse_sample(struct parse *p, const XML_Char **atts)
+{
+	const XML_Char	**ap;
+	struct samp	 *samp;
+	struct dive	 *d = p->curdive;
+	const char	 *v;
+	size_t		  sz, tm;
+
+	for (v = NULL, ap = atts; NULL != ap[0]; ap += 2)
+		if (0 == strcmp(*ap, "time"))
+			v = ap[1];
+
+	if (NULL == v) {
+		lognattr(p, "sample", "time");
+		return;
+	}
+
+	if ( ! parse_time(p, v, &tm)) {
+		logerrx(p, "bad <sample> time");
+		return;
+	} 
+
+	logdbg(p, "new sample at %zu", tm);
+	samp = samp_alloc(p, tm);
+
+	if (samp->time > d->maxtime)
+		d->maxtime = samp->time;
+	if (d->datetime &&
+	    d->datetime + (time_t)samp->time > 
+	    p->stat->timestamp_max)
+		p->stat->timestamp_max =
+			d->datetime + (time_t)samp->time;
+
+	for (ap = atts; NULL != ap[0]; ap += 2)
+		if (0 == strcmp(*ap, "depth")) {
+			samp->depth = parse_depth(p, ap[1]);
+			if (samp->depth < 0.0) {
+				logerrx(p, "bad <sample> depth");
+				return;
+			}
+			samp->flags |= SAMP_DEPTH;
+		} else if (0 == strcmp(*ap, "rbt")) {
+			if ( ! parse_time(p, ap[1], &samp->rbt)) {
+				logerrx(p, "bad <sample> depth");
+				return;
+			}
+			samp->flags |= SAMP_RBT;
+		} else if (0 == strcmp(*ap, "temp")) {
+			samp->temp = parse_temp(p, ap[1]);
+			if (samp->temp < 0.0) {
+				logerrx(p, "bad <sample> temp");
+				return;
+			}
+			samp->flags |= SAMP_TEMP;
+		} else if (0 == strncmp(*ap, "pressure", 8)) {
+			samp->pressure = xreallocarray
+				(p, samp->pressure,
+				 samp->pressuresz + 1,
+				 sizeof(struct samppres));
+			samp->pressuresz++;
+			samp->pressure[samp->pressuresz - 1].pressure = 
+				parse_pressure(p, ap[1]);
+			if (samp->pressure[samp->pressuresz - 1].pressure < 0.0) {
+				logerrx(p, "bad <sample> pressure");
+				return;
+			}
+			sz = strlen(*ap);
+			samp->pressure[samp->pressuresz - 1].tank =
+				sz > 8 ? atoi(*ap + 8) : 0;
+		} else if (0 == strcmp(*ap, "cns")) {
+			if ( ! parse_percent(ap[1], &samp->cns)) {
+				logerrx(p, "bad <sample> cns");
+				return;
+			}
+			samp->flags |= SAMP_CNS;
+		} else if (strcmp(*ap, "time"))
+			logwarnx(p, "unknown <sample> attribute: %s", ap[0]);
+
+	if (SAMP_DEPTH & samp->flags)
+		if (samp->depth > p->curdive->maxdepth)
+			p->curdive->maxdepth = samp->depth;
+
+	if (SAMP_TEMP & samp->flags) {
+		if (0 == p->curdive->hastemp) {
+			p->curdive->maxtemp = samp->temp;
+			p->curdive->mintemp = samp->temp;
+			p->curdive->hastemp = 1;
+		} else {
+			if (samp->temp > p->curdive->maxtemp)
+				p->curdive->maxtemp = samp->temp;
+			if (samp->temp < p->curdive->mintemp)
+				p->curdive->mintemp = samp->temp;
+		}
+	}
+}
+
 static void
 parse_open(void *dat, const XML_Char *s, const XML_Char **atts)
 {
 	const XML_Char	**ap;
 	struct parse	 *p = dat;
-	struct samp	 *samp;
 	struct dive	 *d, *dp;
 	const char	 *date, *time, *num, *er, *dur, *mode, *v;
-	size_t		  sz;
 	char		 *ep, *mixes[3];
 	struct dgroup	 *grp;
 
@@ -592,7 +794,7 @@ parse_open(void *dat, const XML_Char *s, const XML_Char **atts)
 
 		d->gas = xreallocarray(p, d->gas, 
 			d->gassz + 1, sizeof(struct divegas));
-		d->gas[d->gassz].num = d->gassz;
+		d->gas[d->gassz].num = d->gassz + 1;
 
 		if (NULL != mixes[0]) {
 			if ('\0' != mixes[0][0] &&
@@ -631,93 +833,19 @@ parse_open(void *dat, const XML_Char *s, const XML_Char **atts)
 		free(mixes[2]);
 		d->gassz++;
 	} else if (0 == strcmp(s, "sample")) {
-		if (NULL == (d = p->curdive)) { 
+		if (NULL == p->curdive) { 
 			logerrx(p, "<sample> not in <dive>");
 			return;
 		}
-
-		for (v = NULL, ap = atts; NULL != ap[0]; ap += 2)
-			if (0 == strcmp(*ap, "time"))
-				v = ap[1];
-
-		if (NULL == v) {
-			lognattr(p, "sample", "time");
+		parse_sample(p, atts);
+	} else if (0 == strcmp(s, "event")) {
+		if (NULL == p->curdive) { 
+			logerrx(p, "<event> not in <dive>");
 			return;
 		}
-
-		samp = xcalloc(p, 1, sizeof(struct samp));
-		TAILQ_INSERT_TAIL(&d->samps, samp, entries);
-		d->nsamps++;
-
-		if ( ! parse_time(p, v, &samp->time)) {
-			logerrx(p, "bad <sample> time");
-			return;
-		} 
-
-		logdbg(p, "new sample at %zu", samp->time);
-
-		if (samp->time > d->maxtime)
-			d->maxtime = samp->time;
-		if (d->datetime &&
-		    d->datetime + (time_t)samp->time > 
-		    p->stat->timestamp_max)
-			p->stat->timestamp_max =
-				d->datetime + (time_t)samp->time;
-
-		for (ap = atts; NULL != ap[0]; ap += 2)
-			if (0 == strcmp(*ap, "depth")) {
-				samp->depth = parse_depth(p, ap[1]);
-				if (samp->depth < 0.0) {
-					logerrx(p, "bad <sample> depth");
-					return;
-				}
-				samp->flags |= SAMP_DEPTH;
-			} else if (0 == strcmp(*ap, "rbt")) {
-				if ( ! parse_time(p, ap[1], &samp->rbt)) {
-					logerrx(p, "bad <sample> depth");
-					return;
-				}
-				samp->flags |= SAMP_RBT;
-			} else if (0 == strcmp(*ap, "temp")) {
-				samp->temp = parse_temp(p, ap[1]);
-				if (samp->temp < 0.0) {
-					logerrx(p, "bad <sample> temp");
-					return;
-				}
-				samp->flags |= SAMP_TEMP;
-			} else if (0 == strncmp(*ap, "pressure", 8)) {
-				samp->pressure = xreallocarray
-					(p, samp->pressure,
-					 samp->pressuresz + 1,
-					 sizeof(struct samppres));
-				samp->pressuresz++;
-				samp->pressure[samp->pressuresz - 1].pressure = 
-					parse_pressure(p, ap[1]);
-				if (samp->pressure[samp->pressuresz - 1].pressure < 0.0) {
-					logerrx(p, "bad <sample> pressure");
-					return;
-				}
-				sz = strlen(*ap);
-				samp->pressure[samp->pressuresz - 1].tank =
-					sz > 8 ? atoi(*ap + 8) : 0;
-			}
-
-		if (SAMP_DEPTH & samp->flags)
-			if (samp->depth > p->curdive->maxdepth)
-				p->curdive->maxdepth = samp->depth;
-
-		if (SAMP_TEMP & samp->flags) {
-			if (0 == p->curdive->hastemp) {
-				p->curdive->maxtemp = samp->temp;
-				p->curdive->mintemp = samp->temp;
-				p->curdive->hastemp = 1;
-			} else {
-				if (samp->temp > p->curdive->maxtemp)
-					p->curdive->maxtemp = samp->temp;
-				if (samp->temp < p->curdive->mintemp)
-					p->curdive->mintemp = samp->temp;
-			}
-		}
+		parse_event(p, atts);
+	} else if (0 == strcmp(s, "extradata")) {
+		logwarnx(p, "ignoring <extradata>");
 	} else if (0 == strcmp(s, "dives")) {
 		if (NULL == p->curlog)
 			logerrx(p, "<dives> not in <divelog>");
@@ -735,8 +863,8 @@ parse_open(void *dat, const XML_Char *s, const XML_Char **atts)
 			logwarnx(p, "%s: unknown <dive> child", s);
 		else if (NULL != p->curlog)
 			logwarnx(p, "%s: unknown <divelog> child", s);
-
-		logwarnx(p, "%s: unknown element", s);
+		else
+			logwarnx(p, "%s: unknown element", s);
 	}
 }
 
