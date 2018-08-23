@@ -1364,12 +1364,20 @@ divecmd_print_dive_sample(FILE *f, const struct samp *s)
 				s->events[i].duration);
 		fprintf(f, " />\n");
 	}
-	if (SAMP_DECO & s->flags)
-		fprintf(f, "\t\t\t\t\t"
-			"<deco depth=\"%g\" type=\"%s\" "
-			"duration=\"%zu\" />\n",
-			s->deco.depth, decos[s->deco.type], 
-			s->deco.duration);
+	if (SAMP_DECO & s->flags) {
+		if (DECO_ndl == s->deco.type)
+			fprintf(f, "\t\t\t\t\t"
+				"<deco type=\"%s\" "
+				"duration=\"%zu\" />\n",
+				decos[s->deco.type], 
+				s->deco.duration);
+		else
+			fprintf(f, "\t\t\t\t\t"
+				"<deco depth=\"%g\" type=\"%s\" "
+				"duration=\"%zu\" />\n",
+				s->deco.depth, decos[s->deco.type], 
+				s->deco.duration);
+	}
 	if (SAMP_VENDOR & s->flags)
 		fprintf(f, "\t\t\t\t\t"
 			"<vendor type=\"%zu\">%s</vendor>\n",

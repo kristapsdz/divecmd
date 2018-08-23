@@ -247,7 +247,7 @@ And now, the samples...
          [<depth value="xxx" />]
          [<temp value="xxx" />]
          [<pressure value="xxx" tank="nnn" />]
-         [<deco depth="xxx" type="zzz" duration="ss" />]
+         [<deco [depth="xxx"] type="zzz" duration="ss" />]
          [<gaschange mix="nnn" />]
          [<cns value="xxx" />]
          [<event type="event" [duration="ss"] [flags="ss"] />]
@@ -309,11 +309,16 @@ The
 .Li type
 attribute may be one of
 .Dq ndl ,
-.Dq safetystop ,
-.Dq decostop ,
+for non-decompression limit time remaining;
+.Dq safetystop ;
+.Dq decostop ;
 or
 .Dq deepstop .
 Duration is in seconds.
+Decompression notices are suppressed when in freediving mode.
+The
+.Dq ndl
+type ignores the depth attribute, if specified,
 .It Li event
 A generic event.
 This may have the
