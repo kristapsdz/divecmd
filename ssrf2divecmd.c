@@ -611,6 +611,14 @@ parse_sample(struct parse *p, const XML_Char **atts)
 				return;
 			}
 			samp->flags |= SAMP_CNS;
+		} else if (0 == strcmp(*ap, "ndl")) {
+			memset(&samp->deco, 0, sizeof(struct sampdeco));
+			if ( ! parse_time(p, ap[1], &samp->deco.duration)) {
+				logerrx(p, "bad <sample> ndl");
+				return;
+			}
+			samp->deco.type = DECO_ndl;
+			samp->flags |= SAMP_DECO;
 		} else if (strcmp(*ap, "time"))
 			logwarnx(p, "unknown <sample> attribute: %s", ap[0]);
 
