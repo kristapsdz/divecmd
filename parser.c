@@ -444,14 +444,130 @@ parse_text(void *dat, const XML_Char *s, int len)
 }
 
 static void
+parse_tank(struct parse *p, const XML_Char **atts)
+{
+	struct dive	 *d = p->curdive;
+	const char	 *tank = NULL, *mix = NULL, *er;
+	const XML_Char	**ap;
+	size_t		  i;
+
+	for (ap = atts; NULL != ap[0]; ap += 2)
+		if (0 == strcmp(*ap, "num"))
+			tank = ap[1];
+		else if (0 == strcmp(*ap, "gasmix"))
+			mix = ap[1];
+		else
+			logattr(p, "tank", *ap);
+
+	if (NULL == tank) {
+		lognattr(p, "tank", "num");
+		return;
+	}
+	i = strtonum(tank, 0, LONG_MAX, &er);
+	if (NULL != er) {
+		logerrx(p, "malformed <tank> num: %s", tank);
+		return;
+	}
+
+	d->cyls = xreallocarray(p, d->cyls, 
+		d->cylsz + 1, sizeof(struct cylinder));
+	memset(&d->cyls[d->cylsz], 0, sizeof(struct cylinder));
+	d->cyls[d->cylsz].num = i;
+
+	if (NULL != mix) {
+		i = strtonum(mix, 0, LONG_MAX, &er);
+		if (NULL != er) {
+			logerrx(p, "malformed <tank> mix: %s", mix);
+			return;
+		}
+		d->cyls[d->cylsz].mix = i;
+		for (i = 0; i < d->gassz; i++)
+			if (d->gas[i].num == d->cyls[d->cylsz].mix)
+				break;
+		if (i == d->gassz) {
+			logerrx(p, "unknown <tank> mix: %s", mix);
+			return;
+		}
+	}
+
+	d->cylsz++;
+}
+
+static void
+parse_gasmix(struct parse *p, const XML_Char **atts)
+{
+	struct dive	 *d = p->curdive;
+	const char	 *mixes[3];
+	const char	 *v, *er;
+	char		 *ep;
+	const XML_Char	**ap;
+	size_t		  i;
+
+	v = mixes[0] = mixes[1] = mixes[2] = NULL;
+	for (ap = atts; NULL != ap[0]; ap += 2)
+		if (0 == strcmp(*ap, "num"))
+			v = ap[1];
+		else if (0 == strcmp(*ap, "o2"))
+			mixes[0] = ap[1];
+		else if (0 == strcmp(*ap, "n2"))
+			mixes[1] = ap[1];
+		else if (0 == strcmp(*ap, "he"))
+			mixes[2] = ap[1];
+		else
+			logattr(p, "gasmix", *ap);
+
+	if (NULL == v) {
+		lognattr(p, "gasmix", "num");
+		return;
+	}
+
+	i = strtonum(v, 0, LONG_MAX, &er);
+	if (NULL != er) {
+		logerrx(p, "malformed <gasmix> num: %s", v);
+		return;
+	}
+
+	d->gas = xreallocarray(p, d->gas, 
+		d->gassz + 1, sizeof(struct divegas));
+
+	memset(&d->gas[d->gassz], 0, sizeof(struct divegas));
+	d->gas[d->gassz].num = i;
+
+	if (NULL != mixes[0]) {
+		d->gas[d->gassz].o2 = strtod(mixes[0], &ep);
+		if (ep == mixes[0] || ERANGE == errno) {
+			d->gas[d->gassz].o2 = 0.0;
+			logwarnx(p, "malformed <o2> "
+				"value: %s", mixes[0]);
+		}
+	}
+	if (NULL != mixes[1]) {
+		d->gas[d->gassz].n2 = strtod(mixes[1], &ep);
+		if (ep == mixes[1] || ERANGE == errno) {
+			d->gas[d->gassz].n2 = 0.0;
+			logwarnx(p, "malformed <n2> "
+				"value: %s", mixes[1]);
+		}
+	}
+	if (NULL != mixes[2]) {
+		d->gas[d->gassz].he = strtod(mixes[2], &ep);
+		if (ep == mixes[2] || ERANGE == errno) {
+			d->gas[d->gassz].he = 0.0;
+			logwarnx(p, "malformed <he> "
+				"value: %s", mixes[2]);
+		}
+	}
+	d->gassz++;
+}
+
+static void
 parse_open(void *dat, const XML_Char *s, const XML_Char **atts)
 {
 	const XML_Char	**ap;
 	struct parse	 *p = dat;
 	struct samp	 *samp;
 	struct dive	 *d, *dp;
-	const char	 *date, *time, *num, *er, *dur, *mode, *v,
-	       	  	 *mixes[3];
+	const char	 *date, *time, *num, *er, *dur, *mode, *v;
 	char		 *ep;
 	struct tm	  tm;
 	int		  rc;
@@ -664,65 +780,17 @@ parse_open(void *dat, const XML_Char *s, const XML_Char **atts)
 		else
 			XML_SetDefaultHandler(p->p, parse_text);
 	} else if (0 == strcmp(s, "gasmix")) {
-		if (NULL == (d = p->curdive)) { 
+		if (NULL == p->curdive) { 
 			logerrx(p, "<gasmix> not in <dive>");
 			return;
 		}
-
-		v = mixes[0] = mixes[1] = mixes[2] = NULL;
-		for (ap = atts; NULL != ap[0]; ap += 2)
-			if (0 == strcmp(*ap, "num"))
-				v = ap[1];
-			else if (0 == strcmp(*ap, "o2"))
-				mixes[0] = ap[1];
-			else if (0 == strcmp(*ap, "n2"))
-				mixes[1] = ap[1];
-			else if (0 == strcmp(*ap, "he"))
-				mixes[2] = ap[1];
-			else
-				logattr(p, "gasmix", *ap);
-		if (NULL == v) {
-			lognattr(p, "gasmix", "num");
+		parse_gasmix(p, atts);
+	} else if (0 == strcmp(s, "tank")) {
+		if (NULL == p->curdive) { 
+			logerrx(p, "<tank> not in <dive>");
 			return;
 		}
-
-		i = strtonum(v, 0, LONG_MAX, &er);
-		if (NULL != er) {
-			logerrx(p, "malformed <gasmix> num: %s", v);
-			return;
-		}
-
-		d->gas = xreallocarray(p, d->gas, 
-			d->gassz + 1, sizeof(struct divegas));
-
-		memset(&d->gas[d->gassz], 0, sizeof(struct divegas));
-		d->gas[d->gassz].num = i;
-
-		if (NULL != mixes[0]) {
-			d->gas[d->gassz].o2 = strtod(mixes[0], &ep);
-			if (ep == mixes[0] || ERANGE == errno) {
-				d->gas[d->gassz].o2 = 0.0;
-				logwarnx(p, "malformed <o2> "
-					"value: %s", mixes[0]);
-			}
-		}
-		if (NULL != mixes[1]) {
-			d->gas[d->gassz].n2 = strtod(mixes[1], &ep);
-			if (ep == mixes[1] || ERANGE == errno) {
-				d->gas[d->gassz].n2 = 0.0;
-				logwarnx(p, "malformed <n2> "
-					"value: %s", mixes[1]);
-			}
-		}
-		if (NULL != mixes[2]) {
-			d->gas[d->gassz].he = strtod(mixes[2], &ep);
-			if (ep == mixes[2] || ERANGE == errno) {
-				d->gas[d->gassz].he = 0.0;
-				logwarnx(p, "malformed <he> "
-					"value: %s", mixes[2]);
-			}
-		}
-		d->gassz++;
+		parse_tank(p, atts);
 	} else if (0 == strcmp(s, "sample")) {
 		if (NULL == (d = p->curdive)) { 
 			logerrx(p, "<sample> not in <dive>");
@@ -945,10 +1013,8 @@ parse_open(void *dat, const XML_Char *s, const XML_Char **atts)
 				dur = ap[1];
 			else
 				logattr(p, "deco", *ap);
-		if (NULL == v) {
-			lognattr(p, "deco", "depth");
-			return;
-		} else if (NULL == mode) {
+
+		if (NULL == mode) {
 			lognattr(p, "deco", "type");
 			return;
 		} else if (NULL == dur) {
@@ -966,10 +1032,13 @@ parse_open(void *dat, const XML_Char *s, const XML_Char **atts)
 			return;
 		}
 
-		samp->deco.depth = strtod(v, &ep);
-		if (ep == v || ERANGE == errno) {
-			logerrx(p, "malformed <deco> value: %s", v);
-			return;
+		if (NULL != v) {
+			samp->deco.depth = strtod(v, &ep);
+			if (ep == v || ERANGE == errno) {
+				logerrx(p, "malformed <deco> "
+					"value: %s", v);
+				return;
+			}
 		}
 
 		samp->deco.duration = strtonum(dur, 0, LONG_MAX, &er);
@@ -1066,31 +1135,34 @@ parse_open(void *dat, const XML_Char *s, const XML_Char **atts)
 
 		samp->gaschange = strtonum(v, 0, UINT_MAX, &er) + 1;
 		if (NULL != er) {
-			logerrx(p, "malformed "
-				"<gaschange> mix: %s", er);
+			logerrx(p, "bad <gaschange> mix: %s", er);
 			return;
 		}
-
 		for (i = 0; i < p->curdive->gassz; i++)
 			if (samp->gaschange == p->curdive->gas[i].num)
 				break;
-
 		if (i == p->curdive->gassz) {
-			logerrx(p, "unknown <gaschange> mix");
+			logerrx(p, "unknown <gaschange> mix: %s", v);
 			return;
 		}
-
 		samp->flags |= SAMP_GASCHANGE;
 	} else if (0 == strcmp(s, "dives")) {
 		if (NULL == p->curlog)
 			logerrx(p, "<dives> not in <divelog>");
 	} else if (0 == strcmp(s, "gasmixes")) {
 		if (NULL == p->curdive)
-			logerrx(p, "<gasmix> not in <dive>");
+			logerrx(p, "<gasmixes> not in <dive>");
 		else if (NULL != p->cursamp)
-			logerrx(p, "<gasmix> in <sample>");
+			logerrx(p, "<gasmixes> in <sample>");
 		else if (p->curdive->gassz) 
 			logerrx(p, "restatement of <gasmixes>");
+	} else if (0 == strcmp(s, "tanks")) {
+		if (NULL == p->curdive)
+			logerrx(p, "<tanks> not in <dive>");
+		else if (NULL != p->cursamp)
+			logerrx(p, "<tanks> in <sample>");
+		else if (p->curdive->cylsz) 
+			logerrx(p, "restatement of <tanks>");
 	} else if (0 == strcmp(s, "samples")) {
 		if (NULL == p->curdive)
 			logerrx(p, "<samples> not in <dive>");
@@ -1227,6 +1299,7 @@ divecmd_free(struct diveq *dq, struct divestat *st)
 				free(s);
 			}
 			free(d->gas);
+			free(d->cyls);
 			free(d->fprint);
 			free(d);
 		}
@@ -1263,6 +1336,24 @@ divecmd_init(XML_Parser *p, struct diveq *dq,
 	st->group = group;
 	st->groupsort = sort;
 	TAILQ_INIT(&st->dlogs);
+}
+
+void
+divecmd_print_dive_tanks(FILE *f, const struct dive *d)
+{
+	size_t	 i;
+
+	if (0 == d->cylsz)
+		return;
+
+	fputs("\t\t\t<tanks>\n", f);
+	for (i = 0; i < d->gassz; i++) {
+		printf("\t\t\t\t<tank num=\"%zu\"", d->cyls[i].num);
+		if (d->cyls[i].mix)
+			printf(" gasmix=\"%zu\"", d->cyls[i].mix);
+		printf(" />\n");
+	}
+	fputs("\t\t\t</tanks>\n", f);
 }
 
 void
@@ -1338,7 +1429,7 @@ divecmd_print_dive_sample(FILE *f, const struct samp *s)
 		        "<temp value=\"%g\" />\n", s->temp);
 	if (SAMP_GASCHANGE & s->flags)
 		fprintf(f, "\t\t\t\t\t"
-		        "<gaschange mix=\"%zu\" />\n", s->gaschange);
+		        "<gaschange mix=\"%zu\" />\n", s->gaschange - 1);
 	if (SAMP_RBT & s->flags)
 		fprintf(f, "\t\t\t\t\t"
 		        "<rbt value=\"%zu\" />\n", s->rbt);
@@ -1447,6 +1538,7 @@ divecmd_print_dive(FILE *f, const struct dive *d)
 	divecmd_print_dive_open(f, d);
 	divecmd_print_dive_fingerprint(f, d);
 	divecmd_print_dive_gasmixes(f, d);
+	divecmd_print_dive_tanks(f, d);
 	divecmd_print_dive_sampleq(f, &d->samps);
 	divecmd_print_dive_close(f);
 }
