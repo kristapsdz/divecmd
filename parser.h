@@ -164,7 +164,12 @@ struct	divegas {
 	double		 o2; /* O2 or 0 if unset */
 	double		 n2; /* N2 or 0 if unset */
 	double		 he; /* He or 0 if unset */
-	size_t		 num;
+	size_t		 num; /* identifier, never zero */
+};
+
+struct	cylinder {
+	size_t		 num; /* identifier, never zero */
+	size_t		 mix; /* divegas "num" or zero */
 };
 
 struct	dive {
@@ -175,8 +180,10 @@ struct	dive {
 	size_t		     duration; /* duration or zero */
 	enum mode	     mode; /* dive mode */
 	struct sampq	     samps; /* samples */
-	struct divegas	    *gas;
-	size_t		     gassz;
+	struct divegas	    *gas; /* gasmixes */
+	size_t		     gassz; /* number of gasses */
+	struct cylinder	    *cyls; /* cylinders ("tanks") */
+	size_t		     cylsz; /* number of cylinders */
 	double		     maxdepth; /* maximum sample depth */
 	int		     hastemp; /* do we have temps? */
 	double		     maxtemp; /* maximum (hottest) temp */
@@ -220,6 +227,7 @@ void	 divecmd_print_dive_sampleq(FILE *, const struct sampq *);
 void	 divecmd_print_dive_sampleq_close(FILE *);
 void	 divecmd_print_dive_sampleq_open(FILE *);
 void	 divecmd_print_dive_sample(FILE *, const struct samp *);
+void	 divecmd_print_dive_tanks(FILE *, const struct dive *);
 void	 divecmd_print_close(FILE *);
 void	 divecmd_print_open(FILE *, const struct dlog *);
 
