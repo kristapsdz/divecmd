@@ -301,10 +301,10 @@ output_xml_write_depth(FILE *f, dc_parser_t *parser)
  * Write our [optional] tanks:
  *
  * <tanks>
- *   <tank num="NNN" [o2="NN%" n2="NN%" he="NN%"] />
+ *   <tank num="NNN" [gasmix="NNN"] ... />
  * </tanks>
  *
- * The mix number will later be referenced in gas switches.
+ * The mix number will later be referenced in pressure measurements.
  */
 static int
 output_xml_write_tanks(FILE *f, dc_parser_t *parser)
