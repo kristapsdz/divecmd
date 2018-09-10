@@ -542,7 +542,7 @@ parse_sample(struct parse *p, const XML_Char **atts)
 	struct samp	 *samp;
 	struct dive	 *d = p->curdive;
 	const char	 *v;
-	size_t		  sz, tm;
+	size_t		  i, sz, tm, tank;
 
 	for (v = NULL, ap = atts; NULL != ap[0]; ap += 2)
 		if (0 == strcmp(*ap, "time"))
@@ -603,8 +603,15 @@ parse_sample(struct parse *p, const XML_Char **atts)
 				return;
 			}
 			sz = strlen(*ap);
-			samp->pressure[samp->pressuresz - 1].tank =
-				sz > 8 ? atoi(*ap + 8) : 0;
+			tank = sz > 8 ? atoi(*ap + 8) : 0;
+			samp->pressure[samp->pressuresz - 1].tank = tank + 1;
+			for (i = 0; i < d->cylsz; i++)
+				if (tank + 1 == d->cyls[i].num)
+					break;
+			if (i == d->cylsz) {
+				logerrx(p, "<sample> tank not found");
+				return;
+			}
 		} else if (0 == strcmp(*ap, "cns")) {
 			if ( ! parse_percent(ap[1], &samp->cns)) {
 				logerrx(p, "bad <sample> cns");
@@ -641,13 +648,83 @@ parse_sample(struct parse *p, const XML_Char **atts)
 }
 
 static void
+parse_cylinder(struct parse *p, const XML_Char **atts)
+{
+	const XML_Char	**ap;
+	struct dive	 *d = p->curdive;
+	char		 *ep, *mixes[3];
+
+	mixes[0] = mixes[1] = mixes[2] = NULL;
+	for (ap = atts; NULL != ap[0]; ap += 2)
+		if (0 == strcmp(*ap, "o2")) {
+			free(mixes[0]);
+			mixes[0] = xstrdup(p, ap[1]);
+		} else if (0 == strcmp(*ap, "n2")) {
+			free(mixes[1]);
+			mixes[1] = xstrdup(p, ap[1]);
+		} else if (0 == strcmp(*ap, "he")) {
+			free(mixes[2]);
+			mixes[2] = xstrdup(p, ap[1]);
+		} else if (0 == strcmp(*ap, "description")) {
+			/* Do nothing. */ ;
+		} else
+			logattr(p, "cylinder", *ap);
+
+	d->gas = xreallocarray(p, d->gas, 
+		d->gassz + 1, sizeof(struct divegas));
+	d->gas[d->gassz].num = d->gassz + 1;
+
+	if (NULL != mixes[0]) {
+		if ('\0' != mixes[0][0] &&
+		    '%' == mixes[0][strlen(mixes[0]) - 1])
+			mixes[0][strlen(mixes[0]) - 1] = '\0';
+		d->gas[d->gassz].o2 = strtod(mixes[0], &ep);
+		if (ep == mixes[0] || ERANGE == errno) {
+			logerrx(p, "bad <o2> value");
+			return;
+		}
+	}
+
+	if (NULL != mixes[1]) {
+		if ('\0' != mixes[1][0] &&
+		     '%' == mixes[1][strlen(mixes[1]) - 1])
+			mixes[1][strlen(mixes[1]) - 1] = '\0';
+		d->gas[d->gassz].n2 = strtod(mixes[1], &ep);
+		if (ep == mixes[1] || ERANGE == errno) {
+			logerrx(p, "bad <n2> value");
+			return;
+		}
+	}
+
+	if (NULL != mixes[2]) {
+		if ('\0' != mixes[2][0] &&
+		    '%' == mixes[2][strlen(mixes[2]) - 1])
+			mixes[2][strlen(mixes[2]) - 1] = '\0';
+		d->gas[d->gassz].he = strtod(mixes[2], &ep);
+		if (ep == mixes[2] || ERANGE == errno) {
+			logerrx(p, "bad <he> value");
+			return;
+		}
+	}
+	free(mixes[0]);
+	free(mixes[1]);
+	free(mixes[2]);
+
+	d->cyls = xreallocarray(p, d->cyls,
+		d->cylsz + 1, sizeof(struct cylinder));
+	d->cyls[d->cylsz].mix = d->gas[d->gassz].num;
+	d->cyls[d->cylsz].num = d->cylsz + 1;
+	d->cylsz++;
+	d->gassz++;
+}
+
+static void
 parse_open(void *dat, const XML_Char *s, const XML_Char **atts)
 {
 	const XML_Char	**ap;
 	struct parse	 *p = dat;
 	struct dive	 *d, *dp;
 	const char	 *date, *time, *num, *er, *dur, *mode, *v;
-	char		 *ep, *mixes[3];
 	struct dgroup	 *grp;
 
 	if (0 == strcmp(s, "divelog")) {
@@ -782,64 +859,11 @@ parse_open(void *dat, const XML_Char *s, const XML_Char **atts)
 		else
 			TAILQ_INSERT_BEFORE(dp, d, entries);
 	} else if (0 == strcmp(s, "cylinder")) {
-		if (NULL == (d = p->curdive)) { 
+		if (NULL == p->curdive) { 
 			logerrx(p, "<cylinder> not in <dive>");
 			return;
 		}
-
-		mixes[0] = mixes[1] = mixes[2] = NULL;
-		for (ap = atts; NULL != ap[0]; ap += 2)
-			if (0 == strcmp(*ap, "o2"))
-				mixes[0] = xstrdup(p, ap[1]);
-			else if (0 == strcmp(*ap, "n2"))
-				mixes[1] = xstrdup(p, ap[1]);
-			else if (0 == strcmp(*ap, "he"))
-				mixes[2] = xstrdup(p, ap[1]);
-			else if (0 == strcmp(*ap, "description"))
-				/* Do nothing. */ ;
-			else
-				logattr(p, "cylinder", *ap);
-
-		d->gas = xreallocarray(p, d->gas, 
-			d->gassz + 1, sizeof(struct divegas));
-		d->gas[d->gassz].num = d->gassz + 1;
-
-		if (NULL != mixes[0]) {
-			if ('\0' != mixes[0][0] &&
-			    '%' == mixes[0][strlen(mixes[0]) - 1])
-				mixes[0][strlen(mixes[0]) - 1] = '\0';
-			d->gas[d->gassz].o2 = strtod(mixes[0], &ep);
-			if (ep == mixes[0] || ERANGE == errno) {
-				logerrx(p, "bad <o2> value");
-				return;
-			}
-		}
-
-		if (NULL != mixes[1]) {
-			if ('\0' != mixes[1][0] &&
-			     '%' == mixes[1][strlen(mixes[1]) - 1])
-				mixes[1][strlen(mixes[1]) - 1] = '\0';
-			d->gas[d->gassz].n2 = strtod(mixes[1], &ep);
-			if (ep == mixes[1] || ERANGE == errno) {
-				logerrx(p, "bad <n2> value");
-				return;
-			}
-		}
-
-		if (NULL != mixes[2]) {
-			if ('\0' != mixes[2][0] &&
-			    '%' == mixes[2][strlen(mixes[2]) - 1])
-				mixes[2][strlen(mixes[2]) - 1] = '\0';
-			d->gas[d->gassz].he = strtod(mixes[2], &ep);
-			if (ep == mixes[2] || ERANGE == errno) {
-				logerrx(p, "bad <he> value");
-				return;
-			}
-		}
-		free(mixes[0]);
-		free(mixes[1]);
-		free(mixes[2]);
-		d->gassz++;
+		parse_cylinder(p, atts);
 	} else if (0 == strcmp(s, "sample")) {
 		if (NULL == p->curdive) { 
 			logerrx(p, "<sample> not in <dive>");
