@@ -79,7 +79,7 @@ static	const char *pmodes[MODE__MAX] = {
 /*
  * How thick our lines will be (in points). 
  */
-#define	LINE_THICKNESS 0.8
+#define	LINE_THICKNESS 1.0
 
 /*
  * Our line colours.
@@ -553,6 +553,8 @@ print_all(enum pmode mode, const struct diveq *dq,
 					(double)maxtime;
 				printf("%g 0\n", x);
 				TAILQ_FOREACH(s, &d->samps, entries) {
+					if ( ! (SAMP_DEPTH & s->flags))
+						continue;
 					t = s->time;
 					t += d->datetime;
 					t -= dg->mintime;
@@ -702,6 +704,8 @@ print_all(enum pmode mode, const struct diveq *dq,
 				puts("0 0");
 				lastdepth = 0.0;
 				TAILQ_FOREACH(s, &d->samps, entries) {
+					if ( ! (SAMP_DEPTH & s->flags))
+						continue;
 					t = s->time;
 					x = t / (double)maxtime;
 					y = 0 == derivs ? -s->depth :
