@@ -541,7 +541,9 @@ parse_gasmix(struct parse *p, const XML_Char **atts)
 			logwarnx(p, "malformed <o2> "
 				"value: %s", mixes[0]);
 		}
-	}
+	} else 
+		logwarnx(p, "missing <o2> value");
+
 	if (NULL != mixes[1] && strcmp(mixes[1], "0")) {
 		d->gas[d->gassz].n2 = strtod(mixes[1], &ep);
 		if (ep == mixes[1] || ERANGE == errno) {
@@ -1367,8 +1369,10 @@ divecmd_print_dive_gasmixes(FILE *f, const struct dive *d)
 
 	fputs("\t\t\t<gasmixes>\n", f);
 	for (i = 0; i < d->gassz; i++) {
-		printf("\t\t\t\t<gasmix num=\"%zu\" o2=\"%g\"",
-			d->gas[i].num, d->gas[i].o2);
+		printf("\t\t\t\t<gasmix num=\"%zu\"",
+			d->gas[i].num);
+		if (d->gas[i].o2 >= FLT_EPSILON)
+			printf(" o2=\"%g\"", d->gas[i].o2);
 		if (d->gas[i].n2 >= FLT_EPSILON)
 			printf(" n2=\"%g\"", d->gas[i].n2);
 		if (d->gas[i].he >= FLT_EPSILON)
