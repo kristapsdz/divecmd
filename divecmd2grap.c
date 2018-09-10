@@ -104,7 +104,7 @@ static int derivs = 0;
 static int adjust = 0;
 
 static int
-print_all(enum pmode mode, const struct diveq *dq, 
+print_all(enum pmode mode, const struct diveq *dq, int first,
 	const struct divestat *st, const char *title)
 {
 	struct dive	*d, *dp;
@@ -135,16 +135,22 @@ print_all(enum pmode mode, const struct diveq *dq,
 	    MODE_RESTING_SCATTER == mode) 
 		TAILQ_FOREACH(d, dq, entries)
 			if (0 == d->datetime) {
-				warnx("date and time required");
-				return(0);
+				warnx("%s: date and time required", 
+					pmodes[mode]);
+				return 0;
 			}
 
 	if (MODE_RESTING == mode ||
 	    MODE_RESTING_SCATTER == mode ||
-	    MODE_VECTOR == mode)
+	    MODE_VECTOR == mode ||
+	    MODE_SUMMARY == mode || 
+	    MODE_RSUMMARY == mode || 
+	    MODE_TEMP == mode || 
+	    MODE_SCATTER == mode)
 		if (ndives < 2) {
-			warnx("multiple dives required");
-			return(0);
+			warnx("%s: multiple dives required", 
+				pmodes[mode]);
+			return 0;
 		}
 
 	/* These modes require temperatures. */
@@ -154,8 +160,9 @@ print_all(enum pmode mode, const struct diveq *dq,
 	    MODE_AGGREGATE_TEMP == mode) 
 		TAILQ_FOREACH(d, dq, entries)
 			if (0 == d->hastemp) {
-				warnx("temperature required");
-				return(0);
+				warnx("%s: temperature required", 
+					pmodes[mode]);
+				return 0;
 			}
 
 	/* Aggregate mode uses group extrema for axes. */
@@ -237,6 +244,9 @@ print_all(enum pmode mode, const struct diveq *dq,
 		}
 
 	/* Start with the frame of our box. */
+
+	if ( ! first)
+		puts(".bp");
 
 	printf(".G1\n"
 	       "draw solid\n"
@@ -732,7 +742,7 @@ print_all(enum pmode mode, const struct diveq *dq,
 int
 main(int argc, char *argv[])
 {
-	int		 c, rc = 1;
+	int		 c, rc = 1, first;
 	enum group	 group = GROUP_NONE;
 	size_t		 i;
 	XML_Parser	 p;
@@ -825,23 +835,23 @@ main(int argc, char *argv[])
 	}
 
 	if (MODE__MAX == mode) {
-		for (mode = 0; mode < MODE__MAX; mode++) {
-			rc = print_all(mode, &dq, 
+		for (first = 1, mode = 0; mode < MODE__MAX; mode++) {
+			rc = print_all(mode, &dq, first,
 				&st, pmodetitles[mode]);
-			if (rc && mode < MODE__MAX - 1)
-				puts(".bp");
+			if (rc)
+				first = 0;
 		}
 		rc = 1;
 	} else
-		rc = print_all(mode, &dq, &st, NULL);
+		rc = print_all(mode, &dq, 1, &st, NULL);
 out:
 	divecmd_free(&dq, &st);
-	return(rc ? EXIT_SUCCESS : EXIT_FAILURE);
+	return rc ? EXIT_SUCCESS : EXIT_FAILURE;
 usage:
 	fprintf(stderr, "usage: %s "
 		"[-adv] "
 		"[-m mode] "
 		"[-s splitgroup] "
 		"[file...]\n", getprogname());
-	return(EXIT_FAILURE);
+	return EXIT_FAILURE;
 }
