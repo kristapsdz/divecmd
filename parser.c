@@ -23,6 +23,7 @@
 # include <err.h>
 #endif
 #include <errno.h>
+#include <float.h>
 #include <fcntl.h>
 #include <limits.h>
 #include <stdarg.h>
@@ -533,7 +534,7 @@ parse_gasmix(struct parse *p, const XML_Char **atts)
 	memset(&d->gas[d->gassz], 0, sizeof(struct divegas));
 	d->gas[d->gassz].num = i;
 
-	if (NULL != mixes[0]) {
+	if (NULL != mixes[0] && strcmp(mixes[0], "0")) {
 		d->gas[d->gassz].o2 = strtod(mixes[0], &ep);
 		if (ep == mixes[0] || ERANGE == errno) {
 			d->gas[d->gassz].o2 = 0.0;
@@ -541,7 +542,7 @@ parse_gasmix(struct parse *p, const XML_Char **atts)
 				"value: %s", mixes[0]);
 		}
 	}
-	if (NULL != mixes[1]) {
+	if (NULL != mixes[1] && strcmp(mixes[1], "0")) {
 		d->gas[d->gassz].n2 = strtod(mixes[1], &ep);
 		if (ep == mixes[1] || ERANGE == errno) {
 			d->gas[d->gassz].n2 = 0.0;
@@ -549,7 +550,7 @@ parse_gasmix(struct parse *p, const XML_Char **atts)
 				"value: %s", mixes[1]);
 		}
 	}
-	if (NULL != mixes[2]) {
+	if (NULL != mixes[2] && strcmp(mixes[2], "0")) {
 		d->gas[d->gassz].he = strtod(mixes[2], &ep);
 		if (ep == mixes[2] || ERANGE == errno) {
 			d->gas[d->gassz].he = 0.0;
@@ -1366,10 +1367,13 @@ divecmd_print_dive_gasmixes(FILE *f, const struct dive *d)
 
 	fputs("\t\t\t<gasmixes>\n", f);
 	for (i = 0; i < d->gassz; i++) {
-		printf("\t\t\t\t<gasmix num=\"%zu\" "
-			"o2=\"%g\" n2=\"%g\" he=\"%g\" />\n",
-			d->gas[i].num, d->gas[i].o2,
-			d->gas[i].n2, d->gas[i].he);
+		printf("\t\t\t\t<gasmix num=\"%zu\" o2=\"%g\"",
+			d->gas[i].num, d->gas[i].o2);
+		if (d->gas[i].n2 >= FLT_EPSILON)
+			printf(" n2=\"%g\"", d->gas[i].n2);
+		if (d->gas[i].he >= FLT_EPSILON)
+			printf(" he=\"%g\"", d->gas[i].he);
+		printf(" />\n");
 	}
 	fputs("\t\t\t</gasmixes>\n", f);
 }
