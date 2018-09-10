@@ -210,14 +210,13 @@ or
 A unique, alphanumeric fingerprint for the dive.
 .Bd -literal
       <gasmixes>
-        <gasmix num="NNN" [o2="xxx" n2="xxx" he="xxx"] />
+        <gasmix num="NNN" [o2="xxx"] [n2="xxx"] [he="xxx"] />
       </gasmixes>
 .Ed
 .Pp
-Gas mixes (in percent) used in this dive (optional element).
+Gas mixes (in percent) used in this dive.
+This is only if the dive profile features gases.
 .Pq Not to be confused with tanks.
-A gas mix should have its mix value, but that's not guaranteed: it will
-at least show the mix number.
 This number may later be referenced in the samples when switching gases,
 or by the tanks.
 .Bd -literal
@@ -321,6 +320,8 @@ The
 type ignores the depth attribute, if specified,
 .It Li event
 A generic event.
+This should usually be ignored, as it uses opaque values from
+.Xr libdivecomputer 3 .
 This may have the
 .Li type
 set to one of
