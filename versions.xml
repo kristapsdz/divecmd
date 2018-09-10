@@ -5,24 +5,30 @@
 		<header>
 			<h1>0.1.2</h1>
 			<address>Kristaps Dzonsons</address>
-			<time datetime="2018-08-19">ongoing</time>
+			<time datetime="2018-09-09">2018-09-09</time>
 		</header>
 		<aside>
 			<p>
+				Clarify the relationship between tanks (cylinders) and gasses.
+				In <a href="https://libdivecomputer.org">libdivecomputer</a>, a dive
+				can have disconnected cylinders and gas mixes.
+				In <a href="https://subsurface-divelog.org">Subsurface</a>, these
+				are always connected.
+				These values are now printed and parsed properly.
 				Allow for multiple tank pressure reports.
 				This happens when (for example) deco diving with a wireless gauge on
 				both back-gas and deco stage.
 				Allow the vendor and product to be pulled from Subsurface output
 				files, as well as pressures for multiple tanks.
-				Lastly, allow for CNS values.
+				Allow for CNS values.
 			</p>
 			<p>
 				Fix how <code>&lt;gasmix&gt;</code>es are referenced by a 
 				<code>&lt;gaschange&gt;</code>.
-				<strong>
-					You'll need to decrement the <code>num</code> of all
-					code>&lt;gasmix&gt;</code> statements for them to match.
-				</strong>
+			</p>
+			<p>
+				Fix up how <a href="dcmd2grap.1.html">dcmd2grap(1)</a> displays
+				non-free (i.e., singleton) dives.
 			</p>
 		</aside>
 	</article>
