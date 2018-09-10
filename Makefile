@@ -104,6 +104,16 @@ install: all
 	install -m 0755 $(BINS) $(DESTDIR)$(BINDIR)
 	install -m 0444 $(MAN1S) $(DESTDIR)$(MANDIR)/man1
 
+uninstall:
+	@for f in $(BINS); do \
+		echo rm -f $(DESTDIR)$(BINDIR)/$$f ; \
+		rm -f $(DESTDIR)$(BINDIR)/$$f ; \
+	done
+	@for f in $(MAN1S); do \
+		echo rm -f $(DESTDIR)$(MANDIR)/man1/$$f ; \
+		rm -f $(DESTDIR)$(BINDIR)/man1/$$f ; \
+	done
+
 dcmd: $(OBJS) compats.o
 	$(CC) $(CPPFLAGS) -o $@ $(OBJS) compats.o $(LDFLAGS) $(LDADD)
 
