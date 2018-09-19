@@ -154,7 +154,7 @@ sample_cb(dc_sample_type_t type, dc_sample_value_t v, void *userdata)
 		break;
 	case DC_SAMPLE_GASMIX:
 		fprintf(sd->f, "\t\t\t\t\t"
-			"<gaschange mix=\"%u\" />\n", v.gasmix);
+			"<gaschange mix=\"%u\" />\n", v.gasmix + 1);
 		break;
 	case DC_SAMPLE_CNS:
 		fprintf(sd->f, "\t\t\t\t\t"
