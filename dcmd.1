@@ -214,7 +214,8 @@ A unique, alphanumeric fingerprint for the dive.
       </gasmixes>
 .Ed
 .Pp
-Gas mixes (in percent) used in this dive.
+Gas mixes used in this dive.
+Values are percents (0\(en100).
 This is only if the dive profile features gases.
 .Pq Not to be confused with tanks.
 This number may later be referenced in the samples when switching gases,
@@ -231,6 +232,8 @@ Tanks (optional element).
 A tank defines the tank parameters itself, including the referenced
 gasmix (also if applicable), volume and work pressure, and the start and
 end pressure over the course of the dive.
+Dive samples may reference unspecified tanks.
+If so, the tank is assumed to have all default values.
 .Bd -literal
       <depth [max="xxx"] [mean="xxx"] />
 .Ed
