@@ -564,6 +564,50 @@ parse_gasmix(struct parse *p, const XML_Char **atts)
 }
 
 static void
+parse_pressure(struct parse *p, const XML_Char **atts)
+{
+	const char	 *num, *v, *er;
+	const XML_Char	**ap;
+	struct samp	 *s = p->cursamp;
+	char		 *ep;
+
+	v = num = NULL;
+	for (ap = atts; NULL != ap[0]; ap += 2)
+		if (0 == strcmp(*ap, "value"))
+			v = ap[1];
+		else if (0 == strcmp(*ap, "tank"))
+			num = ap[1];
+		else
+			logattr(p, "pressure", *ap);
+
+	if (NULL == v) {
+		lognattr(p, "pressure", "value");
+		return;
+	} else if (NULL == num) {
+		lognattr(p, "pressure", "tank");
+		return;
+	}
+
+	s->pressure = xreallocarray
+		(p, s->pressure,
+		 s->pressuresz + 1,
+		 sizeof(struct samppres));
+	s->pressuresz++;
+
+	s->pressure[s->pressuresz - 1].pressure = strtod(v, &ep);
+	if (ep == v || ERANGE == errno) {
+		logerrx(p, "bad <pressure> value");
+		return;
+	}
+	s->pressure[s->pressuresz - 1].tank = strtonum
+		(num, 0, LONG_MAX, &er);
+	if (NULL != er) {
+		logerrx(p, "bad <pressure> tank");
+		return;
+	}
+}
+
+static void
 parse_open(void *dat, const XML_Char *s, const XML_Char **atts)
 {
 	const XML_Char	**ap;
@@ -888,43 +932,9 @@ parse_open(void *dat, const XML_Char *s, const XML_Char **atts)
 			p->curdive->maxdepth = samp->depth;
 		samp->flags |= SAMP_DEPTH;
 	} else if (0 == strcmp(s, "pressure")) {
-		if (NULL == (samp = p->cursamp))
+		if (NULL == p->cursamp)
 			return;
-
-		v = num = NULL;
-		for (ap = atts; NULL != ap[0]; ap += 2)
-			if (0 == strcmp(*ap, "value"))
-				v = ap[1];
-			else if (0 == strcmp(*ap, "tank"))
-				num = ap[1];
-			else
-				logattr(p, "pressure", *ap);
-		if (NULL == v) {
-			lognattr(p, "pressure", "value");
-			return;
-		} else if (NULL == num) {
-			lognattr(p, "pressure", "tank");
-			return;
-		}
-
-		samp->pressure = xreallocarray
-			(p, samp->pressure,
-			 samp->pressuresz + 1,
-			 sizeof(struct samppres));
-		samp->pressuresz++;
-
-		samp->pressure[samp->pressuresz - 1].pressure = 
-			strtod(v, &ep);
-		if (ep == v || ERANGE == errno) {
-			logerrx(p, "bad <pressure> value");
-			return;
-		}
-		samp->pressure[samp->pressuresz - 1].tank = strtonum
-			(num, 0, LONG_MAX, &er);
-		if (NULL != er) {
-			logerrx(p, "bad <pressure> tank");
-			return;
-		}
+		parse_pressure(p, atts);
 	} else if (0 == strcmp(s, "rbt")) {
 		if (NULL == (samp = p->cursamp)) {
 			logerrx(p, "<rbt> not in <sample>");
