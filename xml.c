@@ -153,8 +153,12 @@ sample_cb(dc_sample_type_t type, dc_sample_value_t v, void *userdata)
 			v.deco.time);
 		break;
 	case DC_SAMPLE_GASMIX:
+		/*
+		 * XXX: this is for historical reasons.
+		 * Don't change to v.gasmix + 1 for this attribute.
+		 */
 		fprintf(sd->f, "\t\t\t\t\t"
-			"<gaschange mix=\"%u\" />\n", v.gasmix + 1);
+			"<gaschange mix=\"%u\" />\n", v.gasmix);
 		break;
 	case DC_SAMPLE_CNS:
 		fprintf(sd->f, "\t\t\t\t\t"
