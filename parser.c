@@ -464,6 +464,7 @@ parse_tank(struct parse *p, const XML_Char **atts)
 		lognattr(p, "tank", "num");
 		return;
 	}
+
 	i = strtonum(tank, 0, LONG_MAX, &er);
 	if (NULL != er) {
 		logerrx(p, "malformed <tank> num: %s", tank);
@@ -482,13 +483,6 @@ parse_tank(struct parse *p, const XML_Char **atts)
 			return;
 		}
 		d->cyls[d->cylsz].mix = i;
-		for (i = 0; i < d->gassz; i++)
-			if (d->gas[i].num == d->cyls[d->cylsz].mix)
-				break;
-		if (i == d->gassz) {
-			logerrx(p, "unknown <tank> mix: %s", mix);
-			return;
-		}
 	}
 
 	d->cylsz++;
@@ -530,7 +524,6 @@ parse_gasmix(struct parse *p, const XML_Char **atts)
 
 	d->gas = xreallocarray(p, d->gas, 
 		d->gassz + 1, sizeof(struct divegas));
-
 	memset(&d->gas[d->gassz], 0, sizeof(struct divegas));
 	d->gas[d->gassz].num = i;
 
@@ -1238,6 +1231,78 @@ parse_close(void *dat, const XML_Char *s)
 }
 
 /*
+ * Make sure that the dive references are intact:
+ *  - all gas changes are connected to mixes
+ *  - all pressures are connected to tanks (these are created if not
+ *  found: this is not an error condition)
+ *  - all tank gasses exist
+ * Returns zero on failure, non-zero on success.
+ */
+static int
+link_dive(struct dive *d)
+{
+	struct samp	*s;
+	size_t		 i, j, errs = 0;
+
+	TAILQ_FOREACH(s, &d->samps, entries) {
+		if (SAMP_GASCHANGE & s->flags) {
+			for (i = 0; i < d->gassz; i++)
+				if (s->gaschange == d->gas[i].num)
+					break;
+			if (i == d->gassz) {
+				warnx("unknown gas: %zu", 
+					s->gaschange);
+				errs++;
+			}
+		}
+		for (i = 0; i < s->pressuresz; i++) {
+			for (j = 0; j < d->cylsz; j++) 
+				if (s->pressure[i].tank == 
+				    d->cyls[j].num)
+					break;
+			if (j == d->cylsz) {
+				d->cyls = reallocarray
+					(d->cyls, d->cylsz + 1,
+					 sizeof(struct cylinder));
+				if (NULL == d->cyls)
+					err(EXIT_FAILURE, NULL);
+				memset(&d->cyls[d->cylsz], 0,
+					sizeof(struct cylinder));
+				d->cyls[d->cylsz++].num = 
+					s->pressure[i].tank;
+			}
+		}
+	}
+
+	for (i = 0; i < d->cylsz; i++) {
+		if (0 == d->cyls[i].mix)
+			continue;
+		for (j = 0; j < d->gassz; j++)
+			if (d->cyls[i].mix == d->gas[j].num)
+				break;
+		if (j == d->gassz) {
+			warnx("unknown gas: %zu", d->cyls[i].mix);
+			errs++;
+		}
+	}
+
+	return 0 == errs;
+}
+
+static int
+link_dives(struct diveq *dq)
+{
+	size_t	 	 errs = 0;
+	struct dive	*d;
+
+	TAILQ_FOREACH(d, dq, entries)
+		if ( ! link_dive(d))
+			errs++;
+
+	return 0 == errs;
+}
+
+/*
  * Parse a set of dives, accumulating the dives into "dq" and into the
  * group dives.
  * Dives in "dq" are ordered, by default, by date.
@@ -1287,10 +1352,12 @@ divecmd_parse(const char *fname, XML_Parser p,
 
 	if (ssz < 0)
 		warn("%s", fname);
+	else if ( ! link_dives(dq))
+		ssz = -1;
 
 	close(fd);
 	free(pp.buf);
-	return(0 == ssz);
+	return 0 == ssz;
 }
 
 void
@@ -1360,7 +1427,7 @@ divecmd_print_dive_tanks(FILE *f, const struct dive *d)
 		return;
 
 	fputs("\t\t\t<tanks>\n", f);
-	for (i = 0; i < d->gassz; i++) {
+	for (i = 0; i < d->cylsz; i++) {
 		printf("\t\t\t\t<tank num=\"%zu\"", d->cyls[i].num);
 		if (d->cyls[i].mix)
 			printf(" gasmix=\"%zu\"", d->cyls[i].mix);
