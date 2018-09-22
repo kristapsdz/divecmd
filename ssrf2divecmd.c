@@ -934,7 +934,10 @@ parse_open(void *dat, const XML_Char *s, const XML_Char **atts)
 		}
 		parse_event(p, atts);
 	} else if (0 == strcmp(s, "extradata")) {
-		logwarnx(p, "ignoring <extradata>");
+		if (NULL == p->curdive) {
+			logerrx(p, "<extradata> not in <dive>");
+			return;
+		}
 	} else if (0 == strcmp(s, "dives")) {
 		if (NULL == p->curlog)
 			logerrx(p, "<dives> not in <divelog>");
@@ -947,6 +950,26 @@ parse_open(void *dat, const XML_Char *s, const XML_Char **atts)
 			return;
 		}
 		parse_divecomputerid(p, atts);
+	} else if (0 == strcmp(s, "water")) {
+		if (NULL == p->curdive) {
+			logerrx(p, "<water> not in <dive>");
+			return;
+		}
+	} else if (0 == strcmp(s, "depth")) {
+		if (NULL == p->curdive) {
+			logerrx(p, "<depth> not in <dive>");
+			return;
+		}
+	} else if (0 == strcmp(s, "temperature")) {
+		if (NULL == p->curdive) {
+			logerrx(p, "<temperature> not in <dive>");
+			return;
+		}
+	} else if (0 == strcmp(s, "surface")) {
+		if (NULL == p->curdive) {
+			logerrx(p, "<surface> not in <dive>");
+			return;
+		}
 	} else {
 		if (NULL != p->curdive)
 			logwarnx(p, "%s: unknown <dive> child", s);
