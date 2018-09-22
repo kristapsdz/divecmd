@@ -24,6 +24,7 @@
 #endif
 #include <errno.h>
 #include <fcntl.h>
+#include <float.h>
 #include <limits.h>
 #include <stdarg.h>
 #include <stdlib.h>
@@ -296,15 +297,19 @@ parse_temp(struct parse *p, const char *v)
 
 /*
  * Parse pressure in bar, "xx bar".
- * Returns <0 on failure.
+ * Sets the result to be <0 on failure (parse error, negative value).
+ * Rounds value to zero if <= FLT_EPSILON.
+ * Returns zero on failure, non-zero on success.
  */
-static double
-parse_pressure(struct parse *p, const char *v)
+static int
+parse_pressure(struct parse *p, const char *v, double *res)
 {
 	size_t	 sz;
 	char	*cp;
 	int	 rc;
 	double	 val;
+
+	*res = -1.0;
 
 	if ((sz = strlen(v)) < 4)
 		return 0;
@@ -312,6 +317,36 @@ parse_pressure(struct parse *p, const char *v)
 		return 0;
 
 	cp = xstrndup(p, v, sz - 4);
+	rc = sscanf(cp, "%lg", &val);
+	free(cp);
+
+	if (1 != rc || val < 0.0)
+		return 0;
+	if (val <= FLT_EPSILON)
+		val = 0.0;
+
+	*res = val;
+	return 1;
+}
+
+/*
+ * Parse volume in litres, "xx.x l".
+ * Returns <0 on failure.
+ */
+static double
+parse_volume(struct parse *p, const char *v)
+{
+	size_t	 sz;
+	char	*cp;
+	int	 rc;
+	double	 val;
+
+	if ((sz = strlen(v)) < 2)
+		return 0;
+	if (strcmp(" l", &v[sz - 2]))
+		return 0;
+
+	cp = xstrndup(p, v, sz - 2);
 	rc = sscanf(cp, "%lg", &val);
 	free(cp);
 
@@ -596,9 +631,8 @@ parse_sample(struct parse *p, const XML_Char **atts)
 				 samp->pressuresz + 1,
 				 sizeof(struct samppres));
 			samp->pressuresz++;
-			samp->pressure[samp->pressuresz - 1].pressure = 
-				parse_pressure(p, ap[1]);
-			if (samp->pressure[samp->pressuresz - 1].pressure < 0.0) {
+			if ( ! parse_pressure(p, ap[1], 
+			    &samp->pressure[samp->pressuresz - 1].pressure)) {
 				logerrx(p, "bad <sample> pressure");
 				return;
 			}
@@ -652,9 +686,11 @@ parse_cylinder(struct parse *p, const XML_Char **atts)
 {
 	const XML_Char	**ap;
 	struct dive	 *d = p->curdive;
+	const char	 *size = NULL, *wp = NULL;
 	char		 *ep, *mixes[3];
 
 	mixes[0] = mixes[1] = mixes[2] = NULL;
+
 	for (ap = atts; NULL != ap[0]; ap += 2)
 		if (0 == strcmp(*ap, "o2")) {
 			free(mixes[0]);
@@ -667,11 +703,16 @@ parse_cylinder(struct parse *p, const XML_Char **atts)
 			mixes[2] = xstrdup(p, ap[1]);
 		} else if (0 == strcmp(*ap, "description")) {
 			/* Do nothing. */ ;
+		} else if (0 == strcmp(*ap, "size")) {
+			size = ap[1];
+		} else if (0 == strcmp(*ap, "workpressure")) {
+			wp = ap[1];
 		} else
 			logattr(p, "cylinder", *ap);
 
 	d->gas = xreallocarray(p, d->gas, 
 		d->gassz + 1, sizeof(struct divegas));
+	memset(&d->gas[d->gassz], 0, sizeof(struct divegas));
 	d->gas[d->gassz].num = d->gassz + 1;
 
 	if (NULL != mixes[0]) {
@@ -680,7 +721,7 @@ parse_cylinder(struct parse *p, const XML_Char **atts)
 			mixes[0][strlen(mixes[0]) - 1] = '\0';
 		d->gas[d->gassz].o2 = strtod(mixes[0], &ep);
 		if (ep == mixes[0] || ERANGE == errno) {
-			logerrx(p, "bad <o2> value");
+			logerrx(p, "bad \"o2\" attribute");
 			return;
 		}
 	}
@@ -691,7 +732,7 @@ parse_cylinder(struct parse *p, const XML_Char **atts)
 			mixes[1][strlen(mixes[1]) - 1] = '\0';
 		d->gas[d->gassz].n2 = strtod(mixes[1], &ep);
 		if (ep == mixes[1] || ERANGE == errno) {
-			logerrx(p, "bad <n2> value");
+			logerrx(p, "bad \"n2\" attribute");
 			return;
 		}
 	}
@@ -702,7 +743,7 @@ parse_cylinder(struct parse *p, const XML_Char **atts)
 			mixes[2][strlen(mixes[2]) - 1] = '\0';
 		d->gas[d->gassz].he = strtod(mixes[2], &ep);
 		if (ep == mixes[2] || ERANGE == errno) {
-			logerrx(p, "bad <he> value");
+			logerrx(p, "bad \"he\" attribute");
 			return;
 		}
 	}
@@ -712,8 +753,24 @@ parse_cylinder(struct parse *p, const XML_Char **atts)
 
 	d->cyls = xreallocarray(p, d->cyls,
 		d->cylsz + 1, sizeof(struct cylinder));
+	memset(&d->cyls[d->cylsz], 0, sizeof(struct cylinder));
 	d->cyls[d->cylsz].mix = d->gas[d->gassz].num;
 	d->cyls[d->cylsz].num = d->cylsz + 1;
+
+	if (NULL != size) {
+		d->cyls[d->cylsz].size = parse_volume(p, size);
+		if (d->cyls[d->cylsz].size < 0.0) {
+			logerrx(p, "bad \"size\" attribute");
+			return;
+		}
+	}
+
+	if (NULL != wp && 
+	    ! parse_pressure(p, wp, &d->cyls[d->cylsz].workpressure)) {
+		logerrx(p, "bad \"workpressure\" value");
+		return;
+	}
+
 	d->cylsz++;
 	d->gassz++;
 }
