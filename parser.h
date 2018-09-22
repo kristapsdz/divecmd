@@ -170,6 +170,8 @@ struct	divegas {
 struct	cylinder {
 	size_t		 num; /* identifier, never zero */
 	size_t		 mix; /* divegas "num" or zero */
+	double		 size; /* volume of tank in litres */
+	double		 workpressure; /* working pressure (bar) */
 };
 
 struct	dive {

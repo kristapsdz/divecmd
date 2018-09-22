@@ -222,6 +222,28 @@ xstrdup(const struct parse *p, const char *cp)
 	return(pp);
 }
 
+/*
+ * Convert "val" to a double leaving it as 0.0 upon conversion errors.
+ * Return zero on failure, non-zero on success (the pointer will be set
+ * to zero).
+ */
+static int
+xstrtod(const char *val, double *res)
+{
+	char		 *ep;
+
+	*res = strtod(val, &ep);
+	if (ep == val || ERANGE == errno) {
+		*res = 0.0;
+		return 0;
+	}
+
+	if (*res <= FLT_EPSILON)
+		*res = 0.0;
+
+	return 1;
+}
+
 static void
 logerrp(struct parse *p)
 {
@@ -448,7 +470,8 @@ static void
 parse_tank(struct parse *p, const XML_Char **atts)
 {
 	struct dive	 *d = p->curdive;
-	const char	 *tank = NULL, *mix = NULL, *er;
+	const char	 *tank = NULL, *mix = NULL, *er,
+	      	 	 *vol = NULL, *wp = NULL;
 	const XML_Char	**ap;
 	size_t		  i;
 
@@ -457,6 +480,10 @@ parse_tank(struct parse *p, const XML_Char **atts)
 			tank = ap[1];
 		else if (0 == strcmp(*ap, "gasmix"))
 			mix = ap[1];
+		else if (0 == strcmp(*ap, "volume"))
+			vol = ap[1];
+		else if (0 == strcmp(*ap, "workpressure"))
+			wp = ap[1];
 		else
 			logattr(p, "tank", *ap);
 
@@ -484,6 +511,12 @@ parse_tank(struct parse *p, const XML_Char **atts)
 		}
 		d->cyls[d->cylsz].mix = i;
 	}
+
+	if (NULL != vol && ! xstrtod(vol, &d->cyls[d->cylsz].size))
+		logwarnx(p, "malformed <tank> size: %s", vol);
+
+	if (NULL != wp && ! xstrtod(wp, &d->cyls[d->cylsz].workpressure))
+		logwarnx(p, "malformed <tank> workpressure: %s", wp);
 
 	d->cylsz++;
 }
@@ -1431,6 +1464,11 @@ divecmd_print_dive_tanks(FILE *f, const struct dive *d)
 		printf("\t\t\t\t<tank num=\"%zu\"", d->cyls[i].num);
 		if (d->cyls[i].mix)
 			printf(" gasmix=\"%zu\"", d->cyls[i].mix);
+		if (d->cyls[i].size >= FLT_EPSILON)
+			printf(" volume=\"%g\"", d->cyls[i].size);
+		if (d->cyls[i].workpressure >= FLT_EPSILON)
+			printf(" workpressure=\"%g\"", 
+				d->cyls[i].workpressure);
 		printf(" />\n");
 	}
 	fputs("\t\t\t</tanks>\n", f);
