@@ -512,10 +512,11 @@ parse_tank(struct parse *p, const XML_Char **atts)
 		d->cyls[d->cylsz].mix = i;
 	}
 
-	if (NULL != vol && ! xstrtod(vol, &d->cyls[d->cylsz].size))
+	if (NULL != vol && 
+	    ! xstrtod(vol, &d->cyls[d->cylsz].size))
 		logwarnx(p, "malformed <tank> size: %s", vol);
-
-	if (NULL != wp && ! xstrtod(wp, &d->cyls[d->cylsz].workpressure))
+	if (NULL != wp && 
+	    ! xstrtod(wp, &d->cyls[d->cylsz].workpressure))
 		logwarnx(p, "malformed <tank> workpressure: %s", wp);
 
 	d->cylsz++;
@@ -527,7 +528,6 @@ parse_gasmix(struct parse *p, const XML_Char **atts)
 	struct dive	 *d = p->curdive;
 	const char	 *mixes[3];
 	const char	 *v, *er;
-	char		 *ep;
 	const XML_Char	**ap;
 	size_t		  i;
 
@@ -560,44 +560,30 @@ parse_gasmix(struct parse *p, const XML_Char **atts)
 	memset(&d->gas[d->gassz], 0, sizeof(struct divegas));
 	d->gas[d->gassz].num = i;
 
-	if (NULL != mixes[0] && strcmp(mixes[0], "0")) {
-		d->gas[d->gassz].o2 = strtod(mixes[0], &ep);
-		if (ep == mixes[0] || ERANGE == errno) {
-			d->gas[d->gassz].o2 = 0.0;
-			logwarnx(p, "malformed <o2> "
-				"value: %s", mixes[0]);
-		}
-	} else 
-		logwarnx(p, "missing <o2> value");
+	if (NULL != mixes[0] &&
+	    ! xstrtod(mixes[0], &d->gas[d->gassz].o2))
+		logwarnx(p, "malformed <gasmix> o2: %s", mixes[0]);
+	else if (NULL == mixes[0])
+		logwarnx(p, "missing <gasmix> o2");
 
-	if (NULL != mixes[1] && strcmp(mixes[1], "0")) {
-		d->gas[d->gassz].n2 = strtod(mixes[1], &ep);
-		if (ep == mixes[1] || ERANGE == errno) {
-			d->gas[d->gassz].n2 = 0.0;
-			logwarnx(p, "malformed <n2> "
-				"value: %s", mixes[1]);
-		}
-	}
-	if (NULL != mixes[2] && strcmp(mixes[2], "0")) {
-		d->gas[d->gassz].he = strtod(mixes[2], &ep);
-		if (ep == mixes[2] || ERANGE == errno) {
-			d->gas[d->gassz].he = 0.0;
-			logwarnx(p, "malformed <he> "
-				"value: %s", mixes[2]);
-		}
-	}
+	if (NULL != mixes[1] &&
+	    ! xstrtod(mixes[1], &d->gas[d->gassz].n2))
+		logwarnx(p, "malformed <gasmix> n2: %s", mixes[1]);
+
+	if (NULL != mixes[2] &&
+	    ! xstrtod(mixes[2], &d->gas[d->gassz].he))
+		logwarnx(p, "malformed <gasmix> he: %s", mixes[2]);
+
 	d->gassz++;
 }
 
 static void
 parse_pressure(struct parse *p, const XML_Char **atts)
 {
-	const char	 *num, *v, *er;
+	const char	 *num = NULL, *v = NULL, *er;
 	const XML_Char	**ap;
 	struct samp	 *s = p->cursamp;
-	char		 *ep;
 
-	v = num = NULL;
 	for (ap = atts; NULL != ap[0]; ap += 2)
 		if (0 == strcmp(*ap, "value"))
 			v = ap[1];
@@ -620,11 +606,11 @@ parse_pressure(struct parse *p, const XML_Char **atts)
 		 sizeof(struct samppres));
 	s->pressuresz++;
 
-	s->pressure[s->pressuresz - 1].pressure = strtod(v, &ep);
-	if (ep == v || ERANGE == errno) {
-		logerrx(p, "bad <pressure> value");
+	if ( ! xstrtod(v, &s->pressure[s->pressuresz - 1].pressure)) {
+		logerrx(p, "malformed <pressure> value: %s", v);
 		return;
 	}
+
 	s->pressure[s->pressuresz - 1].tank = strtonum
 		(num, 0, LONG_MAX, &er);
 	if (NULL != er) {
@@ -641,7 +627,6 @@ parse_open(void *dat, const XML_Char *s, const XML_Char **atts)
 	struct samp	 *samp;
 	struct dive	 *d, *dp;
 	const char	 *date, *time, *num, *er, *dur, *mode, *v;
-	char		 *ep;
 	struct tm	  tm;
 	int		  rc;
 	struct dgroup	 *grp;
@@ -948,8 +933,7 @@ parse_open(void *dat, const XML_Char *s, const XML_Char **atts)
 			return;
 		}
 
-		samp->depth = strtod(v, &ep);
-		if (ep == v || ERANGE == errno) {
+		if ( ! xstrtod(v, &samp->depth)) {
 			logerrx(p, "malformed <depth> value: %s", v);
 			return;
 		}
@@ -1071,13 +1055,9 @@ parse_open(void *dat, const XML_Char *s, const XML_Char **atts)
 			return;
 		}
 
-		if (NULL != v) {
-			samp->deco.depth = strtod(v, &ep);
-			if (ep == v || ERANGE == errno) {
-				logerrx(p, "malformed <deco> "
-					"value: %s", v);
-				return;
-			}
+		if (NULL != v && ! xstrtod(v, &samp->deco.depth)) {
+			logerrx(p, "malformed <deco> depth: %s", v);
+			return;
 		}
 
 		samp->deco.duration = strtonum(dur, 0, LONG_MAX, &er);
@@ -1109,8 +1089,7 @@ parse_open(void *dat, const XML_Char *s, const XML_Char **atts)
 			return;
 		}
 
-		samp->temp = strtod(v, &ep);
-		if (ep == v || ERANGE == errno) {
+		if ( ! xstrtod(v, &samp->temp)) {
 			logerrx(p, "malformed <temp> value: %s", v);
 			return;
 		}
@@ -1144,11 +1123,8 @@ parse_open(void *dat, const XML_Char *s, const XML_Char **atts)
 		if (NULL == v) {
 			lognattr(p, "cns", "value");
 			return;
-		}
-
-		samp->cns = strtod(v, &ep);
-		if (ep == v || ERANGE == errno) {
-			logerrx(p, "malformed <cns> value");
+		} else if ( ! xstrtod(v, &samp->cns)) {
+			logerrx(p, "malformed <cns> value: %s", v);
 			return;
 		}
 		samp->flags |= SAMP_CNS;
