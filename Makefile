@@ -3,7 +3,7 @@
 
 include Makefile.configure
 
-VERSION		 = 0.1.2
+VERSION		 = 0.1.3
 LDADD		+= -ldivecomputer
 CFLAGS		+= -DVERSION="\"$(VERSION)\""
 GROFF		?= groff
@@ -114,32 +114,35 @@ uninstall:
 		rm -f $(DESTDIR)$(BINDIR)/man1/$$f ; \
 	done
 
+libdcmd.a: parser.o compats.o parser.h config.h
+	$(AR) rs $@ parser.o compats.o
+
 dcmd: $(OBJS) compats.o
 	$(CC) $(CPPFLAGS) -o $@ $(OBJS) compats.o $(LDFLAGS) $(LDADD)
 
-dcmdfind: divecmd2divecmd.o parser.o compats.o
-	$(CC) $(CPPFLAGS) -o $@ divecmd2divecmd.o parser.o compats.o -lexpat
+dcmdfind: divecmd2divecmd.o libdcmd.a
+	$(CC) $(CPPFLAGS) -o $@ divecmd2divecmd.o libdcmd.a -lexpat
 
-ssrf2dcmd: ssrf2divecmd.o parser.o compats.o
-	$(CC) $(CPPFLAGS) -o $@ ssrf2divecmd.o parser.o compats.o $(LDFLAGS) -lexpat $(LDADD)
+ssrf2dcmd: ssrf2divecmd.o libdcmd.a
+	$(CC) $(CPPFLAGS) -o $@ ssrf2divecmd.o libdcmd.a $(LDFLAGS) -lexpat $(LDADD)
 
-dcmdterm: divecmd2term.o parser.o compats.o
-	$(CC) $(CPPFLAGS) -o $@ divecmd2term.o parser.o compats.o -lexpat -lm
+dcmdterm: divecmd2term.o libdcmd.a
+	$(CC) $(CPPFLAGS) -o $@ divecmd2term.o libdcmd.a -lexpat -lm
 
-dcmd2grap: divecmd2grap.o parser.o compats.o
-	$(CC) $(CPPFLAGS) -o $@ divecmd2grap.o parser.o compats.o -lexpat
+dcmd2grap: divecmd2grap.o libdcmd.a
+	$(CC) $(CPPFLAGS) -o $@ divecmd2grap.o libdcmd.a -lexpat
 
-dcmdls: divecmd2list.o parser.o compats.o
-	$(CC) $(CPPFLAGS) -o $@ divecmd2list.o parser.o compats.o -lexpat
+dcmdls: divecmd2list.o libdcmd.a
+	$(CC) $(CPPFLAGS) -o $@ divecmd2list.o libdcmd.a -lexpat
 
-dcmd2json: divecmd2json.o parser.o compats.o
-	$(CC) $(CPPFLAGS) -o $@ divecmd2json.o parser.o compats.o -lexpat
+dcmd2json: divecmd2json.o libdcmd.a
+	$(CC) $(CPPFLAGS) -o $@ divecmd2json.o libdcmd.a -lexpat
 
-dcmd2csv: divecmd2csv.o parser.o compats.o
-	$(CC) $(CPPFLAGS) -o $@ divecmd2csv.o parser.o compats.o -lexpat
+dcmd2csv: divecmd2csv.o libdcmd.a
+	$(CC) $(CPPFLAGS) -o $@ divecmd2csv.o libdcmd.a -lexpat
 
-dcmdedit: dcmdedit.o parser.o compats.o
-	$(CC) $(CPPFLAGS) -o $@ dcmdedit.o parser.o compats.o -lexpat
+dcmdedit: dcmdedit.o libdcmd.a
+	$(CC) $(CPPFLAGS) -o $@ dcmdedit.o libdcmd.a -lexpat
 
 dcmd2pdf: divecmd2pdf.in
 	sed "s!@GROFF@!$(GROFF)!g" divecmd2pdf.in >$@
@@ -154,7 +157,7 @@ compats.o: config.h
 $(BINOBJS): parser.h config.h
 
 clean:
-	rm -f $(OBJS) compats.o $(BINS) $(BINOBJS) $(HTMLS) $(PDFS) $(PNGS)
+	rm -f $(OBJS) compats.o $(BINS) $(BINOBJS) $(HTMLS) $(PDFS) $(PNGS) libdcmd.a
 	rm -f divecmd.tar.gz divecmd.tar.gz.sha512
 
 distclean: clean
