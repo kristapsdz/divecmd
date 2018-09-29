@@ -47,6 +47,8 @@ struct	parse {
 	struct dive	 *curdive; /* current dive */
 	struct diveq	 *dives; /* all dives */
 	struct divestat	 *stat; /* statistics */
+	char	 	 *ign; /* token we're ignoring (or NULL) */
+	size_t		  igndepth; /* nested ignore scopes */
 	size_t		  pid; /* current dive no. */
 };
 
@@ -65,6 +67,12 @@ logerrx(struct parse *p, const char *fmt, ...)
 static __dead void
 logfatal(const struct parse *p, const char *fmt, ...)
 	__attribute__((format (printf, 2, 3)));
+
+static void
+parse_open(void *, const XML_Char *, const XML_Char **);
+
+static void
+parse_close(void *, const XML_Char *);
 
 static void
 logerrx(struct parse *p, const char *fmt, ...)
@@ -776,6 +784,31 @@ parse_cylinder(struct parse *p, const XML_Char **atts)
 }
 
 static void
+ign_open(void *dat, const XML_Char *s, const XML_Char **atts)
+{
+	struct parse	*p = dat;
+
+	if (0 == strcmp(s, p->ign)) 
+		p->igndepth++;
+}
+
+static void
+ign_close(void *dat, const XML_Char *s)
+{
+	struct parse	*p = dat;
+
+	if (strcmp(s, p->ign))
+		return;
+
+	if (0 == --p->igndepth) {
+		free(p->ign);
+		p->ign = NULL;
+	}
+
+	XML_SetElementHandler(p->p, parse_open, parse_close);
+}
+
+static void
 parse_open(void *dat, const XML_Char *s, const XML_Char **atts)
 {
 	const XML_Char	**ap;
@@ -965,6 +998,10 @@ parse_open(void *dat, const XML_Char *s, const XML_Char **atts)
 			logerrx(p, "<temperature> not in <dive>");
 			return;
 		}
+	} else if (0 == strcmp(s, "divesites")) {
+		p->ign = xstrdup(p, s);
+		p->igndepth = 1;
+		XML_SetElementHandler(p->p, ign_open, ign_close);
 	} else if (0 == strcmp(s, "surface")) {
 		if (NULL == p->curdive) {
 			logerrx(p, "<surface> not in <dive>");
@@ -1032,6 +1069,7 @@ ssrf_parse(const char *fname, XML_Parser p,
 		warn("%s", fname);
 
 	close(fd);
+	free(pp.ign);
 	return 0 == ssz;
 }
 
@@ -1108,7 +1146,10 @@ out:
 	divecmd_free(&dq, &st);
 	return rc ? EXIT_SUCCESS : EXIT_FAILURE;
 usage:
-	fprintf(stderr, "usage: %s [-v] [file ...]\n", getprogname());
+	fprintf(stderr, "usage: %s "
+		"[-v] "
+		"[-i ident] "
+		"[file ...]\n", getprogname());
 	return EXIT_FAILURE;
 }
 
