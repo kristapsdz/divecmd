@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 	<head>
 		<meta name="viewport" content="initial-scale=1.0, user-scalable=no" />
 		<meta charset="utf-8" /> 
@@ -21,18 +21,18 @@
 			});
 		</script>
 	</head>
-	<body>
+	<body itemscope="itemscope" itemtype="http://schema.org/SoftwareApplication">
 		<nav>
-			<span>version @VERSION@</span>
+			<span itemprop="softwareVersion">version @VERSION@</span>
 			<a href="https://github.com/kristapsdz/divecmd">github</a>,
-			<a href="snapshots/divecmd.tar.gz">source</a>,
+			<a itemprop="downloadURL" href="snapshots/divecmd.tar.gz">source</a>,
 			<a href="snapshots/">archive</a>
 		</nav>
 		<header>
 			<div class="title">
-				<h1>divecmd</h1>
+				<h1 itemprop="name">divecmd</h1>
 				&#8212;
-				<div class="description">download and process dive computer data</div>
+				<div class="description" itemprop="description">download and process dive computer data</div>
 			</div>
 			<div class="cite">
 				Image from <a href="https://divelog.blue">divelog.blue</a>'s <a href="https://divelog.blue/article079.html">Kittiwake</a>.
@@ -40,8 +40,9 @@
 		</header>
 		<article>
 			<p>
-				<span class="nm">divecmd</span> is a suite of open source command-line UNIX tools to extract and manipulate
-				dives from dive computers.
+				<span class="nm">divecmd</span> is a suite of open source command-line <span
+					itemprop="operatingSystem">UNIX</span> tools to <span itemprop="applicationCategory">extract and
+					manipulate dives from dive computers</span>.
 				Why use it instead of, say, <a href="https://subsurface-divelog.org/">Subsurface</a>?
 				Because it's built to work in a command-line workflow with other command-line tools for processing, such as 
 				<a href="http://www.lunabase.org/~faber/Vault/software/grap/">grap(1)</a> piped into <a
@@ -400,7 +401,10 @@
 				Built with <a href="https://kristaps.bsd.lv/sblg">sblg</a> on <a href="https://www.openbsd.org">OpenBSD</a>.
 			</div>
 			<div>
-				Copyright &#169; 2017&#8211;2018, <a rel="author" href="https://github.com/kristapsdz">Kristaps Dzonsons</a>
+				Copyright &#169; 2017&#8211;2018, 
+				<a rel="author" itemprop="author" itemscope="itemscope" itemtype="http://schema.org/Person" href="https://github.com/kristapsdz">
+					<span itemprop="name">Kristaps Dzonsons</span>
+				</a>
 			</div>
 		</footer>
 	</body>
