@@ -40,6 +40,7 @@ print_all(const struct dlog *dl, const struct diveq *dq)
 	const struct dive *d;
 	const struct samp *s;
 	struct tm	  *tm;
+	size_t		   i;
 
 	printf("<divelog program=\'dcmd2ssrf\' "
 	       " version=\'" VERSION "\'>\n"
@@ -52,6 +53,8 @@ print_all(const struct dlog *dl, const struct diveq *dq)
 	       dl->vendor, dl->product);
 
 	TAILQ_FOREACH(d, dq, entries) {
+		/* Start with the "dive" information. */
+
 		printf("  <dive number='%zu'", d->num);
 		if (d->datetime) {
 			tm = localtime(&d->datetime);
@@ -66,27 +69,47 @@ print_all(const struct dlog *dl, const struct diveq *dq)
 			printf(" duration='%zu:%.2zu min'",
 				d->duration / 60,
 				d->duration % 60);
+		if (NULL != d->fprint) 
+			printf(" diveid='%s'", d->fprint);
 		puts(">");
-		printf("   <divecomputer model='%s %s'>\n",
+
+		/* The divecomputer wraps the samples. */
+
+		printf("   <divecomputer model='%s %s'",
 			d->log->vendor, d->log->product);
+		if (MODE_FREEDIVE == d->mode) 
+			printf(" dctype='Freedive'");
+		else if (MODE_CC == d->mode)
+			printf(" dctype='CCR'");
+		puts(">");
+
 		TAILQ_FOREACH(s, &d->samps, entries) {
-			printf("    <sample time=\'%zu:%.2zu min\' ",
+			printf("    <sample time='%zu:%.2zu min' ",
 				s->time / 60,
 				s->time % 60);
 			if (SAMP_DEPTH & s->flags) 
-				printf(" depth=\'%.1f m\'", s->depth);
+				printf(" depth='%.1f m'", s->depth);
 			if (SAMP_TEMP & s->flags) 
-				printf(" temp=\'%.1f C\'", s->temp);
+				printf(" temp='%.1f C'", s->temp);
 			if (SAMP_RBT & s->flags) 
-				printf(" rbt=\'%zu:%.2zu min\'", 
+				printf(" rbt='%zu:%.2zu min'", 
 					s->rbt / 60, s->rbt % 60);
 			if (SAMP_CNS & s->flags) 
-				printf(" cns=\'%.0f %%\'", 
+				printf(" cns='%.0f %%'", 
 					100.0 * s->cns);
 			puts(" />");
+			for (i = 0; i < s->eventsz; i++) {
+				printf("    <event time='%zu:%.2zu min' "
+				       "type='%u'", s->time / 60,
+					s->time % 60, s->events[i].type);
+				if (s->events[i].flags)
+					printf(" flags='%u'", 
+						s->events[i].flags);
+				puts(" />");
+			}
 		}
 		puts("   </divecomputer>\n"
-		     "  </dive>\n");
+		     "  </dive>");
 	}
 
 	puts(" </dives>\n"
