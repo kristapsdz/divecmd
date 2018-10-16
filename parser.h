@@ -17,6 +17,10 @@
 #ifndef PARSER_H
 #define PARSER_H
 
+/*
+ * The dive mode.
+ * This corresponds to libdivecomputer's enum dc_divemode_t.
+ */
 enum	mode {
 	MODE_NONE,
 	MODE_FREEDIVE,
@@ -25,13 +29,19 @@ enum	mode {
 	MODE_CC
 };
 
+/*
+ * Ways to group dives.
+ */
 enum	group {
-	GROUP_NONE,
-	GROUP_DIVER,
-	GROUP_DATE,
-	GROUP_DIVELOG
+	GROUP_NONE, /* don't group: all in one group */
+	GROUP_DIVER, /* group by diver identifier */
+	GROUP_DATE, /* group by date */
+	GROUP_DIVELOG /* group by dive computer */
 };
 
+/*
+ * How to sort dives within groups.
+ */
 enum	groupsort {
 	GROUPSORT_DATETIME,
 	GROUPSORT_MAXDEPTH,
@@ -40,6 +50,10 @@ enum	groupsort {
 	GROUPSORT_RMAXTIME
 };
 
+/*
+ * A generic event.
+ * This corresponds to libdivecomputer's parser_sample_event_t.
+ */
 enum	event {
 	EVENT_none,
 	EVENT_decostop,
@@ -70,6 +84,9 @@ enum	event {
 	EVENT__MAX
 };
 
+/*
+ * Type of deco sample notification.
+ */
 enum	deco {
 	DECO_ndl,
 	DECO_safetystop,
@@ -114,7 +131,7 @@ struct	samp {
 	size_t		  pressuresz; /* number of pressures */
 	size_t		  rbt; /* seconds */
 	size_t		  gaschange; /* num of gas change */
-	struct sampevent *events;
+	struct sampevent *events; /* generic events */
 	size_t		  eventsz;
 	struct sampdeco	  deco;
 	struct sampvendor vendor;
@@ -125,7 +142,7 @@ struct	samp {
 #define	SAMP_VENDOR	  0x20
 #define	SAMP_GASCHANGE	  0x40
 #define	SAMP_CNS	  0x80
-	unsigned int	  flags; /* bits of SAMP_xxx */
+	unsigned int	  flags; /* SAMP_xxx values represented */
 	TAILQ_ENTRY(samp) entries;
 };
 
