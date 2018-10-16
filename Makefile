@@ -20,6 +20,7 @@ BINOBJS		 = dcmdedit.o \
 		   divecmd2grap.o \
 		   divecmd2list.o \
 		   divecmd2json.o \
+		   divecmd2ssrf.o \
 		   divecmd2term.o \
 		   parser.o \
 		   ssrf2divecmd.o
@@ -31,6 +32,7 @@ BINS		 = dcmd \
 		   dcmd2json \
 		   dcmd2pdf \
 		   dcmd2ps \
+		   dcmd2ssrf \
 		   dcmdedit \
 		   dcmdfind \
 		   dcmdls \
@@ -140,6 +142,9 @@ dcmd2json: divecmd2json.o libdcmd.a
 
 dcmd2csv: divecmd2csv.o libdcmd.a
 	$(CC) $(CPPFLAGS) -o $@ divecmd2csv.o libdcmd.a -lexpat
+
+dcmd2ssrf: divecmd2ssrf.o libdcmd.a
+	$(CC) $(CPPFLAGS) -o $@ divecmd2ssrf.o libdcmd.a -lexpat
 
 dcmdedit: dcmdedit.o libdcmd.a
 	$(CC) $(CPPFLAGS) -o $@ dcmdedit.o libdcmd.a -lexpat
