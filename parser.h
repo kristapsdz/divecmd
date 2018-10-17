@@ -101,17 +101,34 @@ struct	sampevent {
 	enum event	 type; /* event type */
 };
 
+/*
+ * Decompression information.
+ * If this is DECO_ndl, the duration is the current NDL time.
+ * Otherwise, the duration is the stop (or remaining) time.
+ * The "depth" value is set for deco and deep stops to be the depth of
+ * the decompression stop.
+ */
 struct	sampdeco {
-	double	  	 depth;
+	double	  	 depth; /* stop depth or zero */
 	enum deco 	 type;
-	size_t	  	 duration;
+	size_t	  	 duration; /* stop/time duration or zero */
 };
 
+/*
+ * Vendor-specific information (can be anything).
+ */
 struct	sampvendor {
-	char		*buf;
-	size_t		 type;
+	char		*buf; /* hex-valued vendor information */
+	size_t		 type; /* opaque type */
 };
 
+/*
+ * Pressure of a tank.
+ * Note that the tank may not refer to a cylinder in the "cyls" of the
+ * dive.
+ * In this case, the tank is assumed to have no data attached to it and
+ * is "blank" (no working pressure, size, etc.).
+ */
 struct	samppres {
 	size_t		 tank; /* tank num */
 	double		 pressure; /* bar */
@@ -135,13 +152,13 @@ struct	samp {
 	size_t		  eventsz;
 	struct sampdeco	  deco;
 	struct sampvendor vendor;
-#define	SAMP_DEPTH	  0x01
-#define	SAMP_TEMP	  0x02
-#define	SAMP_RBT	  0x04
-#define	SAMP_DECO	  0x10
-#define	SAMP_VENDOR	  0x20
-#define	SAMP_GASCHANGE	  0x40
-#define	SAMP_CNS	  0x80
+#define	SAMP_DEPTH	  0x01 /* sets depth */
+#define	SAMP_TEMP	  0x02 /* sets tmp */
+#define	SAMP_RBT	  0x04 /* sets rbt */
+#define	SAMP_DECO	  0x10 /* sets deco */
+#define	SAMP_VENDOR	  0x20 /* sets vendor */
+#define	SAMP_GASCHANGE	  0x40 /* sets gaschange */
+#define	SAMP_CNS	  0x80 /* sets cns */
 	unsigned int	  flags; /* SAMP_xxx values represented */
 	size_t		  line; /* parse line */
 	size_t		  col; /* parse column */
