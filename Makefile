@@ -44,6 +44,7 @@ MAN1S		 = dcmd.1 \
 		   dcmd2json.1 \
 		   dcmd2pdf.1 \
 		   dcmd2ps.1 \
+		   dcmd2ssrf.1 \
 		   dcmdedit.1 \
 		   dcmdfind.1 \
 		   dcmdls.1 \
@@ -80,6 +81,7 @@ HTMLS		 = dcmd.1.html \
 		   dcmd2json.1.html \
 		   dcmd2pdf.1.html \
 		   dcmd2ps.1.html \
+		   dcmd2ssrf.1.html \
 		   dcmdedit.1.html \
 		   dcmdfind.1.html \
 		   dcmdls.1.html \
