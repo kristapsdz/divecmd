@@ -65,16 +65,44 @@ static	const char *const events[EVENT__MAX] = {
 };
 
 static void
-print_evtgas(size_t mix, size_t t, 
-	const struct dive *d, const size_t *map_gas)
+print_deco(const struct sampdeco *d)
+{
+
+	/* NDL only has duration (if that). */
+
+	if (DECO_ndl == d->type && d->duration) 
+		printf(" ndl='%zu:%.2zu min'",
+			d->duration / 60, d->duration % 60);
+	if (DECO_ndl == d->type)
+		return;
+	if (d->duration)
+		printf(" stoptime='%zu:%.2zu min'",
+			d->duration / 60, d->duration % 60);
+	if (d->depth > FLT_EPSILON)
+		printf(" stopdepth='%.1f m'", d->depth);
+}
+
+/*
+ * Have a special function to print a gas change.
+ * This is because we want to link the gas change mixture to a mixture
+ * we already have, then to the cylinder we're printing.
+ */
+static void
+print_evtgas(size_t mix, const struct dive *d, 
+	const size_t *map_gas, const struct samp *s)
 {
 	size_t	 i;
 
 	printf("    <event time='%zu:%.2zu min' "
-	       "type='25' name='gaschange'", t / 60, t % 60);
+	       "type='25' name='gaschange'", 
+	       s->time / 60, s->time % 60);
 	for (i = 0; i < d->gassz; i++)
 		if (d->gas[i].num == mix)
 			break;
+	if (i == d->gassz)
+		errx(EXIT_FAILURE, "%s:%zu:%zu: gas mix "
+			"not found: %zu", d->log->file,
+			s->line, s->col, mix);
 	assert(i < d->gassz);
 	printf(" flags='%zu' cylinder='%zu' />\n", 
 		map_gas[i] + 1, map_gas[i]);
@@ -84,12 +112,26 @@ static void
 print_evt(const struct sampevent *p, const struct samp *s, 
 	const struct dive *d, const size_t *map_gas)
 {
+	/*
+	 * Process the gaschange2 event as an actual gas change using
+	 * print_evtgas().
+	 * To do so, we actually need a mixture, which in the flags is
+	 * non-zero.
+	 * Old versions of dcmd didn't process this properly and didn't
+	 * print out the flags.
+	 */
 
 	if (EVENT_gaschange2 == p->type) {
-		print_evtgas(p->flags - 1, s->time, d, map_gas);
+		if (0 == p->flags)
+			warnx("%s:%zu:%zu: omitting "
+				"gas change without mix",
+				d->log->file, s->line, s->col);
+		else
+			print_evtgas(p->flags - 1, d, map_gas, s);
 		return;
 	}
-	printf("    <event time='%zu:%.2zu min' type='%u' name='%s'",
+	fputs("    ", stdout);
+	printf("<event time='%zu:%.2zu min' type='%u' name='%s'",
 		s->time / 60, s->time % 60, p->type, events[p->type]);
 	if (p->flags)
 		printf(" flags='%u'", p->flags);
@@ -148,6 +190,8 @@ print_all(const struct dlog *dl, const struct diveq *dq)
 	struct tm	  *tm;
 	size_t		   i, j, cylsz;
 	size_t		  *map_cyl, *map_gas;
+	unsigned int	   bits;
+	int		   in_deco;
 
 	printf("<divelog program=\'dcmd2ssrf\' "
 	       " version=\'" VERSION "\'>\n"
@@ -222,25 +266,83 @@ print_all(const struct dlog *dl, const struct diveq *dq)
 			printf(" dctype='CCR'");
 		puts(">");
 
+		in_deco = 0;
 		TAILQ_FOREACH(s, &d->samps, entries) {
 			printf("    <sample time='%zu:%.2zu min'",
-				s->time / 60,
-				s->time % 60);
-			if (SAMP_DEPTH & s->flags) 
+				s->time / 60, s->time % 60);
+			bits = s->flags;
+			if (SAMP_DEPTH & bits) {
 				printf(" depth='%.1f m'", s->depth);
-			if (SAMP_TEMP & s->flags) 
+				bits &= ~SAMP_DEPTH;
+			}
+			if (SAMP_TEMP & bits) {
 				printf(" temp='%.1f C'", s->temp);
-			if (SAMP_RBT & s->flags) 
+				bits &= ~SAMP_TEMP;
+			}
+			if (SAMP_RBT & bits) {
 				printf(" rbt='%zu:%.2zu min'", 
 					s->rbt / 60, s->rbt % 60);
-			if (SAMP_CNS & s->flags) 
-				printf(" cns='%.0f%%'", 
-					100.0 * s->cns);
+				bits &= ~SAMP_RBT;
+			}
+			if (SAMP_CNS & bits) {
+				printf(" cns='%.0f%%'", 100.0 * s->cns);
+				bits &= ~SAMP_CNS;
+			}
+			if (SAMP_DECO & bits) {
+				/*
+				 * Deco is complicated.
+				 * Don't allow nested deco (e.g., a deep
+				 * stop in a deco stop...?).
+				 * When we have a NDL message and we're
+				 * in deco, take that to mean that we're
+				 * no longer in deco.
+				 */
+
+				print_deco(&s->deco);
+				if (in_deco && 
+				    DECO_ndl == s->deco.type) {
+					printf(" in_deco='0'");
+					in_deco = 0;
+				} 
+				if (in_deco && 
+				    in_deco != s->deco.type)
+					warnx("%s:%zu:%zu: cannot "
+						"have nested deco",
+						d->log->file,
+						s->line, s->col);
+				if (0 == in_deco && 
+				    DECO_decostop == s->deco.type) {
+					printf(" in_deco='1'");
+					in_deco = DECO_decostop;
+				}
+				if (0 == in_deco && 
+				    DECO_deepstop == s->deco.type) {
+					printf(" in_deco='1'");
+					in_deco = DECO_deepstop;
+				}
+				bits &= ~SAMP_DECO;
+			}
+
 			puts(" />");
+
 			for (i = 0; i < s->eventsz; i++)
 				print_evt(&s->events[i], s, d, map_gas);
-			if (SAMP_GASCHANGE & s->flags)
-				print_evtgas(s->gaschange, s->time, d, map_gas);
+			if (SAMP_GASCHANGE & bits) {
+				print_evtgas(s->gaschange, d, map_gas, s);
+				bits &= ~SAMP_GASCHANGE;
+			}
+
+			/* Ignore vendor bits. */
+
+			if (SAMP_VENDOR & bits) 
+				bits &= ~SAMP_VENDOR;
+
+			/* Make sure we get everything. */
+
+			if (bits)
+				warnx("%s:%zu:%zu: unhandled "
+					"sample data", d->log->file, 
+					s->line, s->col);
 		}
 
 		puts("   </divecomputer>\n"
@@ -279,7 +381,8 @@ main(int argc, char *argv[])
 	argc -= optind;
 	argv += optind;
 
-	divecmd_init(&p, &dq, &st, GROUP_DIVER, GROUPSORT_DATETIME);
+	divecmd_init(&p, &dq, &st, 
+		GROUP_DIVELOG, GROUPSORT_DATETIME);
 
 	if (0 == argc)
 		rc = divecmd_parse("-", p, &dq, &st);
@@ -300,9 +403,7 @@ main(int argc, char *argv[])
 	if (TAILQ_EMPTY(&dq)) {
 		warnx("no dives to display");
 		goto out;
-	} 
-	
-	if (NULL != TAILQ_NEXT(TAILQ_FIRST(&st.dlogs), entries)) {
+	} else if (st.groupsz > 1) {
 		warnx("only one computer/diver allowed");
 		goto out;
 	}
@@ -310,8 +411,8 @@ main(int argc, char *argv[])
 	print_all(TAILQ_FIRST(&st.dlogs), &dq);
 out:
 	divecmd_free(&dq, &st);
-	return(rc ? EXIT_SUCCESS : EXIT_FAILURE);
+	return rc ? EXIT_SUCCESS : EXIT_FAILURE;
 usage:
 	fprintf(stderr, "usage: %s [-v] [file]\n", getprogname());
-	return(EXIT_FAILURE);
+	return EXIT_FAILURE;
 }
