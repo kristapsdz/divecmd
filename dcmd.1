@@ -359,9 +359,19 @@ set to one of
 .Dq tissuelevel ,
 or
 .Dq gaschange2 .
-An opaque
+.Pp
+The
 .Li flags
-value is also exported.
+may optionally be set to
+.Dq 1
+or
+.Dq 2 ,
+meaning that the condition has begun or ended, respectively.
+The exception to this is
+.Dq gaschange2 ,
+which optionally sets
+.Li flags
+to the new mixture (starting at zero).
 .El
 .Pp
 In theory, it's possible for a sample to have no inner elements at all,
