@@ -143,6 +143,8 @@ struct	samp {
 #define	SAMP_GASCHANGE	  0x40
 #define	SAMP_CNS	  0x80
 	unsigned int	  flags; /* SAMP_xxx values represented */
+	size_t		  line; /* parse line */
+	size_t		  col; /* parse column */
 	TAILQ_ENTRY(samp) entries;
 };
 
@@ -193,7 +195,6 @@ struct	cylinder {
 
 struct	dive {
 	size_t		     pid; /* unique in parse sequence */
-	size_t		     line; /* parse line */
 	time_t		     datetime; /* time or zero */
 	size_t		     num; /* number or zero */
 	size_t		     duration; /* duration or zero */
@@ -214,6 +215,8 @@ struct	dive {
 	const struct dlog   *log; /* source divelog */
 	TAILQ_ENTRY(dive)    entries; /* in-dive entry */
 	TAILQ_ENTRY(dive)    gentries; /* in-group entry */
+	size_t		     line; /* parse line */
+	size_t		     col; /* parse column */
 };
 
 struct	divestat {

@@ -620,6 +620,61 @@ parse_pressure(struct parse *p, const XML_Char **atts)
 }
 
 static void
+parse_event(struct parse *p, const XML_Char **atts)
+{
+	const XML_Char	**ap;
+	struct samp	 *s = p->cursamp;
+	const char	 *v = NULL, *dur = NULL, *fl = NULL, *er;
+	enum event	  evt;
+
+	for (ap = atts; NULL != ap[0]; ap += 2)
+		if (0 == strcmp(*ap, "type"))
+			v = ap[1];
+		else if (0 == strcmp(*ap, "duration"))
+			dur = ap[1];
+		else if (0 == strcmp(*ap, "flags"))
+			fl = ap[1];
+		else
+			logattr(p, "event", *ap);
+
+	if (NULL == v) {
+		lognattr(p, "event", "type");
+		return;
+	}
+
+	for (evt = 0; evt < EVENT__MAX; evt++)
+		if (0 == strcmp(v, events[evt]))
+			break;
+
+	if (EVENT__MAX == evt) {
+		logerrx(p, "unknown <event> type");
+		return;
+	}
+
+	s->events = xreallocarray
+		(p, s->events, 
+		 s->eventsz + 1,
+		 sizeof(struct sampevent));
+	memset(&s->events[s->eventsz], 0,
+		sizeof(struct sampevent));
+	s->events[s->eventsz].type = evt;
+	s->eventsz++;
+
+	if (NULL != dur) {
+		s->events[s->eventsz - 1].duration = 
+			strtonum(dur, 0, LONG_MAX, &er);
+		if (NULL != er)
+			logerrx(p, "bad <event> duration: %s", er);
+	}
+	if (NULL != fl) {
+		s->events[s->eventsz - 1].flags = 
+			strtonum(fl, 0, LONG_MAX, &er);
+		if (NULL != er)
+			logerrx(p, "bad <event> flags: %s", er);
+	}
+}
+
+static void
 parse_open(void *dat, const XML_Char *s, const XML_Char **atts)
 {
 	const XML_Char	**ap;
@@ -631,7 +686,6 @@ parse_open(void *dat, const XML_Char *s, const XML_Char **atts)
 	int		  rc;
 	struct dgroup	 *grp;
 	size_t		  i;
-	enum event	  evt;
 
 	if (0 == strcmp(s, "divelog")) {
 		if (NULL != p->curlog) {
@@ -677,6 +731,7 @@ parse_open(void *dat, const XML_Char *s, const XML_Char **atts)
 		p->curdive = d = xcalloc(p, 1, sizeof(struct dive));
 		p->curdive->pid = ++p->pid;
 		p->curdive->line = XML_GetCurrentLineNumber(p->p);
+		p->curdive->col = XML_GetCurrentColumnNumber(p->p);
 		TAILQ_INIT(&d->samps);
 		d->log = p->curlog;
 
@@ -877,6 +932,8 @@ parse_open(void *dat, const XML_Char *s, const XML_Char **atts)
 		d->nsamps++;
 
 		samp->time = i;
+		samp->line = XML_GetCurrentLineNumber(p->p);
+		samp->col = XML_GetCurrentColumnNumber(p->p);
 
 		if (samp->time > d->maxtime)
 			d->maxtime = samp->time;
@@ -972,48 +1029,11 @@ parse_open(void *dat, const XML_Char *s, const XML_Char **atts)
 		}
 		samp->flags |= SAMP_RBT;
 	} else if (0 == strcmp(s, "event")) {
-		if (NULL == (samp = p->cursamp)) {
+		if (NULL == p->cursamp) {
 			logerrx(p, "<event> not in <sample>");
 			return;
-		}
-
-		v = dur = NULL;
-		for (ap = atts; NULL != ap[0]; ap += 2)
-			if (0 == strcmp(*ap, "type"))
-				v = ap[1];
-			else if (0 == strcmp(*ap, "duration"))
-				dur = ap[1];
-			else
-				logattr(p, "event", *ap);
-		if (NULL == v) {
-			lognattr(p, "event", "type");
-			return;
-		}
-		for (evt = 0; evt < EVENT__MAX; evt++)
-			if (0 == strcmp(v, events[evt]))
-				break;
-		if (EVENT__MAX == evt) {
-			logerrx(p, "malformed <event> type: %s", v);
-			return;
-		}
-
-		er = NULL;
-		i = NULL == dur ? 0 :
-			strtonum(dur, 0, LONG_MAX, &er);
-		if (NULL != er) {
-			logerrx(p, "malformed <event> duration: %s", er);
-			return;
-		}
-
-		samp->events = xreallocarray
-			(p, samp->events, 
-			 samp->eventsz + 1,
-			 sizeof(struct sampevent));
-		memset(&samp->events[samp->eventsz], 0,
-			sizeof(struct sampevent));
-		samp->events[samp->eventsz].type = evt;
-		samp->events[samp->eventsz].duration = i;
-		samp->eventsz++;
+		} else
+			parse_event(p, atts);
 	} else if (0 == strcmp(s, "deco")) {
 		if (NULL == (samp = p->cursamp)) {
 			logerrx(p, "<deco> not in <sample>");
