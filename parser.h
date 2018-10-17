@@ -178,17 +178,17 @@ struct	dlog {
 TAILQ_HEAD(dlogq, dlog);
 
 struct	divegas {
-	double		 o2; /* O2 or 0 if unset */
-	double		 n2; /* N2 or 0 if unset */
-	double		 he; /* He or 0 if unset */
+	double		 o2; /* O2 (%) or 0 if unset */
+	double		 n2; /* N2 (%) or 0 if unset */
+	double		 he; /* He (%) or 0 if unset */
 	size_t		 num; /* identifier, never zero */
 };
 
 struct	cylinder {
 	size_t		 num; /* identifier, never zero */
 	size_t		 mix; /* divegas "num" or zero */
-	double		 size; /* volume of tank in litres */
-	double		 workpressure; /* working pressure (bar) */
+	double		 size; /* volume of tank in litres or zero */
+	double		 workpressure; /* working pressure (bar) or zero */
 };
 
 struct	dive {
