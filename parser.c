@@ -1440,9 +1440,9 @@ divecmd_print_dive_tanks(FILE *f, const struct dive *d)
 		printf("\t\t\t\t<tank num=\"%zu\"", d->cyls[i].num);
 		if (d->cyls[i].mix)
 			printf(" gasmix=\"%zu\"", d->cyls[i].mix);
-		if (d->cyls[i].size >= FLT_EPSILON)
+		if (d->cyls[i].size > FLT_EPSILON)
 			printf(" volume=\"%g\"", d->cyls[i].size);
-		if (d->cyls[i].workpressure >= FLT_EPSILON)
+		if (d->cyls[i].workpressure > FLT_EPSILON)
 			printf(" workpressure=\"%g\"", 
 				d->cyls[i].workpressure);
 		printf(" />\n");
@@ -1462,11 +1462,11 @@ divecmd_print_dive_gasmixes(FILE *f, const struct dive *d)
 	for (i = 0; i < d->gassz; i++) {
 		printf("\t\t\t\t<gasmix num=\"%zu\"",
 			d->gas[i].num);
-		if (d->gas[i].o2 >= FLT_EPSILON)
+		if (d->gas[i].o2 > FLT_EPSILON)
 			printf(" o2=\"%g\"", d->gas[i].o2);
-		if (d->gas[i].n2 >= FLT_EPSILON)
+		if (d->gas[i].n2 > FLT_EPSILON)
 			printf(" n2=\"%g\"", d->gas[i].n2);
-		if (d->gas[i].he >= FLT_EPSILON)
+		if (d->gas[i].he > FLT_EPSILON)
 			printf(" he=\"%g\"", d->gas[i].he);
 		printf(" />\n");
 	}
