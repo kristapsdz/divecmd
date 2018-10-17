@@ -3,6 +3,23 @@
 <articles>
 	<article data-sblg-article="1" data-sblg-tags="version">
 		<header>
+			<h1>0.1.4</h1>
+			<address>Kristaps Dzonsons</address>
+			<time datetime="2018-10-17">2018-10-17</time>
+		</header>
+		<aside>
+			<p>
+				Add more documentation into parser and clean up parser more.
+				Parse <code>flags</code> on events.
+			</p>
+			<p>
+				Add <a href="dcmd2ssrf.1.html">dcmd2ssrf(1)</a> to export from 
+				<a href="dcmd.1.html">dcmd(1)</a> dives into Subsurface.
+			</p>
+		</aside>
+	</article>
+	<article data-sblg-article="1" data-sblg-tags="version">
+		<header>
 			<h1>0.1.3</h1>
 			<address>Kristaps Dzonsons</address>
 			<time datetime="2018-09-29">2018-09-29</time>
