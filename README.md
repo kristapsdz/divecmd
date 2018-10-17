@@ -21,6 +21,14 @@ has several programs:
 - [dcmdls(1)](https://kristaps.bsd.lv/divecmd/dcmdls.1.html),
   which lists dive profiles.
 
+For interoperability with [Subsurface](https://subsurface-divelog.org/),
+it features:
+
+- [dcmd2ssrf(1)](https://kristaps.bsd.lv/divecmd/dcmd2ssrf.1.html),
+  for convertint into Subsurface; and
+- [ssrf2dcmd(1)](https://kristaps.bsd.lv/divecmd/ssrf2dcmd.1.html)
+  for converting out.
+
 It compiles and runs on Linux, Mac OS X, and OpenBSD.
 For Mac OS X machines with homebrew, see BSD.lv's
 [homebrew-repo](https://github.com/kristapsdz/homebrew-repo).
