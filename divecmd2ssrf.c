@@ -323,9 +323,9 @@ print_all(const struct dlog *dl, const struct diveq *dq)
 				}
 				bits &= ~SAMP_DECO;
 			} else if (in_deco) {
-				/*warnx("%s:%zu:%zu: implicit end "
+				warnx("%s:%zu:%zu: implicit end "
 					"of deco interval",
-					d->log->file, s->line, s->col);*/
+					d->log->file, s->line, s->col);
 				in_deco = 0;
 			}
 
