@@ -974,6 +974,33 @@ parse_dive(struct parse *p, const XML_Char **atts)
 }
 
 static void
+parse_divecomputer(struct parse *p, const XML_Char **atts)
+{
+	const XML_Char	**ap;
+	const char	 *diveid = NULL, *dctype = NULL;
+
+	p->curdive->mode = MODE_OC;
+
+	for (ap = atts; NULL != ap[0]; ap += 2)
+		if (0 == strcmp(*ap, "diveid"))
+			diveid = ap[1];
+		else if (0 == strcmp(*ap, "dctype"))
+			dctype = ap[1];
+
+	if (NULL != diveid)
+		p->curdive->fprint = xstrdup(p, diveid);
+
+	/* These are the only ones we care about. */
+
+	if (NULL != dctype) {
+		if (0 == strcasecmp(dctype, "freedive"))
+			p->curdive->mode = MODE_FREEDIVE;
+		else if (0 == strcasecmp(dctype, "ccr"))
+			p->curdive->mode = MODE_CC;
+	}
+}
+
+static void
 ign_open(void *dat, const XML_Char *s, const XML_Char **atts)
 {
 	struct parse	*p = dat;
@@ -1001,9 +1028,7 @@ ign_close(void *dat, const XML_Char *s)
 static void
 parse_open(void *dat, const XML_Char *s, const XML_Char **atts)
 {
-	const XML_Char	**ap;
 	struct parse	 *p = dat;
-	const char	 *v;
 
 	if (0 == strcmp(s, "divelog")) {
 		if (NULL != p->curlog) {
@@ -1016,16 +1041,10 @@ parse_open(void *dat, const XML_Char *s, const XML_Char **atts)
 		TAILQ_INSERT_TAIL(&p->stat->dlogs, p->curlog, entries);
 		logdbg(p, "new divelog");
 	} else if (0 == strcmp(s, "divecomputer")) {
-		if (NULL == p->curdive) {
+		if (NULL == p->curdive)
 			logerrx(p, "<divecomputer> not in <dive>");
-			return;
-		}
-		v = NULL;
-		for (ap = atts; NULL != ap[0]; ap += 2)
-			if (0 == strcmp(*ap, "diveid"))
-				v = ap[1];
-		if (NULL != v)
-			p->curdive->fprint = xstrdup(p, v);
+		else
+			parse_divecomputer(p, atts);
 	} else if (0 == strcmp(s, "dive")) {
 		if (NULL != p->curdive) {
 			logerrx(p, "nested <dive>");
