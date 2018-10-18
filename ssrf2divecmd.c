@@ -204,8 +204,6 @@ logerrp(struct parse *p)
 
 /*
  * Allocate a sample and insert it into the correct order.
- * FIXME we should just check the last one first and avoid walking the
- * whole queue, as most will be well-ordered.
  */
 static struct samp *
 samp_alloc(struct parse *p, size_t tm)
@@ -214,18 +212,31 @@ samp_alloc(struct parse *p, size_t tm)
 
 	assert(NULL != p->curdive);
 
+	/* Short-circuit: test if we're at the end. */
+
+	ss = TAILQ_LAST(&p->curdive->samps, sampq);
+
+	if (NULL != ss && ss->time < tm) {
+		samp = xcalloc(p, 1, sizeof(struct samp));
+		samp->time = tm;
+		TAILQ_INSERT_TAIL(&p->curdive->samps, samp, entries);
+		p->curdive->nsamps++;
+		return samp;
+	} else if (NULL != ss && ss->time == tm) 
+		return ss;
+
+	TAILQ_FOREACH(ss, &p->curdive->samps, entries)
+		if (ss->time == tm) 
+			return ss;
+		else if (ss->time > tm)
+			break;
+
 	samp = xcalloc(p, 1, sizeof(struct samp));
 	samp->time = tm;
 
-	TAILQ_FOREACH(ss, &p->curdive->samps, entries)
-		if (ss->time >= samp->time)
-			break;
-
-	if (NULL != ss) {
-		if (ss->time == samp->time)
-			return ss;
+	if (NULL != ss)
 		TAILQ_INSERT_BEFORE(ss, samp, entries);
-	} else
+	else
 		TAILQ_INSERT_TAIL(&p->curdive->samps, samp, entries);
 
 	p->curdive->nsamps++;
@@ -574,11 +585,15 @@ parse_event(struct parse *p, const XML_Char **atts)
 	/* Each is going to be a singleton. */
 
 	samp = samp_alloc(p, tm);
-	samp->events = xcalloc(p, 1, sizeof(struct sampevent));
-	samp->eventsz++;
-	samp->events[0].type = type;
+	samp->events = xreallocarray
+		(p, samp->events, samp->eventsz + 1, 
+		 sizeof(struct sampevent));
+	memset(&samp->events[samp->eventsz], 
+		0, sizeof(struct sampevent));
+	samp->events[samp->eventsz].type = type;
 	if (NULL != flagp) 
-		samp->events[0].flags = atoi(flagp);
+		samp->events[samp->eventsz].flags = atoi(flagp);
+	samp->eventsz++;
 }
 
 static void 
@@ -844,6 +859,121 @@ parse_cylinder(struct parse *p, const XML_Char **atts)
 }
 
 static void
+parse_dive(struct parse *p, const XML_Char **atts)
+{
+	const XML_Char	**ap;
+	struct dive	 *d, *dp;
+	const char	 *num = NULL, *dur = NULL, *date = NULL,
+	      		 *time = NULL, *mode = NULL, *id = NULL, *er;
+	struct dgroup	 *grp;
+
+	p->curdive = d = xcalloc(p, 1, sizeof(struct dive));
+	TAILQ_INIT(&d->samps);
+	d->pid = ++p->pid;
+	d->line = XML_GetCurrentLineNumber(p->p);
+	d->log = p->curlog;
+	d->mode = MODE_OC;
+
+	for (ap = atts; NULL != ap[0]; ap += 2)
+		if (0 == strcmp(*ap, "number"))
+			num = ap[1];
+		else if (0 == strcmp(*ap, "diveid"))
+			id = ap[1];
+		else if (0 == strcmp(*ap, "duration"))
+			dur = ap[1];
+		else if (0 == strcmp(*ap, "date"))
+			date = ap[1];
+		else if (0 == strcmp(*ap, "time"))
+			time = ap[1];
+		else 
+			logattr(p, "dive", *ap);
+
+	if (NULL != id && '\0' != *id)
+		d->fprint = xstrdup(p, id);
+
+	if (NULL != mode) {
+		if (0 == strcmp(mode, "freedive"))
+			d->mode = MODE_FREEDIVE;
+		else if (0 == strcmp(mode, "opencircuit"))
+			d->mode = MODE_OC;
+		else if (0 == strcmp(mode, "closedcircuit"))
+			d->mode = MODE_CC;
+		else if (0 == strcmp(mode, "gauge"))
+			d->mode = MODE_GAUGE;
+		else
+			logwarnx(p, "bad <dive> mode");
+	}
+
+	if (NULL != num) {
+		d->num = strtonum(num, 0, LONG_MAX, &er);
+		if (NULL != er) {
+			logerrx(p, "bad <dive> number");
+			return;
+		} else
+			logdbg(p, "new dive: %zu", d->num);
+	}
+
+	if (NULL != dur && 
+	    ! parse_time(p, dur, &d->duration)) {
+		logerrx(p, "bad <dive> duration");
+		return;
+	}
+
+	if (NULL != date && NULL != time) {
+		d->datetime = parse_date(date, time);
+		if (d->datetime < 0) {
+			logerrx(p, "bad <dive> date/time");
+			return;
+		}
+
+		/* Check against our global extrema. */
+
+		if (0 == p->stat->timestamp_min ||
+		    d->datetime < p->stat->timestamp_min)
+			p->stat->timestamp_min = d->datetime;
+		if (0 == p->stat->timestamp_max ||
+		    d->datetime > p->stat->timestamp_max)
+			p->stat->timestamp_max = d->datetime;
+	} 
+
+	/*
+	 * Now assign to our group.
+	 * Our group assignment might require data we don't
+	 * have, so we might not be grouping the dive.
+	 */
+
+	if (0 == p->stat->groupsz && verbose)
+		logdbg(p, "new default group");
+	grp = (0 == p->stat->groupsz) ?
+		group_alloc(p, d, NULL) :
+		group_add(p, 0, d);
+
+	if (NULL != date && 
+	    (0 == grp->mintime || d->datetime < grp->mintime))
+		grp->mintime = d->datetime;
+
+	/* 
+	 * Now register the dive with the dive queue.
+	 * If the dive has a date and time, we order everything
+	 * by time; and furthermore, we order it by offsetting
+	 * from our group's start time.
+	 * If there's no date/time, we just append to the queue.
+	 */
+
+	/* Insert is in reverse order. */
+
+	TAILQ_FOREACH(dp, p->dives, entries)
+		if (dp->datetime - dp->group->mintime &&
+		    dp->datetime - dp->group->mintime > 
+		    d->datetime - d->group->mintime)
+			break;
+	if (NULL == dp)
+		TAILQ_INSERT_TAIL(p->dives, d, entries);
+	else
+		TAILQ_INSERT_BEFORE(dp, d, entries);
+}
+
+static void
 ign_open(void *dat, const XML_Char *s, const XML_Char **atts)
 {
 	struct parse	*p = dat;
@@ -873,9 +1003,7 @@ parse_open(void *dat, const XML_Char *s, const XML_Char **atts)
 {
 	const XML_Char	**ap;
 	struct parse	 *p = dat;
-	struct dive	 *d, *dp;
-	const char	 *date, *time, *num, *er, *dur, *mode, *v;
-	struct dgroup	 *grp;
+	const char	 *v;
 
 	if (0 == strcmp(s, "divelog")) {
 		if (NULL != p->curlog) {
@@ -906,108 +1034,7 @@ parse_open(void *dat, const XML_Char *s, const XML_Char **atts)
 			logerrx(p, "<dive> not in <divelog>");
 			return;
 		}
-
-		p->curdive = d = xcalloc(p, 1, sizeof(struct dive));
-		p->curdive->pid = ++p->pid;
-		p->curdive->line = XML_GetCurrentLineNumber(p->p);
-		TAILQ_INIT(&d->samps);
-		d->log = p->curlog;
-		d->mode = MODE_OC;
-
-		num = dur = date = time = mode = NULL;
-		for (ap = atts; NULL != ap[0]; ap += 2)
-			if (0 == strcmp(*ap, "number"))
-				num = ap[1];
-			else if (0 == strcmp(*ap, "duration"))
-				dur = ap[1];
-			else if (0 == strcmp(*ap, "date"))
-				date = ap[1];
-			else if (0 == strcmp(*ap, "time"))
-				time = ap[1];
-			else 
-				logattr(p, "dive", *ap);
-
-		if (NULL != mode) {
-			if (0 == strcmp(mode, "freedive"))
-				d->mode = MODE_FREEDIVE;
-			else if (0 == strcmp(mode, "opencircuit"))
-				d->mode = MODE_OC;
-			else if (0 == strcmp(mode, "closedcircuit"))
-				d->mode = MODE_CC;
-			else if (0 == strcmp(mode, "gauge"))
-				d->mode = MODE_GAUGE;
-			else
-				logwarnx(p, "%s: bad "
-					"<dive> mode", mode);
-		}
-
-		if (NULL != num) {
-			d->num = strtonum(num, 0, LONG_MAX, &er);
-			if (NULL != er) {
-				logerrx(p, "bad <dive> number");
-				return;
-			} else
-				logdbg(p, "new dive: %zu", d->num);
-		}
-
-		if (NULL != dur && 
-		    ! parse_time(p, dur, &d->duration)) {
-			logerrx(p, "bad <dive> duration");
-			return;
-		}
-
-		if (NULL != date && NULL != time) {
-			d->datetime = parse_date(date, time);
-			if (d->datetime < 0) {
-				logerrx(p, "bad <dive> date/time");
-				return;
-			}
-
-			/* Check against our global extrema. */
-
-			if (0 == p->stat->timestamp_min ||
-			    d->datetime < p->stat->timestamp_min)
-				p->stat->timestamp_min = d->datetime;
-			if (0 == p->stat->timestamp_max ||
-			    d->datetime > p->stat->timestamp_max)
-				p->stat->timestamp_max = d->datetime;
-		} 
-
-		/*
-		 * Now assign to our group.
-		 * Our group assignment might require data we don't
-		 * have, so we might not be grouping the dive.
-		 */
-
-		if (0 == p->stat->groupsz && verbose)
-			logdbg(p, "new default group");
-		grp = (0 == p->stat->groupsz) ?
-			group_alloc(p, d, NULL) :
-			group_add(p, 0, d);
-
-		if (NULL != date && 
-		    (0 == grp->mintime || d->datetime < grp->mintime))
-			grp->mintime = d->datetime;
-
-		/* 
-		 * Now register the dive with the dive queue.
-		 * If the dive has a date and time, we order everything
-		 * by time; and furthermore, we order it by offsetting
-		 * from our group's start time.
-		 * If there's no date/time, we just append to the queue.
-		 */
-
-		/* Insert is in reverse order. */
-
-		TAILQ_FOREACH(dp, p->dives, entries)
-			if (dp->datetime - dp->group->mintime &&
-			    dp->datetime - dp->group->mintime > 
-			    d->datetime - d->group->mintime)
-				break;
-		if (NULL == dp)
-			TAILQ_INSERT_TAIL(p->dives, d, entries);
-		else
-			TAILQ_INSERT_BEFORE(dp, d, entries);
+		parse_dive(p, atts);
 	} else if (0 == strcmp(s, "cylinder")) {
 		if (NULL == p->curdive) { 
 			logerrx(p, "<cylinder> not in <dive>");
