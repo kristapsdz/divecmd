@@ -50,6 +50,7 @@ struct	parse {
 	char	 	 *ign; /* token we're ignoring (or NULL) */
 	size_t		  igndepth; /* nested ignore scopes */
 	size_t		  pid; /* current dive no. */
+	int		  in_deco; /* are we in deco? */
 };
 
 static void
@@ -220,10 +221,12 @@ samp_alloc(struct parse *p, size_t tm)
 		if (ss->time >= samp->time)
 			break;
 
-	if (NULL == ss)
-		TAILQ_INSERT_TAIL(&p->curdive->samps, samp, entries);
-	else
+	if (NULL != ss) {
+		if (ss->time == samp->time)
+			return ss;
 		TAILQ_INSERT_BEFORE(ss, samp, entries);
+	} else
+		TAILQ_INSERT_TAIL(&p->curdive->samps, samp, entries);
 
 	p->curdive->nsamps++;
 	return samp;
@@ -668,6 +671,42 @@ parse_sample(struct parse *p, const XML_Char **atts)
 			}
 			samp->deco.type = DECO_ndl;
 			samp->flags |= SAMP_DECO;
+		} else if (0 == strcmp(*ap, "stopdepth")) {
+			/*
+			 * We'll only use this if in_deco is set, later.
+			 */
+			samp->deco.depth = parse_depth(p, ap[1]);
+			if (samp->deco.depth < 0.0) {
+				logerrx(p, "bad <sample> stopdepth");
+				return;
+			}
+		} else if (0 == strcmp(*ap, "stoptime")) {
+			/*
+			 * We'll only use this if in_deco is set, later.
+			 */
+			if ( ! parse_time(p, ap[1], &samp->deco.duration)) {
+				logerrx(p, "bad <sample> stoptime");
+				return;
+			}
+		} else if (0 == strcmp(*ap, "in_deco")) {
+			if (0 == strcmp(ap[1], "1")) {
+				if (p->in_deco) {
+					logerrx(p, "<sample> starting deco "
+						"when already in deco");
+					return;
+				}
+				p->in_deco = 1;
+			} else if (0 == strcmp(ap[1], "0")) {
+				if ( ! p->in_deco) {
+					logerrx(p, "<sample> ending deco "
+						"when not in deco");
+					return;
+				}
+				p->in_deco = 0;
+			} else {
+				logerrx(p, "bad <sample> in_deco");
+				return;
+			}
 		} else if (strcmp(*ap, "time"))
 			logwarnx(p, "unknown <sample> attribute: %s", ap[0]);
 
@@ -686,6 +725,27 @@ parse_sample(struct parse *p, const XML_Char **atts)
 			if (samp->temp < p->curdive->mintemp)
 				p->curdive->mintemp = samp->temp;
 		}
+	}
+
+	if (p->in_deco) {
+		if (SAMP_DECO & samp->flags) {
+			logerrx(p, "<sample> with overlapping ndl "
+				"and deco");
+			return;
+		}
+		/* 
+		 * ssrf doesn't differentiate between a deco and a deep
+		 * stop: we assume a regular DECO_decostop.
+		 */
+		samp->deco.type = DECO_decostop;
+		samp->flags |= SAMP_DECO;
+	} else if ( ! (SAMP_DECO & samp->flags)) {
+		if (samp->deco.depth > FLT_EPSILON)
+			logwarnx(p, "<sample> has stopdepth "
+				"when not in deco mode");
+		if (samp->deco.duration > 0)
+			logwarnx(p, "<sample> has stoptime "
+				"when not in deco mode");
 	}
 }
 
@@ -1064,6 +1124,7 @@ ssrf_parse(const char *fname, XML_Parser p,
 	       } else if (0 == ssz)
 		       break;
 	}
+
 
 	if (ssz < 0)
 		warn("%s", fname);
