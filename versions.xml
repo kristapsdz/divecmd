@@ -3,6 +3,20 @@
 <articles>
 	<article data-sblg-article="1" data-sblg-tags="version">
 		<header>
+			<h1>0.1.5</h1>
+			<address>Kristaps Dzonsons</address>
+			<time datetime="2018-10-18">2018-10-18</time>
+		</header>
+		<aside>
+			<p>
+				Fully support decompression and pressure recordings when converting
+				into and out of Subsurface log files.
+				I can now export, convert-out, convert-in, then import and it's the same dive profile.
+			</p>
+		</aside>
+	</article>
+	<article data-sblg-article="1" data-sblg-tags="version">
+		<header>
 			<h1>0.1.4</h1>
 			<address>Kristaps Dzonsons</address>
 			<time datetime="2018-10-17">2018-10-17</time>
