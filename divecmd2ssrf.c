@@ -279,10 +279,22 @@ print_all(const struct dlog *dl, const struct diveq *dq)
 				printf(" temp='%.1f C'", s->temp);
 				bits &= ~SAMP_TEMP;
 			}
-			if (SAMP_RBT & bits) {
-				printf(" rbt='%zu:%.2zu min'", 
-					s->rbt / 60, s->rbt % 60);
-				bits &= ~SAMP_RBT;
+			for (i = 0; i < s->pressuresz; i++) {
+				for (j = 0; j < d->cylsz; j++)
+					if (d->cyls[j].num == 
+					    s->pressure[i].tank)
+						break;
+				if (j == d->cylsz) {
+					warnx("%s:%zu:%zu: unknown "
+						"cylinder: %zu",
+						d->log->file, s->line,
+						s->col, 
+						s->pressure[i].tank);
+					continue;
+				}
+				printf(" pressure%zu='%.3f bar'",
+					map_cyl[j],
+					s->pressure[i].pressure);
 			}
 			if (SAMP_CNS & bits) {
 				printf(" cns='%.0f%%'", 100.0 * s->cns);
@@ -328,8 +340,11 @@ print_all(const struct dlog *dl, const struct diveq *dq)
 					d->log->file, s->line, s->col);
 				in_deco = 0;
 			}
-
-
+			if (SAMP_RBT & bits) {
+				printf(" rbt='%zu:%.2zu min'", 
+					s->rbt / 60, s->rbt % 60);
+				bits &= ~SAMP_RBT;
+			}
 			puts(" />");
 
 			for (i = 0; i < s->eventsz; i++)
