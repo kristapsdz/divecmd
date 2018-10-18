@@ -183,7 +183,8 @@ print_cylinder(const struct cylinder *p, const struct dive *d)
 }
 
 static void
-print_all(const struct dlog *dl, const struct diveq *dq)
+print_all(const struct dlog *dl, 
+	const struct diveq *dq, const char *deviceid)
 {
 	const struct dive *d;
 	const struct samp *s;
@@ -193,15 +194,18 @@ print_all(const struct dlog *dl, const struct diveq *dq)
 	unsigned int	   bits;
 	int		   in_deco;
 
-	printf("<divelog program=\'dcmd2ssrf\' "
-	       " version=\'" VERSION "\'>\n"
-	       " <settings>\n"
-	       "  <divecomputerid model=\'%s %s\'/>\n"
-	       " </settings>\n"
-	       " <divesites>\n"
-	       " </divesites>\n"
-	       " <dives>\n",
-	       dl->vendor, dl->product);
+	puts("<divelog program=\'dcmd2ssrf\' "
+	     " version=\'" VERSION "\'>\n"
+	     " <settings>");
+	printf("  <divecomputerid model=\'%s %s\'",
+		dl->vendor, dl->product);
+	if (NULL != deviceid && '\0' != *deviceid)
+		printf(" deviceid='%s'", deviceid);
+	puts("/>\n"
+	     " </settings>\n"
+	     " <divesites>\n"
+	     " </divesites>\n"
+	     " <dives>");
 
 	TAILQ_FOREACH(d, dq, entries) {
 		/* Start with the "dive" information. */
@@ -220,8 +224,6 @@ print_all(const struct dlog *dl, const struct diveq *dq)
 			printf(" duration='%zu:%.2zu min'",
 				d->duration / 60,
 				d->duration % 60);
-		if (NULL != d->fprint) 
-			printf(" diveid='%s'", d->fprint);
 		puts(">");
 
 		/*
@@ -264,6 +266,10 @@ print_all(const struct dlog *dl, const struct diveq *dq)
 			printf(" dctype='Freedive'");
 		else if (MODE_CC == d->mode)
 			printf(" dctype='CCR'");
+		if (NULL != d->fprint) 
+			printf(" diveid='%s'", d->fprint);
+		if (NULL != deviceid && '\0' != *deviceid)
+			printf(" deviceid='%s'", deviceid);
 		puts(">");
 
 		in_deco = 0;
@@ -386,13 +392,17 @@ main(int argc, char *argv[])
 	XML_Parser	 p;
 	struct diveq	 dq;
 	struct divestat	 st;
+	const char	*deviceid = NULL;
 
 #if HAVE_PLEDGE
 	if (-1 == pledge("stdio rpath", NULL))
 		err(EXIT_FAILURE, "pledge");
 #endif
-	while (-1 != (c = getopt(argc, argv, "v")))
+	while (-1 != (c = getopt(argc, argv, "i:v")))
 		switch (c) {
+		case ('i'):
+			deviceid = optarg;
+			break;
 		case ('v'):
 			verbose = 1;
 			break;
@@ -430,11 +440,14 @@ main(int argc, char *argv[])
 		goto out;
 	}
 
-	print_all(TAILQ_FIRST(&st.dlogs), &dq);
+	print_all(TAILQ_FIRST(&st.dlogs), &dq, deviceid);
 out:
 	divecmd_free(&dq, &st);
 	return rc ? EXIT_SUCCESS : EXIT_FAILURE;
 usage:
-	fprintf(stderr, "usage: %s [-v] [file]\n", getprogname());
+	fprintf(stderr, "usage: %s "
+		"[-v] "
+		"[-i deviceid] "
+		"[file]\n", getprogname());
 	return EXIT_FAILURE;
 }
