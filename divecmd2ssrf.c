@@ -300,7 +300,8 @@ print_all(const struct dlog *dl, const struct diveq *dq)
 
 				print_deco(&s->deco);
 				if (in_deco && 
-				    DECO_ndl == s->deco.type) {
+				    (DECO_ndl == s->deco.type ||
+				     DECO_safetystop == s->deco.type)) {
 					printf(" in_deco='0'");
 					in_deco = 0;
 				} 
@@ -321,7 +322,13 @@ print_all(const struct dlog *dl, const struct diveq *dq)
 					in_deco = DECO_deepstop;
 				}
 				bits &= ~SAMP_DECO;
+			} else if (in_deco) {
+				/*warnx("%s:%zu:%zu: implicit end "
+					"of deco interval",
+					d->log->file, s->line, s->col);*/
+				in_deco = 0;
 			}
+
 
 			puts(" />");
 
