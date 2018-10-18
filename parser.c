@@ -121,14 +121,14 @@ static void
 logattr(const struct parse *p, const char *tag, const char *attr)
 {
 
-	logwarnx(p, "%s: unknown <%s> attribute", attr, tag);
+	logwarnx(p, "unknown <%s> attribute: %s", tag, attr);
 }
 
 static void
 lognattr(struct parse *p, const char *tag, const char *attr)
 {
 
-	logerrx(p, "missing <%s> attribute: %s", attr, tag);
+	logerrx(p, "missing <%s> attribute: %s", tag, attr);
 }
 
 static void
@@ -675,6 +675,57 @@ parse_event(struct parse *p, const XML_Char **atts)
 }
 
 static void
+parse_deco(struct parse *p, const XML_Char **atts)
+{
+	const XML_Char	**ap;
+	struct samp	*samp = p->cursamp;
+	const char	*depth = NULL, *mode = NULL, 
+	     		*dur = NULL, *er;
+
+	for (ap = atts; NULL != ap[0]; ap += 2) 
+		if (0 == strcmp(*ap, "depth"))
+			depth = ap[1];
+		else if (0 == strcmp(*ap, "type"))
+			mode = ap[1];
+		else if (0 == strcmp(*ap, "duration"))
+			dur = ap[1];
+		else
+			logattr(p, "deco", *ap);
+
+	if (NULL == mode) {
+		lognattr(p, "deco", "type");
+		return;
+	}
+
+	for (samp->deco.type = 0; 
+	     samp->deco.type < DECO__MAX; 
+	     samp->deco.type++)
+		if (0 == strcmp(decos[samp->deco.type], mode))
+			break;
+
+	if (DECO__MAX == samp->deco.type) {
+		logerrx(p, "unknown <deco> type");
+		return;
+	}
+
+	if (NULL != depth && ! xstrtod(depth, &samp->deco.depth)) {
+		logerrx(p, "malformed <deco> depth");
+		return;
+	}
+
+	if (NULL != dur) {
+		samp->deco.duration = 
+			strtonum(dur, 0, LONG_MAX, &er);
+		if (NULL != er) {
+			logerrx(p, "malformed <deco> duration: %s", er);
+			return;
+		}
+	}
+
+	samp->flags |= SAMP_DECO;
+}
+
+static void
 parse_open(void *dat, const XML_Char *s, const XML_Char **atts)
 {
 	const XML_Char	**ap;
@@ -1035,60 +1086,13 @@ parse_open(void *dat, const XML_Char *s, const XML_Char **atts)
 		} else
 			parse_event(p, atts);
 	} else if (0 == strcmp(s, "deco")) {
-		if (NULL == (samp = p->cursamp)) {
+		/* Ignore deco when freediving. */
+		if (NULL == (samp = p->cursamp))
 			logerrx(p, "<deco> not in <sample>");
-			return;
-		} else if (SAMP_DECO & samp->flags) {
+		else if (SAMP_DECO & samp->flags)
 			logerrx(p, "restatement of <deco>");
-			return;
-		} else if (MODE_FREEDIVE == p->curdive->mode) {
-			/* Ignore deco when freediving. */
-			return;
-		}
-
-		v = mode = dur = NULL;
-		for (ap = atts; NULL != ap[0]; ap += 2) 
-			if (0 == strcmp(*ap, "depth"))
-				v = ap[1];
-			else if (0 == strcmp(*ap, "type"))
-				mode = ap[1];
-			else if (0 == strcmp(*ap, "duration"))
-				dur = ap[1];
-			else
-				logattr(p, "deco", *ap);
-
-		if (NULL == mode) {
-			lognattr(p, "deco", "type");
-			return;
-		} else if (NULL == dur) {
-			lognattr(p, "deco", "duration");
-			return;
-		}
-
-		for (samp->deco.type = 0; 
-		     samp->deco.type < DECO__MAX; 
-		     samp->deco.type++)
-			if (0 == strcmp(decos[samp->deco.type], mode))
-				break;
-		if (DECO__MAX == samp->deco.type) {
-			logerrx(p, "unknown <deco> type: %s", mode);
-			return;
-		}
-
-		if (NULL != v && ! xstrtod(v, &samp->deco.depth)) {
-			logerrx(p, "malformed <deco> depth: %s", v);
-			return;
-		}
-
-		samp->deco.duration = strtonum(dur, 0, LONG_MAX, &er);
-		if (NULL != er) {
-			logerrx(p, "malformed <deco> duration: %s", dur);
-			return;
-		}
-
-		if (SAMP_DECO & samp->flags)
-			logwarnx(p, "multiple <deco>");
-		samp->flags |= SAMP_DECO;
+		else if (MODE_FREEDIVE != p->curdive->mode)
+			parse_deco(p, atts);
 	} else if (0 == strcmp(s, "temp")) {
 		if (NULL == (samp = p->cursamp)) {
 			logerrx(p, "<temp> not in <sample>");
@@ -1575,18 +1579,26 @@ divecmd_print_dive_sample(FILE *f, const struct samp *s)
 		fprintf(f, " />\n");
 	}
 	if (SAMP_DECO & s->flags) {
-		if (DECO_ndl == s->deco.type)
+		if (DECO_ndl != s->deco.type) {
 			fprintf(f, "\t\t\t\t\t"
-				"<deco type=\"%s\" "
-				"duration=\"%zu\" />\n",
-				decos[s->deco.type], 
-				s->deco.duration);
-		else
+				"<deco type=\"%s\"",
+				decos[s->deco.type]);
+			if (s->deco.depth > FLT_EPSILON)
+				printf(" depth=\"%g\"",
+					s->deco.depth);
+			if (s->deco.duration > 0)
+				printf(" duration=\"%zu\"",
+					s->deco.duration);
+			puts(" />");
+		} else {
 			fprintf(f, "\t\t\t\t\t"
-				"<deco depth=\"%g\" type=\"%s\" "
-				"duration=\"%zu\" />\n",
-				s->deco.depth, decos[s->deco.type], 
-				s->deco.duration);
+				"<deco type=\"%s\"",
+				decos[s->deco.type]);
+			if (s->deco.duration > 0)
+				printf(" duration=\"%zu\"",
+					s->deco.duration);
+			puts(" />");
+		}
 	}
 	if (SAMP_VENDOR & s->flags)
 		fprintf(f, "\t\t\t\t\t"
