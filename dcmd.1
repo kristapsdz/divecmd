@@ -249,7 +249,7 @@ And now, the samples...
          [<depth value="xxx" />]
          [<temp value="xxx" />]
          [<pressure value="xxx" tank="nnn" />]
-         [<deco [depth="xxx"] type="zzz" duration="ss" />]
+         [<deco [depth="xxx"] type="zzz" [duration="ss"] />]
          [<gaschange mix="nnn" />]
          [<cns value="xxx" />]
          [<event type="event" [duration="ss"] [flags="ss"] />]
@@ -324,7 +324,20 @@ Duration is in seconds.
 Decompression notices are suppressed when in freediving mode.
 The
 .Dq ndl
-type ignores the depth attribute, if specified,
+type ignores the depth attribute, if specified.
+All types may omit the
+.Li duration
+and
+.Li depth ,
+in which case this is simply an indicator of state.
+While in a deco or deep stop, the
+.Li type
+of deco (or deep) will be continuously emitted for each sample.
+The end of the stop may be inferred by a
+.Dq ndl
+or
+.Dq safetystop ,
+or simply by the non-existence of the prior deco type.
 .It Li event
 A generic event.
 This should usually be ignored, as it uses opaque values from
