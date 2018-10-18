@@ -26,6 +26,7 @@
 .Sh SYNOPSIS
 .Nm dcmd2ssrf
 .Op Fl v
+.Op Fl i Ar deviceid
 .Op Ar files...
 .Sh DESCRIPTION
 The
@@ -35,6 +36,11 @@ utility accepts
 format dives and exports into the XML native format of Subsurface.
 Its arguments are as follows:
 .Bl -tag -width Ds
+.It Fl i Ar deviceid
+Specify a device identifier.
+This should not include the leading
+.Dq 0x
+as shown in Subsurface.
 .It Fl v
 Parse files in verbose mode.
 .It Ar files...
@@ -50,3 +56,6 @@ The
 utility was written by
 .An Kristaps Dzonsons ,
 .Mt kristaps@bsd.lv .
+.Sh BUGS
+The device identifier is not yet computed and must be provided using
+.Fl i .
