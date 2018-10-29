@@ -50,6 +50,12 @@ XML input files with one or more dives.
 At this time it only supports divelogs for a single dive computer.
 .Sh EXIT STATUS
 .Ex -std
+.Sh EXAMPLES
+To convert all open circuit dives in
+.Pa daily.xml
+to Subsurface:
+.Pp
+.Dl dcmdfind -lmode=open daily.xml | dcmd2ssrf > daily.ssrf
 .Sh AUTHORS
 The
 .Nm

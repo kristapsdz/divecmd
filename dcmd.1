@@ -66,6 +66,10 @@ which is an opaque string.
 .It Fl l
 Lists the dives in short format, one per line: time, type, and
 fingerprint.
+.Em This flag is deprecated.
+Use
+.Xr dcmdls 1
+instead.
 .It Fl m Ar model
 When looking up the
 .Ar computer ,
@@ -402,6 +406,17 @@ guaranteed.
 .Ed
 .Sh EXIT STATUS
 .Ex -std
+.Sh EXAMPLES
+To grab all dives from a Suunto D6i for
+.Dq kristaps
+since last download:
+.Pp
+.Dl dcmd -i kristaps d6i > dives-`date +%F`.xml
+.Pp
+To list all recent dives on the computer without setting the last-seen
+stamp:
+.Pp
+.Dl dcmd -n d6i | dcmdls
 .Sh AUTHORS
 The
 .Nm

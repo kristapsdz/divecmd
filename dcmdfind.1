@@ -98,11 +98,12 @@ Date-times are formatted as YYYY-mm-ddTHH:MM.
 .Sh EXIT STATUS
 .Ex -std
 .Sh EXAMPLES
-To list only the current date's dives:
+To list only the current date's dives from all XML files in the current
+directory:
 .Pp
 .Dl dcmdfind -ldate=today *.xml | dcmdls
 .Pp
-To graph today's open-circuit dive:
+To graph today's open-circuit dive from the same:
 .Pp
 .Dl dcmdfind -ldate=today -lmode=open *.xml | dcmdterm
 .Sh SEE ALSO
